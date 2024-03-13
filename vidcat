@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+# Con(cat)enate video files
+# $1: output video file
+# $@: input video files (sorted)
+_vidcat() {
+
+  local \
+    _out="${1}" \
+    _i=1 \
+    _in=() \
+    _vf="" \
+    _vids
+  shift 1
+  _in=("$@")
+
+  _vids="$(mktemp)"
+  for _vid in "${_in[@]}"; do
+   _vid="$(realpath "${_vid}")"
+   echo "file '${_vid}'" >> "${_vids}"
+   _vf="${_vf} [${_i}:v] [${_i}:a]"
+   _i=$((_i + 1))
+  done
+
+  _vf="${_vf} concat=n=${_i}:v=1:a=1 [v] [a]"
+
+  cat $_vids
+  ffmpeg \
+    -safe 0 \
+    -i ${_vids} \
+    -filter_complex "${_vf}" \
+    -map "[v]" \
+    -map "[a]" \
+    -f mp4 \
+    -vcodec lix265 \
+    "${_out}"
+  # echo $_mm
+  [[ ! $? -eq 0 ]] && \
+    _concat
+}
+
+_concat() {
+
+  ffmpeg \
+    -f concat \
+    -safe 0 \
+    -i "${_vids}" \
+    -c copy \
+    "${_out}"
+
+}
+
+_out="${1}"
+shift
+_vids=("$@")
+
+_vidcat "${_out}" "${_vids[@]}"

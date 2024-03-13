@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_path="$( \
+  export \
+    _OLDPWD="$(pwd)" && \
+  cd \
+    "$(dirname \
+         "${BASH_SOURCE[0]}")" && \
+  echo \
+    "$(pwd)" && \
+  cd "${_OLDPWD}")"
+
+app_name="$( \
+  basename \
+    "${BASH_SOURCE[0]}")"
+
+# Create blank video of given length;
+# output file must have mpeg extension
+# $1: output video file
+# $2: length of resulting blank file
+# $@: input video files to infer best
+#     size (sorted)
+_blackvid() {
+  local \
+    _out="${1}" \
+    _len="${2}" \
+    _cmd="_ffmpeg_adapta" \
+    _i=0 \
+    _in=() \
+    _af="" \
+    _vf="" \
+    _vids=()
+  shift 2
+  _in=("$@")
+  [[ "${_in[@]}" == "" ]] && \
+    _cmd=_ffmpeg
+  "${_cmd}"
+}
+
+_ffmpeg() {
+  ffmpeg \
+    -y \
+    -t "${_len}" \
+    -s 640x480 \
+    -f rawvideo \
+    -pix_fmt rgb24 \
+    -r 25 \
+    -i /dev/zero \
+    "${_out}.mpeg"
+
+  
+  ffmpeg \
+    -y \
+    -i "${_out}.mpeg" \
+    "${_out}.webm"
+
+  # ffmpeg \
+  #   -y \
+  #   -i "${_out}.webm" \
+  #   -preset \
+  #   -f mp4 \
+  #   "${_out}.mp4"
+
+  # ffmpeg \
+  #   -y \
+  #   -f lavfi \
+  #   -i anullsrc \
+  #   -i "${_out}.webm" \
+  #   -c:v copy \
+  #   -c:a ac3 \
+  #   -map 0:a \
+  #   -map 1:v \
+  #   -shortest \
+  #   "${_out}"
+  # rm "${_out}.mpeg"
+}
+
+_ffmpeg_adapta() {
+  rm "${_out}.queue"
+  for _vid in "${_in[@]}"; do
+    echo \
+      "file '$(realpath \
+                 ${_vid})'" >> \
+      "${_out}.queue"
+  done
+  _af="atrim=0:${_len},volume=0"
+  _vf="trim=0:${_len},geq=0:128:128"
+  ffmpeg \
+    -safe 0 \
+    -i "${_out}.queue" \ # ${_vids[@]} \
+    -vf "${_vf}" \
+    -af "${_af}" \
+    -video_track_timescale 600 \
+    "${_out}"
+}
+
+_msg_err() {
+  local \
+    _msg=("$@") \
+    _line
+  for _line in "${_msg[@]}"; do
+    echo "${_line}"
+  done
+  exit 1
+}
+
+_out="${1}"
+_len="${2}"
+
+# [[ "${_out}" != *".mpeg" ]] || \
+(( $# < 2 )) && \
+  _msg_err \
+    "Usage:" \
+    "${app_name} <out>.mpeg <duration> ( [video] )"
+shift 2
+_vids=("$@")
+
+_blackvid \
+  "${_out}" \
+  "${_len}" \
+  "${_vids[@]}"

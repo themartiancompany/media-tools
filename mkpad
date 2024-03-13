@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+# Resize maintaining original proportions
+# and adding colored pad
+_mkpad () {
+  local \
+    _in="${1}" \
+    _out="${2}" \
+    _w="${3}" \
+    _h="${4}" \
+    _color="${5}" \
+    _pad_opts=() \
+    _scale_opts=() \
+    _opts=() \
+    _vf
+
+  _pad_opts=(
+    "${_w}"
+    "${_h}"
+    "-1"
+    "-1"
+    "color=${_color}")
+
+  _scale_opts=(
+    "${_w}"
+    "${_h}"
+    "force_original_aspect_ratio=decrease")
+  
+  _vf="$(IFS=":"; \
+         echo \
+	   "${_scale_opts[*]},${_pad_opts[@]}")"
+
+  _opts=(
+    -i "${_in}"
+    -vf "${_vf}"
+    -c:v libx264
+    -preset slow
+    -crf 18)
+
+  ffmpeg \
+    "${_opts[@]}" \
+    "${_out}"
+}
+
+_in="${1}"
+_out="${2}"
+_w="${3}"
+_h="${4}"
+_color="${5}"
+
+_mkpad "${_in}" "${_out}" "${_w}" "${_h}" "${_color}"

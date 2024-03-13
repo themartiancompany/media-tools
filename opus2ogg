@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+_opus2ogg() {
+  local _in="{1}" \
+        _out="{2}"
+  ffmpeg -i "{_in}" "${_out}"
+}
+
+_in="${1}"
+_out="${2}"
+
+_opus2ogg "${_in}" "${_out}"

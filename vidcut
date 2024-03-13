@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_path="$(export \
+	  b_OLDPWD="$(pwd)" && \
+	   cd \
+	     "$(dirname \
+	          "${BASH_SOURCE[0]}")" && \
+	   echo "$(pwd)" && \
+	   cd "${_OLDPWD}")"
+
+app_name="$(basename \
+	      "${BASH_SOURCE[0]}")"
+
+# Cut video from A to B
+# $1: output video file
+# $2: time to cut in (in seconds)
+# $3: time to cut in (in seconds)
+# $4: input video file
+_vidcut() {
+
+  local \
+    _in="${1}" \
+    _start="${2}" \
+    _end="${3}" \
+    _out="${4}"
+  ffmpeg \
+    -ss "${_start}" \
+    -i "${_in}" \
+    -to "${_end}" \
+    -reset_timestamps 1 \
+    -map 0 \
+    -c copy \
+    "${_out}"
+
+}
+
+_in="${1}"
+_start="${2}"
+_end="${3}"
+_out="${4}"
+
+_vidcut "${_in}" \
+	"${_start}" \
+	"${_end}" \
+	"${_out}"

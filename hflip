@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+# Flip a video horizontally
+# $1: input video file
+# $2: output flipped video file
+_hflip() {
+  local _in="${1}" \
+        _out="${2}"
+  ffmpeg \
+  -i \
+    "${_in}" \
+  -vf hflip \
+  -map 0:v \
+  -map 1:a \
+  -shortest \
+  "${_out}"
+}
+
+_in="${1}"
+_out="${2}"
+
+_hflip "${_in}" "${_out}"

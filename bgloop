@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+_aud="${1}"
+_vid="${2}"
+_out="${3}"
+
+ffmpeg \
+  -stream_loop -1 \
+  -i "${_vid}" \
+  -i "${_aud}" \
+  -shortest \
+  -map 0:v:0 \
+  -map 1:a:0 \
+  -y \
+  -codec copy \
+  "${_out}"

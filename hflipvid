@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+_hflipvid() {
+  local _in="${1}" \
+        _out="${2}"
+  ffmpeg \
+  -i \
+    "${_in}" \
+  -vf hflip \
+  -map 0:v \
+  -map 1:a \
+  -shortest \
+  "${_out}"
+}
+
+_in="${1}"
+_out="${2}"
+
+_hflipvid "${_in}" "${_out}"

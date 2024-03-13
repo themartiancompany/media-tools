@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+# Stitches pics together
+_picstitch() {
+  local \
+    _out="${1}"
+  shift
+  local \
+    _pics=("${@}") \
+    _tmp
+  _tmp="$(mktemp -d)"
+  pto_gen \
+    "${_pics[@]}" \
+    -o "${_tmp}/picstitch.pto"
+  hugin_executor \
+    --stitching \
+    --prefix="${_tmp}/picstitch" \
+    "${_tmp}/picstitch.pto"
+  convert \
+    "${_tmp}/picstitch.tif" \
+    "${_out}"
+}
+
+_out="${1}"
+shift
+_pics=("${@}")
+
+_picstitch "${_out}" "${_pics[@]}"

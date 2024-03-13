@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+# Merges sound with a sequence of vids
+# $1: output file
+# $2: sound file
+# $@: videos
+_audiovid2vid() {
+  local \
+    _out="${1}"
+    _aud="${2}"
+  shift 2
+  local \
+    _pics=("${@}") \
+    _tmp
+  _tmp="$(mktemp -d)"
+
+  ffmpeg \
+    -loop 1 \
+    -i "${_vids[@]}" \
+    -i "${_aud}" \
+    -c:v libx264 \
+    -c:a aac \
+    -b:a 48k \
+    -pix_fmt yuv420p \
+    -shortest "${_out}"
+}
+
+_out="${1}"
+_aud="${2}"
+shift 2
+_vids=(
+  "${@}")
+
+_audiovid2vid \
+  "${_out}" \
+  "${_aud}" \
+  "${_vids[@]}"

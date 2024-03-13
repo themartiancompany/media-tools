@@ -1,0 +1,222 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+# Global variables
+_globals() {
+  _path="$(\
+    export \
+    OLDPWD="$(pwd)" && \
+    cd \
+      "$( \
+        dirname \
+          "${BASH_SOURCE[0]}")" && \
+    echo \
+      "$(pwd)" && \
+    cd \
+      "${_OLDPWD}" && \
+    unset _OLDPWD)"
+  unset \
+    _OLDPWD
+  app_name="$( \
+    basename \
+      "${BASH_SOURCE[0]}")"
+}
+
+# Prepares two videos recorded at the same time 
+# to be showed together in sync
+# $1: output file
+# $2: kirsh video
+# $3: second video
+_vidsync() {
+  local \
+    _out="${1}" \
+    _bro="${2}" \
+    _chick="${3}" \
+    _ifmt="mp4" \
+    _msg=() \
+    _bro_t \
+    _chick_t \
+    _delta \
+    _pad
+  _pad="$( \
+    dirname \
+      "$( \
+        realpath \
+          "${_out}")")/pad"
+  # _check_cmd "blackintro"
+  # _check_cmd "blackvid"
+  _check_cmd "ytencode"
+  _check_cmd "vidcat"
+  _bro_t="$(_tname "${_bro}")"
+  _chick_t="$(_tname "${_chick}")"
+  _kirsh="${_bro}"
+  (( _bro_t > _chick_t )) && \
+    _kirsh="${_chick}"
+  _delta=$(( \
+    _bro_t - _chick_t ))
+  _delta="${_delta#-}"
+  echo "${_blackvid}"
+  echo "${_delta}"
+  # "${_blackintro}" \
+  #   "${_out}" \
+  #   "${_delta}" \
+  #   "${_kirsh}"
+  # "${_blackvid}" \
+  #   "${_pad}.${_ifmt}" \
+  #   "${_delta}"
+  # bash \
+  #   "${_ytencode}" \
+  #    "${_pad}.webm" \
+  #    "${_pad}.${_ifmt}"
+  # [[ "${_kirsh}" != *".${_ifmt}" ]] && \
+    bash \
+      "${_ytencode}" \
+        "${_kirsh}" \
+       "${_kirsh}.${_ifmt}" && \
+     _kirsh="${_kirsh}.${_ifmt}"
+  bash \
+    "${_vidcat}" \
+      "${_out}" \
+      "${_pad}.${_ifmt}" \
+      "${_kirsh}"
+  # rm "${_pad}"{.mpeg,.webm}
+  # rm "${_kirsh}.webm"
+}
+
+# Extract data from OpenCamera
+# multimedia-generated filenames
+# $1: file path
+_tname() {
+  local \
+    _file="${1}" \
+    _date_arr=() \
+    _time_arr=() \
+    _filename \
+    _name \
+    _str_t \
+    _year \
+    _month \
+    _day \
+    _hour \
+    _minute \
+    _second \
+    _date \
+    _time \
+    _epoch
+  _filename="$( \
+    basename \
+      "${_file}")"
+  _name="${_filename%.*}"
+  _str_t="${_name:4}"
+  _year="${_str_t::4}"
+  _month="${_str_t:4:2}"
+  _day="${_str_t:6:2}"
+  _hour="${_str_t:9:2}"
+  _minute="${_str_t:11:2}"
+  _second="${_str_t:13:2}"
+  _date=(
+    "${_year}"
+    "${_month}"
+    "${_day}")
+  _time_arr=(
+    "${_hour}"
+    "${_minute}"
+    "${_second}")
+  _date="$( \
+    printf '/%s' \
+      "${_date_arr[@]}")"
+  _date="${_date:1}"
+  _time="$( \
+    printf ':%s' \
+      "${_time_arr[@]}")"
+  _time="${_time:1}"
+ 
+  _epoch="$( \
+    date \
+      -d "${_date} ${_time}" +"%s")"
+  echo \
+    "${_epoch}"
+}
+
+# Pipes command arrays, ie.
+# "a" "b" "c" becomes "a | b | c"
+# $@: array to pipe
+_pipe() {
+  local \
+    _cmd=(
+      "$@") \
+    _str
+  _str="$( \
+    printf \
+      ' | %s' \
+      "${_cmd[@]}")"
+  echo \
+    "${_str:3}"
+}
+
+_score() {
+  local \
+    _hosts=("$@") \
+    _best_size=0 \
+    _best_host \
+    _size_kib
+  for _host in "${_hosts[@]}"; do
+    _size_kib=$(_df \
+                  "${_host}")
+    echo "Free space on ${_size_kib}"
+    [[ ${_size_kib} > ${_best_size} ]] && \
+      _best_host="${_host}"
+  done
+  echo "${_best_host}"
+}
+
+# Check if a command exists;
+# quits if it does not find it nor
+# in the system and in the script directory
+# $1: command
+_check_cmd(){
+  local \
+    _cmd="${1}" \
+    _cmd_var \
+    _flag
+  _cmd_var="$(echo \
+	        "${_cmd}" | \
+		sed \
+		  "s/-/_/g")"
+  command \
+     -v "${_cmd}" &> /dev/null && \
+    printf \
+      -v "_${_cmd_var}" \
+      "${_cmd}" && \
+    _flag=true
+  [ -e "${_path}/${_cmd}" ] && \
+    printf \
+      -v "_${_cmd_var}" \
+      "${_path}/${_cmd}" && \
+    _flag=true
+  [[ "${_flag}" != "true" ]] && \
+    _msg_err \
+      "Install ${_cmd}"
+}
+
+_msg_err() {
+  local _msg="${1}"
+  echo "${_msg}"
+  exit 1
+}
+
+_globals
+
+_out="${1}"
+_bro="${2}"
+_chick="${3}"
+
+[[ ${#} < 3 ]] && \
+  _msg_err \
+    "Usage: ${app_name} <out> <bro> <chick>"
+
+_vidsync \
+  "${_out}" \
+  "${_bro}" \
+  "${_chick}"

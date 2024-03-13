@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+# Merges together pictures to maje a gif
+_mkgif() {
+  local \
+    _out="${1}" \
+    _len="${2}" \
+    _pics=()
+  shift 2
+  _pics=("${@}")
+
+  convert \
+    -delay "${_len}" \
+    -loop 0 \
+    "${_pics[@]}" \
+    "${_out}"
+}
+
+_out="${1}"
+_len="${2}"
+shift 2
+_pics="${@}"
+
+_mkgif "${_out}" "${_len}" "${_pics[@]}"

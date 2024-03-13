@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+# Clip audio segment from youtube video
+# $1: URL
+# $2: Time stamp -5 seconds
+# $3: length of clip
+# $4: video file name
+_ytxclip () {
+  local \
+  _url="${1}" \
+  _start="${2}" \
+  _len="${3}" \
+  _out="${4}" \
+  _urls=() \
+  _opts=()
+	
+  readarray \
+    -t \
+    _urls <<< \
+      "$(yt-dlp \
+           --youtube-skip-dash-manifest \
+  	 -g \
+  	 "${_url}")"
+
+  _opts=(
+    # -ss "${_start}"
+    # -i "${_urls[0]}"
+    -ss "${_start}"
+    -i "${_urls[1]}"
+    -ss 5
+    # -map 0:v
+    -map 0:a
+    # -map 1:a
+    # -c:v libx264
+    -c:a libvorbis
+    -t "${_len}")
+
+  ffmpeg \
+    "${_opts[@]}" \
+    "${_out}"
+}
+
+_url="${1}"
+_start="${2}"
+_len="${3}"
+_out="${4}"
+ 
+_ytxclip "${_url}" \
+	 "${_start}" \
+	 "${_len}" \
+	 "${_out}"

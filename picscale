@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_single_ping() {
+  local \
+    _in="${1}" \
+    _component="${2}"
+  identify \
+    -ping \
+    -format "%${_component}" \
+    "${_in}"
+}
+
+_get_height() {
+  local \
+    _in="${1}"
+  _single_ping "${_in}" "h"
+}
+
+_get_width() {
+  local \
+    _in="${1}"
+  _single_ping "${_in}" "w"
+}
+
+_picscale() {
+  local \
+    _in="${1}" \
+    _out="${2}" \
+    _scale="${3}" \
+    _w \
+    _h \
+    _wnew \
+    _hnew
+  _h="$(_get_height "${_in}")"
+  _w="$(_get_width "${_in}")"
+  _wnew="$(( (_w * _scale) / 100))"
+  _hnew="$(( (_h * _scale) / 100))"
+  convert \
+    "${_in}" \
+    -resize "${_wnew}x${_hnew}"\! \
+    "${_out}"
+}
+
+_in="${1}"
+_out="${2}"
+_scale="${3}"
+
+_picscale "${_in}" "${_out}" "${_scale}"

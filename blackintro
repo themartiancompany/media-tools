@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+# Add a black intro of given length
+# $1: output video file
+# $2: length of resulting blank file
+# $@: input video files (sorted)
+_blackintro() {
+
+  local \
+    _out="${1}" \
+    _len="${2}" \
+    _i=0 \
+    _in=() \
+    _af="" \
+    _vf="" \
+    _dir \
+    _fn \
+    _vid \
+    _vids=()
+  shift 2
+  _args=(${@})
+  # _dir="$(mktemp -d)"
+
+  for _vid in "${_in[@]}"; do
+   _vids+=(-i "${_vid}")
+   _i=$((_i + 1))
+  done
+
+  _af="atrim=0:${_len},volume=0"
+  _vf="trim=0:${_len},geq=0:128:128"
+
+  ffmpeg \
+    -safe 0 \
+    ${_vids} \
+    -af "${_af}" \
+    -vf "${_vf}" \
+    -video_track_timescale 600 \
+    "intro.mp4"
+
+  echo \
+    "file intro.mp4" >> \
+    "${_out}.queue"
+
+
+  i=0
+  for _vid in "${_in[@]}"; do
+    _fn="$(basename "${_vid}")"
+    ffmpeg \
+      -safe 0 \
+      ${_vids[i]} \
+      -c copy \
+      -video_track_timescale 600 \
+      "600${_fn}"
+
+    echo \
+      "file 600${_fn}" >> \
+      "${_out}.queue"
+    i=$((i + 1))
+  done
+
+  ffmpeg \
+    -safe 0 \
+    -f concat \
+    -i "${_out}.queue" \
+    -c copy \
+    "${_out}"
+
+}
+
+_out="${1}"
+_len="${2}"
+shift 2
+_vids=(${@})
+
+_blackintro "${_out}" "${_len}" "${_vids[@]}"

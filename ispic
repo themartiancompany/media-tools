@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+_ispic(){
+  local \
+    _pic="${1}" \
+    _mimetype
+  _mimetype="$(file \
+	         --mime-type \
+	         "${_pic}")" 
+  [[ "${_mimetype}" == "image"* ]] && \
+    echo true
+    return
+  echo false
+}
+
+_pic="${1}"
+
+_ispic "${_pic}"
