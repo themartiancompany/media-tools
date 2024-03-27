@@ -23,6 +23,7 @@ install-doc:
 
 install-media:
 
+	install -vdm 755 "$(BIN_DIR)"
 	install -vDm 755 media-tools/audiopic2vid "$(BIN_DIR)/"
 	install -vDm 755 media-tools/hflip "$(BIN_DIR)/"
 	install -vDm 755 media-tools/hflipvid "$(BIN_DIR)/"
