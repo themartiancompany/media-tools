@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
-_vidlength() {
+_medialength() {
   local \
-    _vid="${1}" \
+    _media="${1}" \
     _ffprobe_opts=()
   _ffprobe_opts=(
     -show_entries 
@@ -16,23 +16,23 @@ _vidlength() {
   )
   ffprobe \
     -i \
-      "${_vid}" \
+      "${_media}" \
     ${_ffprobe_opts[@]}
 }
 
-_vid="${1}"
+_media="${1}"
 
 (( $# < 1 )) && \
   _usage=(
     "Usage:"
-      "vidlength"
+      "medialength"
         "<video_file>"
   ) && \
   echo \
     "${_usage[*]}" && \
     exit
 
-_vidlength \
-  "${_vid}" \
+_medialength \
+  "${_media}" \
 
 # vim: ft=sh syn=sh et
