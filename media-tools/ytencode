@@ -3,7 +3,7 @@
 _ytencode() {
   local \
     _in="${1}" \
-    _out="${2}" \ 
+    _out="${2}" \
     _ffmpeg_opts=()
   _ffmpeg_opts=(
     -vf
@@ -37,6 +37,17 @@ _ytencode() {
 
 _in="${1}"
 _out="${2}"
+
+(( $# < 2 )) && \
+  _usage=(
+    "Usage:"
+      "ytencode"
+        "<input_file>"
+	"<output_file>"
+  ) && \
+  echo \
+    "${_usage[*]}" && \
+    exit
 
 _ytencode \
   "${_in}" \
