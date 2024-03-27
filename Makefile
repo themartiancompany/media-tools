@@ -40,6 +40,7 @@ install-media:
 	install -vDm 755 media-tools/stretchpic "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidscale "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidcat "$(BIN_DIR)"
+	install -vDm 755 media-tools/ytencode "$(BIN_DIR)"
 
 
 .PHONY: check install install-doc install-media shellcheck
