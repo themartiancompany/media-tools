@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_vidlength() {
+  local \
+    _vid="${1}" \
+    _ffprobe_opts=()
+  _ffprobe_opts=(
+    -show_entries 
+      'format=duration'
+    -v
+      'quiet'
+    -of
+     csv="p=0"
+  )
+  ffprobe \
+    -i \
+      "${_vid}" \
+    ${_ffprobe_opts[@]}
+}
+
+_vid="${1}"
+
+(( $# < 1 )) && \
+  _usage=(
+    "Usage:"
+      "vidlength"
+        "<video_file>"
+  ) && \
+  echo \
+    "${_usage[*]}" && \
+    exit
+
+_vidlength \
+  "${_vid}" \
+
+# vim: ft=sh syn=sh et
