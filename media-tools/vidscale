@@ -9,28 +9,37 @@ _vidscale() {
     _scale="${3}" \
     _scale_opts=() \
     _opts=()
-
   _scale_opts=(
-    "iw*${_scale}"
+    "scale=iw*${_scale}"
     "ih*${_scale}"
-    "flags=neighbor")
-
+    "flags=neighbor"
+  )
   _opts=(
     -i "${_in}"
-    -vf
-      "$(IFS=":"; \
-         echo "${_scale_opts[@]}")"
-    -c:v libx264
-    -preset slow
-    -crf 18)
-
+    -vf "$(IFS=":"; \
+           echo \
+	     "${_scale_opts[*]}")"
+    -c:v
+      libx264
+    -preset
+      slow
+    -crf
+      18
+  )
   ffmpeg \
-    "${_opts[@]}" \
+    ${_opts[@]} \
     "${_out}"
 }
+
+(( $# < 3 )) && \
+  echo \
+    "Usage: vidscale <in> <out> <scale>"
 
 _in="${1}"
 _out="${2}"
 _scale="${3}"
 
-_vidscale "${_in}" "${_out}" "${_scale}"
+_vidscale \
+  "${_in}" \
+  "${_out}" \
+  "${_scale}"
