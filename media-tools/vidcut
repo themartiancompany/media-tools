@@ -36,12 +36,18 @@ _vidcut() {
 
 }
 
+(( $# < 4 )) && \
+  echo \
+    "Usage: vidcut <in> <start> <end> <out>" && \
+  exit
+
 _in="${1}"
 _start="${2}"
 _end="${3}"
 _out="${4}"
 
-_vidcut "${_in}" \
-	"${_start}" \
-	"${_end}" \
-	"${_out}"
+_vidcut \
+  "${_in}" \
+  "${_start}" \
+  "${_end}" \
+  "${_out}"

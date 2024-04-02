@@ -33,7 +33,8 @@ _vidscale() {
 
 (( $# < 3 )) && \
   echo \
-    "Usage: vidscale <in> <out> <scale>"
+    "Usage: vidscale <in> <out> <scale>" && \
+  exit
 
 _in="${1}"
 _out="${2}"
