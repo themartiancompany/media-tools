@@ -2,13 +2,103 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
-_path="$(export \
-	  b_OLDPWD="$(pwd)" && \
-	   cd \
-	     "$(dirname \
-	          "${BASH_SOURCE[0]}")" && \
-	   echo "$(pwd)" && \
-	   cd "${_OLDPWD}")"
+_globals() {
+  local \
+    _OLDPWD
+  set \
+    -e \
+    -u
+  shopt \
+    -s \
+      extglob
+  # Control the environment
+  umask \
+    0022
+  export \
+    LC_ALL="C.UTF-8"
+  # LC_ALL=C.UTF-8, unlike LC_ALL=C,
+  # does not override LANGUAGE.
+  # See 
+  # https://sourceware.org/bugzilla/show_bug.cgi?id=16621
+  # and 
+  # https://savannah.gnu.org/bugs/?62815
+  [[ -v LANGUAGE ]] && \
+    unset \
+      LANGUAGE
+  [[ -v SOURCE_DATE_EPOCH ]] || \
+    printf \
+      -v \
+        SOURCE_DATE_EPOCH \
+      '%(%s)T' \
+      -1
+  export \
+    SOURCE_DATE_EPOCH
+  
+  # Get script path
+  # shellcheck disable=SC2005
+  _path="$( \
+    _OLDPWD="$( \
+      pwd)" && \
+    export \
+      _OLDPWD && \
+    cd \
+      "$( \
+	dirname \
+          "${BASH_SOURCE[0]}")" && \
+    echo \
+      "$(pwd)" && \
+    cd \
+      "${_OLDPWD}" && \
+    unset \
+      _OLDPWD)"
+  unset \
+    _OLDPWD
+  # Set application name
+  # from the script's file name
+  app_name="${0##*/}"
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  in_file=""
+  out_file=""
+  color=""
+  quiet=""
+}
+
+# Show an INFO message
+# $1: message string
+_msg_info() {
+  local \
+    _msg=(
+      "$@"
+    ) \
+    _fmt_line=() \
+    _line
+  [[ "${quiet}" == "y" ]] || \
+    for _line \
+      in "${_msg[@]}"; do
+      _printf \
+        '[%s] INFO: %s\n' \
+        "${app_name}" \
+        "${_line}"
+    done
+}
+
+# Show a WARNING message
+# $1: message string
+_msg_warning() {
+  local \
+    _msg=()
+  _msg=(
+    "${1}"
+  )
+  _printf \
+    '[%s] WARNING: %s\n' \
+    "${app_name}" \
+    "${_msg[*]}" >&2
+}
+
 
 app_name="$(basename \
 	      "${BASH_SOURCE[0]}")"
@@ -35,6 +125,31 @@ _vidcut() {
     "${_out}"
 
 }
+
+while \
+  getopts \
+    'cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+
 
 (( $# < 4 )) && \
   echo \
