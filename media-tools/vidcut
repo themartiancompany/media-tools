@@ -126,6 +126,15 @@ _vidcut() {
 
 }
 
+_usage() {
+  local \
+    _exit_code="${1}"
+  echo \
+    "Usage: vidcut <in> <start> <end> <out>" && \
+  exit \
+    "${_exit_code}"
+}
+
 while \
   getopts \
     'cvh?' \
@@ -150,11 +159,9 @@ shift \
     OPTIND - 1 \
   ))
 
-
 (( $# < 4 )) && \
-  echo \
-    "Usage: vidcut <in> <start> <end> <out>" && \
-  exit
+  _usage \
+    1
 
 _in="${1}"
 _start="${2}"
