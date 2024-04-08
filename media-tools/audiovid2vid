@@ -27,11 +27,24 @@ _audiovid2vid() {
     -shortest "${_out}"
 }
 
+_usage() {
+  local \
+    _exit_code="${1}"
+  echo \
+    "Usage: audiovid2vid <output_video> <input_audio> [input_video]"
+  exit \
+    "${_exit_code}"
+}
+
 _out="${1}"
 _aud="${2}"
 shift 2
 _vids=(
   "${@}")
+
+(( $# < 3 )) && \
+  _usage \
+    1
 
 _audiovid2vid \
   "${_out}" \
