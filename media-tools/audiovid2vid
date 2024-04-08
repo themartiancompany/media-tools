@@ -8,23 +8,32 @@
 # $@: videos
 _audiovid2vid() {
   local \
-    _out="${1}"
-    _aud="${2}"
-  shift 2
-  local \
-    _pics=("${@}") \
+    _out="${1}" \
+    _aud="${2}" \
+    _pics=() \
+    _ffmpeg_opts=() \
     _tmp
-  _tmp="$(mktemp -d)"
-
+  shift \
+    2
+  _pics=(
+    "${@}"
+  )
+  _tmp="$( \
+    mktemp \
+      -d)"
+  _ffmpeg_opts=(
+    # -loop 1
+    -i "${_vids[@]}"
+    -i "${_aud}"
+    -c:v libx264
+    -c:a aac
+    -b:a 48k
+    -pix_fmt yuv420p
+    -shortest
+  )
   ffmpeg \
-    -loop 1 \
-    -i "${_vids[@]}" \
-    -i "${_aud}" \
-    -c:v libx264 \
-    -c:a aac \
-    -b:a 48k \
-    -pix_fmt yuv420p \
-    -shortest "${_out}"
+    "${_ffmpeg_opts[@]}" \
+    "${_out}"
 }
 
 _usage() {
@@ -36,15 +45,16 @@ _usage() {
     "${_exit_code}"
 }
 
+(( $# < 3 )) && \
+  _usage \
+    1
+
 _out="${1}"
 _aud="${2}"
 shift 2
 _vids=(
-  "${@}")
-
-(( $# < 3 )) && \
-  _usage \
-    1
+  "${@}"
+)
 
 _audiovid2vid \
   "${_out}" \
