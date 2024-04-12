@@ -33,7 +33,7 @@ _vidsync() {
     _out="${1}" \
     _bro="${2}" \
     _chick="${3}" \
-    _ifmt="mp4" \
+    _ext="mp4" \
     _msg=() \
     _bro_t \
     _chick_t \
@@ -44,42 +44,57 @@ _vidsync() {
       "$( \
         realpath \
           "${_out}")")/pad"
-  # _check_cmd "blackintro"
-  # _check_cmd "blackvid"
-  _check_cmd "ytencode"
-  _check_cmd "vidcat"
-  _bro_t="$(_tname "${_bro}")"
-  _chick_t="$(_tname "${_chick}")"
+  # _check_cmd \
+  #   "blackintro"
+  # _check_cmd \
+  #   "blackvid"
+  _check_cmd \
+    "ytencode"
+  _check_cmd \
+    "vidcat"
+  _bro_t="$( \
+    _tname \
+      "${_bro}")"
+  _chick_t="$( \
+    _tname \
+      "${_chick}")"
   _kirsh="${_bro}"
   (( _bro_t > _chick_t )) && \
     _kirsh="${_chick}"
   _delta=$(( \
     _bro_t - _chick_t ))
   _delta="${_delta#-}"
-  echo "${_blackvid}"
-  echo "${_delta}"
+  echo \
+    "${_blackvid}"
+  printf \
+    '%s\n%s\n%s\n%s\n%s\n' \
+    "timedelta between" \
+    "${_bro}"\ \
+    "and" \
+    "${_chick}" \
+    "is ${_delta}"
   # "${_blackintro}" \
   #   "${_out}" \
   #   "${_delta}" \
   #   "${_kirsh}"
   # "${_blackvid}" \
-  #   "${_pad}.${_ifmt}" \
+  #   "${_pad}.${_ext}" \
   #   "${_delta}"
   # bash \
   #   "${_ytencode}" \
   #    "${_pad}.webm" \
-  #    "${_pad}.${_ifmt}"
-  # [[ "${_kirsh}" != *".${_ifmt}" ]] && \
-    bash \
-      "${_ytencode}" \
-        "${_kirsh}" \
-       "${_kirsh}.${_ifmt}" && \
-     _kirsh="${_kirsh}.${_ifmt}"
-  bash \
-    "${_vidcat}" \
-      "${_out}" \
-      "${_pad}.${_ifmt}" \
-      "${_kirsh}"
+  #    "${_pad}.${_ext}"
+  # [[ "${_kirsh}" != *".${_ext}" ]] && \
+  #   bash \
+  #     "${_ytencode}" \
+  #       "${_kirsh}" \
+  #         "${_kirsh}.${_ext}" && \
+  #     _kirsh="${_kirsh}.${_ext}"
+  # bash \
+  #   "${_vidcat}" \
+  #     "${_out}" \
+  #     "${_pad}.${_ext}" \
+  #     "${_kirsh}"
   # rm "${_pad}"{.mpeg,.webm}
   # rm "${_kirsh}.webm"
 }
