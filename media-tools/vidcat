@@ -52,8 +52,18 @@ _concat() {
 
 }
 
+(( $# < 1 )) && \
+  echo \
+    "vidcat <out> [vid]" && \
+  exit \
+    1
+
 _out="${1}"
 shift
-_vids=("$@")
+_vids=(
+  "$@"
+)
 
-_vidcat "${_out}" "${_vids[@]}"
+_vidcat \
+  "${_out}" \
+  "${_vids[@]}"
