@@ -65,14 +65,14 @@ _ytbulkencode() {
     _filename="$( \
       basename \
         "${_file}")"
+    _sum="$( \
+      sha256sum \
+        "${_file}" | \
+        awk \
+          '{print $2}')"
     _msg_info \
       "encoding ${_filename}..."
     [ -e "yte.completed.log" ] && \
-      _sum="$( \
-        sha256sum \
-          "${_file}" | \
-          awk \
-	    '{print $2}')" && \
       cat \
         "yte.completed.log" | \
         grep \
