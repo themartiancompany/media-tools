@@ -19,34 +19,54 @@ _global_variables() {
   quiet=""
 }
 
+# Check all required programs
+# are available
+_requirements() {
+  true
+}
+
 _ytbulkencode() {
   local \
     _dir="${1}" \
     _queue=() \
+    _ytencode_opts=() \
     _file \
     _filename \
     _sum \
     _ytencode
+  if [[ "${quiet}" != 'y' ]]; then
+    _ytencode_opts+=(
+      -v
+    )
+  fi
   _ytencode="$( \
     command \
       -v \
-      "ytencode")"
-  [[ "${_ytencode}" == "" ]] && \
+      "ytencode" || \
+      true)"
+  if [[ "${_ytencode}" == "" ]]; then
     _ytencode="${HOME}/media-tools/media-tools/ytencode"
-  [[ "${_ytencode}" == "" ]] && \
+  fi
+  if [[ "${_ytencode}" == "" ]]; then
     _msg_error \
       "missing ytencode" \
         1
+  fi
+  _msg_info \
+    "ytencode: ${_ytencode}"
   _queue=(
     $(find \
-        "${_dir}" | \
+	"${_dir}" | \
 	grep \
-	  ".mp4")
+	  "mp4")
   )
   for _file \
     in "${_queue[@]}"; do
+    _filename="$( \
+      basename \
+        "${_file}")"
     _msg_info \
-      "encoding ${_file}"
+      "encoding ${_filename}..."
     [ -e "yte.completed.log" ] && \
       _sum="$( \
         sha256sum \
@@ -59,20 +79,19 @@ _ytbulkencode() {
           -q \
           "${_sum}" && \
           break
-    _filename="$( \
-      basename \
-        "${_file}")"
-    _msg_info \
-     "ytencode: ${_ytencode}"
     bash \
       "${_ytencode}" \
-        -v \
+        "${_ytencode_opts[@]}" \
         "${_file}" \
         "${_dir}/${_filename}.yt.mp4"
     [[ $? -eq 0 ]] && \
+      _msg_info \
+        "saving checksum for resume..." && \
       echo \
         "${_sum} ${_file}" >> \
         "yte.completed.log"
+      _msg_info \
+        "finished"
   done
 }
 
