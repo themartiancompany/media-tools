@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+
+
+_ytbulkencode() {
+  local \
+    _dir="${1}" \
+    _queue=() \
+    _file \
+    _filename \
+    _sum \
+    _ytencode
+  _ytencode="$( \
+    command \
+      -v \
+      "ytencode")"
+  [[ "${_ytencode}" == "" ]] && \
+    _ytencode="${HOME}/media-tools/media-tools/ytencode"
+  [[ "${_ytencode}" == "" ]] && \
+    echo \
+      "ERROR; missing ytencode" && \
+      exit \
+        1
+  _queue=(
+    $(find \
+        "${_dir}" | \
+	grep \
+	  ".mp4")
+  )
+  for _file \
+    in "${_queue[@]}"; do
+    echo \
+      "encoding ${_file}"
+    [ -e "yte.completed.log" ] && \
+      _sum="$( \
+        sha256sum \
+          "${_file}" | \
+          awk \
+	    '{print $2}')" && \
+      cat \
+        "yte.completed.log" | \
+        grep \
+          -q \
+          "${_sum}" && \
+          break
+    _filename="$( \
+      basename \
+        "${_file}")"
+    echo \
+     "INFO: ytencode: ${_ytencode}"
+    bash \
+      "${_ytencode}" \
+        -v \
+        "${_file}" \
+        "${_dir}/${_filename}.yt.mp4"
+    [[ $? -eq 0 ]] && \
+      echo \
+        "${_sum} ${_file}" >> \
+        "yte.completed.log"
+  done
+}
+
+_usage() {
+  local \
+    _code="${1}"
+  echo \
+    "Usage: ytbulkencode <dir>"
+  exit \
+    "${_code}"
+}
+
+(( $# < 1 )) && \
+  _usage \
+    1
+_dir="$( \
+  realpath \
+    "${1}")"
+echo \
+  "INFO: encoding ${_dir}"
+_ytbulkencode \
+  "${_dir}"
