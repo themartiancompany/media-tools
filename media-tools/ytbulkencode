@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
 
 _bin="$( \
   dirname \
@@ -9,8 +11,6 @@ _bin="$( \
 _lib="${_bin}/../lib"
 source \
   "${_lib}/libcrash-bash/crash-bash"
-
-
 
 _ytbulkencode() {
   local \
@@ -27,9 +27,8 @@ _ytbulkencode() {
   [[ "${_ytencode}" == "" ]] && \
     _ytencode="${HOME}/media-tools/media-tools/ytencode"
   [[ "${_ytencode}" == "" ]] && \
-    echo \
-      "ERROR; missing ytencode" && \
-      exit \
+    _msg_error \
+      "missing ytencode" \
         1
   _queue=(
     $(find \
@@ -39,7 +38,7 @@ _ytbulkencode() {
   )
   for _file \
     in "${_queue[@]}"; do
-    echo \
+    _msg_info \
       "encoding ${_file}"
     [ -e "yte.completed.log" ] && \
       _sum="$( \
@@ -56,8 +55,8 @@ _ytbulkencode() {
     _filename="$( \
       basename \
         "${_file}")"
-    echo \
-     "INFO: ytencode: ${_ytencode}"
+    _msg_info \
+     "ytencode: ${_ytencode}"
     bash \
       "${_ytencode}" \
         -v \
@@ -85,7 +84,7 @@ _usage() {
 _dir="$( \
   realpath \
     "${1}")"
-echo \
-  "INFO: encoding ${_dir}"
+_msg_info \
+  "encoding ${_dir}"
 _ytbulkencode \
   "${_dir}"
