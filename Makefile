@@ -43,6 +43,7 @@ install-media:
 	install -vDm 755 media-tools/vidscale "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidcat "$(BIN_DIR)"
 	install -vDm 755 media-tools/ytencode "$(BIN_DIR)"
+	install -vDm 755 media-tools/ytbulkencode "$(BIN_DIR)"
 	install -vDm 755 configs/ffmpeg_options "$(DATA_DIR)"
 
 
