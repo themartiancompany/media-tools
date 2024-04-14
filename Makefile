@@ -15,7 +15,7 @@ check: shellcheck
 shellcheck:
 	shellcheck -s bash $(SCRIPT_FILES)
 
-install: install-media install-doc
+install: install-media install-configs install-doc
 
 install-doc:
 
@@ -24,7 +24,6 @@ install-doc:
 install-media:
 
 	install -vdm 755 "$(BIN_DIR)"
-	install -vdm 755 "$(DATA_DIR)"
 	install -vDm 755 media-tools/audiopic2vid "$(BIN_DIR)"
 	install -vDm 755 media-tools/hflip "$(BIN_DIR)"
 	install -vDm 755 media-tools/hflipvid "$(BIN_DIR)"
@@ -43,8 +42,10 @@ install-media:
 	install -vDm 755 media-tools/vidscale "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidcat "$(BIN_DIR)"
 	install -vDm 755 media-tools/ytencode "$(BIN_DIR)"
-	install -vDm 755 media-tools/ytbulkencode "$(BIN_DIR)"
-	install -vDm 755 configs/ffmpeg_options "$(DATA_DIR)"
 
+install-configs:
 
-.PHONY: check install install-doc install-media shellcheck
+	install -vdm 755 "$(DATA_DIR)/configs"
+	install -vDm 755 configs/ffmpeg_options "$(DATA_DIR)/configs"
+
+.PHONY: check install install-configs install-doc install-media shellcheck
