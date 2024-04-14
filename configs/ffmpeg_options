@@ -1,0 +1,16 @@
+_ffmpeg_opts=(
+  -hide_banner
+)
+_loglevel="quiet"
+_ffmpeg_opts+=(
+  -loglevel
+    "${_loglevel}"
+  )
+[[ "${quiet}" == "y" ]] && \
+  _ffmpeg_opts+=(
+    -y
+  )
+[[ "${quiet}" != "y" ]] && \
+  _ffmpeg_opts+=(
+    -stats
+  )
