@@ -53,7 +53,7 @@ _vidscale() {
     _crf=18
     _preset="fast"
   fi
-  if [[ "${_mode}" == 'size' ]]
+  if [[ "${_mode}" == 'size' ]]; then
     _crf=30
     _preset="slow"
   fi
