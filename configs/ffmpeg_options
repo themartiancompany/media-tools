@@ -1,5 +1,4 @@
 _ffmpeg_opts=(
-  -hide_banner
 )
 _loglevel="quiet"
 _ffmpeg_opts+=(
@@ -14,3 +13,6 @@ _ffmpeg_opts+=(
   _ffmpeg_opts+=(
     -stats
   )
+_ffmpeg_opts+=(
+  -hide_banner
+)

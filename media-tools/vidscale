@@ -65,6 +65,8 @@ _vidscale() {
     -crf
       18
   )
+  _msg_info \
+    "ffmpeg opts: ${_opts[*]}"
   ffmpeg \
     ${_opts[@]} \
     "${_out}"
