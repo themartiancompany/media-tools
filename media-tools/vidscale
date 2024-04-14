@@ -9,11 +9,23 @@ _bin="$( \
         -v \
 	  "env")")"
 _lib="${_bin}/../lib"
+_share="${_bin}/../share"
 source \
   "${_lib}/libcrash-bash/crash-bash"
 
+source \
+  "${_share}/media-tools/ffmpeg_options"
 
-
+_config_user_init() {
+  local \
+    _cfg_dir
+  _cfg_dir="${HOME}/.config/$(_get "app" "name")"
+  [ ! -e "${_config_user}" ] && \
+    cp \
+      "${_share}/media-tools/configs/ffmpeg_options" \
+      "${_cfg_dir}" || \
+    true
+}
 
 _vidscale() {
   local \
@@ -28,6 +40,7 @@ _vidscale() {
     "flags=neighbor"
   )
   _opts=(
+    "${_ffmpeg_opts[@]}"
     -i "${_in}"
     -vf "$(IFS=":"; \
            echo \
