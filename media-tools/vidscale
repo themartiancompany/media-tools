@@ -2,6 +2,19 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+
+
+
 _vidscale() {
   local \
     _in="${1}" \

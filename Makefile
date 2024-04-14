@@ -1,9 +1,9 @@
-#
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 PREFIX ?= /usr/local
 DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/media-tools
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
+DATA_DIR=$(DESTDIR)$(PREFIX)/share
 
 DOC_FILES=$(wildcard *.rst)
 SCRIPT_FILES=$(wildcard media-tools/*)
@@ -24,6 +24,7 @@ install-doc:
 install-media:
 
 	install -vdm 755 "$(BIN_DIR)"
+	install -vdm 755 "$(DATA_DIR)"
 	install -vDm 755 media-tools/audiopic2vid "$(BIN_DIR)"
 	install -vDm 755 media-tools/hflip "$(BIN_DIR)"
 	install -vDm 755 media-tools/hflipvid "$(BIN_DIR)"
@@ -42,6 +43,7 @@ install-media:
 	install -vDm 755 media-tools/vidscale "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidcat "$(BIN_DIR)"
 	install -vDm 755 media-tools/ytencode "$(BIN_DIR)"
+	install -vDm 755 configs/ffmpeg_options "$(DATA_DIR)"
 
 
 .PHONY: check install install-doc install-media shellcheck
