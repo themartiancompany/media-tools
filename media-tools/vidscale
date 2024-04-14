@@ -53,7 +53,6 @@ _vidscale() {
     "flags=neighbor"
   )
   _opts=(
-    "${_ffmpeg_opts[@]}"
     -i "${_in}"
     -vf "$(IFS=":"; \
            echo \
@@ -64,6 +63,7 @@ _vidscale() {
       fast
     -crf
       18
+    "${_ffmpeg_opts[@]}"
   )
   _msg_info \
     "ffmpeg opts: ${_opts[*]}"
