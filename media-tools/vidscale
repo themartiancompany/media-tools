@@ -13,18 +13,14 @@ _share="${_bin}/../share"
 source \
   "${_lib}/libcrash-bash/crash-bash"
 
-source \
-  "${_share}/media-tools/ffmpeg_options"
-
-_config_user_init() {
+_ffmpeg_options_load() {
   local \
-    _cfg_dir
-  _cfg_dir="${HOME}/.config/$(_get "app" "name")"
-  [ ! -e "${_config_user}" ] && \
-    cp \
-      "${_share}/media-tools/configs/ffmpeg_options" \
-      "${_cfg_dir}" || \
-    true
+    ffmpeg_options
+  ffmpeg_options="${_share}/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
 }
 
 _vidscale() {
@@ -34,6 +30,8 @@ _vidscale() {
     _scale="${3}" \
     _scale_opts=() \
     _opts=()
+  source \
+    "${HOME}/.config/media-tools/ffmpeg_options"
   _scale_opts=(
     "scale=iw*${_scale}"
     "ih*${_scale}"
@@ -46,9 +44,9 @@ _vidscale() {
            echo \
 	     "${_scale_opts[*]}")"
     -c:v
-      libx264
+      libx265
     -preset
-      slow
+      fast
     -crf
       18
   )
@@ -57,6 +55,7 @@ _vidscale() {
     "${_out}"
 }
 
+_globals
 (( $# < 3 )) && \
   echo \
     "Usage: vidscale <in> <out> <scale>" && \
@@ -66,6 +65,9 @@ _in="${1}"
 _out="${2}"
 _scale="${3}"
 
+_ffmpeg_options_load
+_config_user_init \
+  "media-tools"
 _vidscale \
   "${_in}" \
   "${_out}" \

@@ -3,7 +3,7 @@
 PREFIX ?= /usr/local
 DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/media-tools
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
-DATA_DIR=$(DESTDIR)$(PREFIX)/share
+DATA_DIR=$(DESTDIR)$(PREFIX)/share/media-tools
 
 DOC_FILES=$(wildcard *.rst)
 SCRIPT_FILES=$(wildcard media-tools/*)
