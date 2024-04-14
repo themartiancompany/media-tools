@@ -15,6 +15,7 @@ source \
 
 # shellcheck disable=SC2034
 _global_variables() {
+  encode_mode=""
   input_video=""
   output_video=""
   color=""
@@ -43,8 +44,19 @@ _vidscale() {
     _in="${1}" \
     _out="${2}" \
     _scale="${3}" \
+    _mode="${4}" \
     _scale_opts=() \
-    _opts=()
+    _opts=() \
+    _crf \
+    _preset
+  if [[ "${_mode}" == 'quality' ]]; then
+    _crf=18
+    _preset="fast"
+  fi
+  if [[ "${_mode}" == 'size' ]]
+    _crf=30
+    _preset="slow"
+  fi
   source \
     "${HOME}/.config/media-tools/ffmpeg_options"
   _scale_opts=(
@@ -60,9 +72,9 @@ _vidscale() {
     -c:v
       libx265
     -preset
-      fast
+      "${_preset}"
     -crf
-      18
+      "${_crf}"
     "${_ffmpeg_opts[@]}"
   )
   _msg_info \
@@ -74,6 +86,10 @@ _vidscale() {
 
 # Set defaults
 _set_overrides() {
+  _set_override \
+    "encode" \
+    "mode" \
+    "quality"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -101,10 +117,13 @@ Scale up or down a video by a factor
 
 Usage:
   $(_get "app" "name")
+    [options]
     <input_video>
     <output_video>
     <scale>
   options:
+     -m                   Encode mode, 'quality', 'size'.
+                          (Default: $(_get "encode" "mode"))
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -122,10 +141,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'cvh?' \
+    'm:cvh?' \
     arg; do
   case \
     "${arg}" in
+    m) override_encode_mode="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -152,10 +172,14 @@ _in="${1}"
 _out="${2}"
 _scale="${3}"
 
+_set_overrides
 _ffmpeg_options_load
 _config_user_init \
   "media-tools"
 _vidscale \
   "${_in}" \
   "${_out}" \
-  "${_scale}"
+  "${_scale}" \
+  "$(_get \
+       "encode" \
+       "mode")"
