@@ -159,15 +159,17 @@ _set \
   "file" \
   "${1}"
 (( $# < 2 )) && \
+  _out="$( \
+    basename \
+      "$( \
+        _get \
+          "in" \
+          "file")")" && \
   _set \
     "out" \
     "file" \
     "$( \
-      pwd)/$( \
-        basename \
-          "$(_get \
-              "in" \
-              "file")").yt.mp4"
+      pwd)/${_out%.*}.yt.${_out#*.}"
 [[ "$(_get \
 	"out" \
 	"file")" == "" ]] && \
