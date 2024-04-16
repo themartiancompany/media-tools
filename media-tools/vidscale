@@ -173,6 +173,7 @@ _out="${2}"
 _scale="${3}"
 
 _set_overrides
+_x265="true"
 _ffmpeg_options_load
 _config_user_init \
   "media-tools"

@@ -31,6 +31,17 @@ _global_variables() {
   quiet=""
 }
 
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+
 # Cut video from A to B
 # $1: output video file
 # $2: time to cut in (in seconds)
@@ -43,7 +54,9 @@ _vidcut() {
     _length="${3}" \
     _out=(
       "${4}"
-    )
+    ) \
+    _opts=()
+  _msg_info "out: ${_out[*]}"
   if [[ "${_out[*]}" == "" ]] || \
      [[ "$(_get \
              "out" \
@@ -52,21 +65,23 @@ _vidcut() {
       -
     )
   fi
-  if [[ "${_out[*]}" != "" ]] && \
-     [[ "$(_get \
-             "out" \
-	     "stdout")" == "n" ]]; then
-    _out+=(
-      "${4}"
-    )
-  fi
+  _opts+=(
+    "${_ffmpeg_opts[@]}"
+    -ss 
+      "${_start}"
+    -i
+      "${_in}"
+    -to
+      "${_length}"
+    -reset_timestamps
+      1
+    -map 
+      0
+    -c 
+      copy
+  )
   ffmpeg \
-    -ss "${_start}" \
-    -i "${_in}" \
-    -to "${_length}" \
-    -reset_timestamps 1 \
-    -map 0 \
-    -c copy \
+    "${_opts[@]}" \
     "${_out[*]}"
 }
 
@@ -168,6 +183,9 @@ cut_end="${3}"
 (( $# == 4 )) && \
   out_file="${4}"
 _set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
 _vidcut \
   "${in_file}" \
   "${cut_start}" \
