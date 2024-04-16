@@ -50,12 +50,14 @@ _out="${4}"
 
 (( $# < 4 )) && \
   printf \
-    "Usage:\n  %s\n    %s\n      %s\n      %s\n      %s\n      %s\n" \
+    "Usage:\n  %s\n    %s\n      %s\n      %s\n      %s\n      %s" \
       "ytxclip" \
         "<url>" \
         "<start>" \
         "<length>" \
-        "<out>"
+        "<out>" && \
+  exit \
+    1
 
 _ytxclip "${_url}" \
 	 "${_start}" \

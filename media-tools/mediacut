@@ -41,7 +41,6 @@ _ffmpeg_options_load() {
   true
 }
 
-
 # Cut video from A to B
 # $1: output video file
 # $2: time to cut in (in seconds)
@@ -145,11 +144,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'cvh?' \
+    'scvh?' \
     arg; do
   case \
     "${arg}" in
-    s) override_output_stdout="y" ;;
+    s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
