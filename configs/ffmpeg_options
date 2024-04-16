@@ -1,10 +1,15 @@
+#!/usr[bin/env bash
+
+# SPDX-License-Identifier: AGPL-3.0
 _ffmpeg_opts=(
 )
 _loglevel="quiet"
 _ffmpeg_opts+=(
   -loglevel
     "${_loglevel}"
-  )
+  -x265-params 
+    "log-level=${_loglevel}"
+)
 [[ "${quiet}" == "y" ]] && \
   _ffmpeg_opts+=(
     -y
