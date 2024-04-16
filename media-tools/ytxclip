@@ -19,10 +19,11 @@ _ytxclip () {
   readarray \
     -t \
     _urls <<< \
-      "$(yt-dlp \
-           --youtube-skip-dash-manifest \
-  	 -g \
-  	 "${_url}")"
+      "$( \
+        yt-dlp \
+          --youtube-skip-dash-manifest \
+  	  -g \
+  	  "${_url}")"
 
   _opts=(
     # -ss "${_start}"
@@ -46,7 +47,16 @@ _url="${1}"
 _start="${2}"
 _len="${3}"
 _out="${4}"
- 
+
+(( $# < 4 )) && \
+  printf \
+    "Usage:\n  %s\n    %s\n      %s\n      %s\n      %s\n      %s\n" \
+      "ytxclip" \
+        "<url>" \
+        "<start>" \
+        "<length>" \
+        "<out>"
+
 _ytxclip "${_url}" \
 	 "${_start}" \
 	 "${_len}" \
