@@ -24,6 +24,7 @@ _requirements() {
 _global_variables() {
   in_video=""
   out_video=""
+  rotation_degrees=""
   rotate_method=""
   video_encode=""
   out_stdout=""
@@ -52,24 +53,48 @@ _vidrotate() {
       "${2}"
     ) \
     _degrees="${3}" \
-    _opts=() 
+    _opts=() \
+    _ffmpeg_version
   _opts+=(
     "${_ffmpeg_opts[@]}"
-    -i "${_in}"
   )
   [[ "$(_get \
 	  "rotate" \
 	  "method")" == 'metadata' ]] && \
-    _opts+=(
-      -c
-        copy
-      -metadata:s:v:0
-        "rotate=${_degrees}"
-    )
+    _ffmpeg_version="$( \
+      ffmpeg \
+        -version | \
+        head \
+	  -n \
+	    1 | \
+	  awk \
+	    '{print $3}')" && \
+    if (( ${_ffmpeg_version%%.*} < 6 )); then
+      _opts+=(
+        -i
+          "${_in}"
+        -c
+          copy
+        -map_metadata 0
+        -metadata:s:v
+          "rotate=${_degrees}"
+      )
+    else
+      _opts+=(
+        -display_rotation
+	  ${_degrees} 
+        -i
+          "${_in}"
+        -c
+          copy
+      )
+    fi
   if [[ "$(_get \
 	  "rotate" \
 	  "method")" == 'filter' ]]; then
     _opts+=(
+      -i
+        "${_in}"
       -vf
         "transpose=1"
     )
@@ -140,9 +165,9 @@ Cut media files
 Usage:
   $(_get "app" "name")
     [options]
-    <output_video>
-    <input_audio>
-    [input_video]
+    <input_video>
+    <output_audio>
+    <degrees>
   options:
      -r                   Rotation method (metadata, video filter)
 			  Default: $(_get "rotate" "method")
@@ -194,33 +219,32 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-
-(( $# < 3 )) && \
-  _set_overrides && \
+(( $# <= 2 )) && \
   _usage \
     1
 _set \
-  "out" \
+  "in" \
   "video" \
   "${1}"
 _set \
-  "in" \
-  "audio" \
+  "out" \
+  "video" \
   "${2}"
-shift \
-  2
-in_videos=(
-  "$@"
-)
+_set \
+  "rotation" \
+  "degrees" \
+  "${3}"
 _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
-_audiovid2vid \
+_vidrotate \
+  "$(_get \
+       "in" \
+       "video")" \
   "$(_get \
        "out" \
        "video")" \
   "$(_get \
-       "in" \
-       "audio")" \
-  "${in_videos[@]}"
+       "rotation" \
+       "degrees")"
