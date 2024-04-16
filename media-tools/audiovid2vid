@@ -58,8 +58,6 @@ _audiovid2vid() {
   _vids=(
     "$@"
   )
-  _msg_info \
-    "input videos: ${_vids[*]}"
   _opts+=(
     "${_ffmpeg_opts[@]}"
     # -loop 1
@@ -204,12 +202,9 @@ _set \
   "${2}"
 shift \
   2
-echo "$@"
 in_videos=(
   "$@"
 )
-echo \
-  "${in_videos[@]}"
 _set_overrides
 _config_user_init \
   "media-tools"
