@@ -17,6 +17,7 @@ source \
 _global_variables() {
   in_file=""
   out_file=""
+  encode_mode=""
   color=""
   quiet=""
 }
@@ -28,33 +29,37 @@ _requirements() {
     "ffmpeg"
 }
 
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
 _ytencode() {
   local \
     _in="${1}" \
     _out="${2}" \
-    _ffmpeg_opts=() \
-    _loglevel="quiet"
-    _ffmpeg_opts+=(
-    -loglevel
-      "${_loglevel}"
-    )
-  [[ "${quiet}" == "y" ]] && \
-    _ffmpeg_opts+=(
-      -y
-    )
-  [[ "${quiet}" != "y" ]] && \
-    _ffmpeg_opts+=(
-      -stats
-    )
-  _ffmpeg_opts+=(
+    _encode_mode="${3}" \
+    _opts=() \
+    _crf
+  [[ "${_encode_mode}" == "quality" ]] && \
+    _crf=18
+  [[ "${_encode_mode}" == "size" ]] && \
+    _crf=30
+  _opts+=(
+    "${_ffmpeg_opts[@]}"
     -vf
      "yadif,format=yuv420p"
    -force_key_frames
      "expr:gte(t,n_forced/2)"
    -c:v
-     "libx264"
+     "libx265"
    -crf
-     18
+     "${_crf}"
    -bf 2
    -c:a
      "aac"
@@ -68,18 +73,21 @@ _ytencode() {
      0
    -movflags
      +faststart
-    -hide_banner
   )
   ffmpeg \
     -i \
       "${_in}" \
-    ${_ffmpeg_opts[@]} \
+    "${_ffmpeg_opts[@]}" \
     "${_out}"
 }
 
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
+  _set_override \
+    "encode" \
+    "mode" \
+    "quality"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -111,6 +119,8 @@ Usage:
     <input_file>
     <output_file>
   options:
+     -m                   Video encode mode ('quolity', 'size').
+                          Default: $(_get "encode" "mode")
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -128,10 +138,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'cvh?' \
+    'm:cvh?' \
     arg; do
   case \
     "${arg}" in
+    m) override_encode_mode="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -178,12 +189,19 @@ _set \
     "file" \
     "${2}"
 _set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
 _ytencode \
   "$( \
     _get \
       "in" \
       "file")" \
-   "$( \
+  "$( \
     _get \
       "out" \
-      "file")"
+      "file")" \
+  "$( \
+    _get \
+      "encode" \
+      "mode")"

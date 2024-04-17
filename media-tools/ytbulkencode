@@ -34,6 +34,10 @@ _ytbulkencode() {
     _filename \
     _sum \
     _ytencode
+  _ytencode_opts+=(
+    -m 
+      "size"
+  )
   if [[ "${quiet}" != 'y' ]]; then
     _ytencode_opts+=(
       -v
