@@ -17,16 +17,15 @@ source \
 # are available
 _requirements() {
   _check_cmd \
-    "ffmpeg"
+    'ffmpeg'
 }
 
 # shellcheck disable=SC2034
 _global_variables() {
-  out_video=""
-  in_audio=""
-  in_videos=()
-  video_encode=""
   out_stdout=""
+  in_file=""
+  delay_seconds=""
+  out_file=""
   color=""
   quiet=""
 }
@@ -41,48 +40,20 @@ _ffmpeg_options_load() {
   true
 }
 
-# Merges sound with a sequence of vids
-# $1: output file
-# $2: sound file
-# $@: videos
-_audiovid2vid() {
+# Add silence to audio file
+# $1: input video file
+# $2: delay seconds
+# $3: output video file
+_addsilence() {
   local \
+    _in="${1}" \
+    _seconds="${2}" \
     _out=(
-      "${1}"
+      "${3}"
     ) \
-    _aud="${2}" \
-    _vids=() \
-    _opts=() 
-  shift \
-    2
-  _vids=(
-    "$@"
-  )
-  _opts+=(
-    "${_ffmpeg_opts[@]}"
-   #  -loop 1
-    -i "${_vids[@]}"
-    -i "${_aud}"
-  )
-  [[ "$(_get \
-	  "video" \
-	  "encode")" == "y" ]] && \
-    _x265="true" && \
-    _opts+=(
-      -c:v libx265
-      -pix_fmt yuv420p
-  )
-  [[ "$(_get \
-	  "video" \
-	  "encode")" == "n" ]] && \
-    _opts+=(
-      -c:v copy
-  )
-  _opts+=(
-    -c:a aac
-    -b:a 48k
-    -shortest
-  )
+    _opts=()
+  _msg_info \
+    "out: ${_out[*]}"
   if [[ "${_out[*]}" == "" ]] || \
      [[ "$(_get \
              "out" \
@@ -91,6 +62,13 @@ _audiovid2vid() {
       -
     )
   fi
+  _opts+=(
+    "${_ffmpeg_opts[@]}"
+    -af
+      "adelay=${_seconds}s:all=true"
+    -c:a
+      copy
+  )
   ffmpeg \
     "${_opts[@]}" \
     "${_out[*]}"
@@ -100,9 +78,15 @@ _audiovid2vid() {
 # from arch-grub command line option parameters
 _set_overrides() {
   _set_override \
-    "video" \
-    "encode" \
-    "n"
+    "out" \
+    "file" \
+    "$( \
+      _get \
+        "in" \
+	"file").$( \
+	   _get \
+	     "delay" \
+	     "seconds").silence"
   _set_override \
     "out" \
     "stdout" \
@@ -119,6 +103,7 @@ _set_overrides() {
   fi
 }
 
+
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
@@ -131,20 +116,16 @@ _usage() {
       _usage_text << \
         ENDUSAGETEXT || true
 
-Cut media files
+Add silence to audio (and video?) file
 
 Usage:
   $(_get "app" "name")
     [options]
-    <output_video>
-    <input_audio>
-    [input_video]
+    <in_file>
+    <delay_seconds>
+    (<out_file>)
   options:
-     -e                   Whether to encode the resulting video
-                          or use encoder from input media.
-			  Default: $(_get "video" "encode")
      -s                   Output to stdout.
-			  Default: $(_get "out" "stdout")
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -162,13 +143,12 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'scevh?' \
+    'scvh?' \
     arg; do
   case \
     "${arg}" in
     s) override_out_stdout="y" ;;
     c) override_color="y" ;;
-    e) override_video_encode="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
 	 _usage \
@@ -189,31 +169,21 @@ shift \
   ))
 
 (( $# < 3 )) && \
-  _set_overrides && \
   _usage \
     1
-_set \
-  "out" \
-  "video" \
-  "${1}"
-_set \
-  "in" \
-  "audio" \
-  "${2}"
-shift \
-  2
-in_videos=(
-  "$@"
-)
+(( $# < 3 )) && \
+  _msg_info \
+    "no output file given, will return to stdout"
+    
+in_file="${1}"
+delay_seconds="${2}"
+(( $# == 3 )) && \
+  out_file="${3}"
 _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
-_audiovid2vid \
-  "$(_get \
-       "out" \
-       "video")" \
-  "$(_get \
-       "in" \
-       "audio")" \
-  "${in_videos[@]}"
+_addsilence \
+  "${in_file}" \
+  "${delay_seconds}" \
+  "${out_file}"
