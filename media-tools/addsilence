@@ -64,10 +64,10 @@ _addsilence() {
   fi
   _opts+=(
     "${_ffmpeg_opts[@]}"
+    -i 
+      "${_in}"
     -af
       "adelay=${_seconds}s:all=true"
-    -c:a
-      copy
   )
   ffmpeg \
     "${_opts[@]}" \
