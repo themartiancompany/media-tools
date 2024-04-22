@@ -77,7 +77,7 @@ _ytencode() {
   ffmpeg \
     -i \
       "${_in}" \
-    "${_ffmpeg_opts[@]}" \
+    "${_opts[@]}" \
     "${_out}"
 }
 

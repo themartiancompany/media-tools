@@ -2,76 +2,177 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
-# Add a black intro of given length
-# $1: output video file
-# $2: length of resulting blank file
-# $@: input video files (sorted)
-_blackintro() {
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
 
-  local \
-    _out="${1}" \
-    _len="${2}" \
-    _i=0 \
-    _in=() \
-    _af="" \
-    _vf="" \
-    _dir \
-    _fn \
-    _vid \
-    _vids=()
-  shift 2
-  _args=(${@})
-  # _dir="$(mktemp -d)"
-
-  for _vid in "${_in[@]}"; do
-   _vids+=(-i "${_vid}")
-   _i=$((_i + 1))
-  done
-
-  _af="atrim=0:${_len},volume=0"
-  _vf="trim=0:${_len},geq=0:128:128"
-
-  ffmpeg \
-    -safe 0 \
-    ${_vids} \
-    -af "${_af}" \
-    -vf "${_vf}" \
-    -video_track_timescale 600 \
-    "intro.mp4"
-
-  echo \
-    "file intro.mp4" >> \
-    "${_out}.queue"
-
-
-  i=0
-  for _vid in "${_in[@]}"; do
-    _fn="$(basename "${_vid}")"
-    ffmpeg \
-      -safe 0 \
-      ${_vids[i]} \
-      -c copy \
-      -video_track_timescale 600 \
-      "600${_fn}"
-
-    echo \
-      "file 600${_fn}" >> \
-      "${_out}.queue"
-    i=$((i + 1))
-  done
-
-  ffmpeg \
-    -safe 0 \
-    -f concat \
-    -i "${_out}.queue" \
-    -c copy \
-    "${_out}"
-
+# shellcheck disable=SC2034
+_global_variables() {
+  in_file=""
+  out_file=""
+  intro_length=""
+  color=""
+  quiet=""
 }
 
-_out="${1}"
-_len="${2}"
-shift 2
-_vids=(${@})
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    "ffmpeg"
+    "blackvid"
+    "vidcat"
+}
 
-_blackintro "${_out}" "${_len}" "${_vids[@]}"
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+# Add a blank intro to a video file
+# $1: input video files to infer size
+# $2: output video file
+# $3: length of resulting file
+_blackvid() {
+  local \
+    _in="${1}" \
+    _out="${2}" \
+    _length="${3}" \
+    _opts=() \
+    _norm \
+    _intro
+  _intro="$( \
+    mktemp)"
+  _norm="$( \
+    mktemp)"
+  _opts+=(
+    "${_ffmpeg_opts[@]}"
+    -c
+      'copy'
+    -video_track_timescale
+      600
+  )
+  ffmpeg \
+    -i \
+      "${_in}" \
+    "${_opts[@]}" \
+    "${_norm}"
+  vidcat \
+    "${_out}" \
+    "${_intro}" \
+    "${_norm}"
+}
+
+_set_overrides() {
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+Add a black intro to a video
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <input_file>
+    <output_file>
+    <intro_length>
+  options:
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'm:cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    m) override_encode_mode="${OPTARG}" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+         _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+(( ${#} < 3 )) && \
+  _usage \
+    1
+_set \
+  "in" \
+  "file" \
+  "${1}"
+_set \
+  "out" \
+  "file" \
+  "${2}"
+_set \
+  "intro" \
+  "length" \
+  "${3}"
+_set_overrides
+_config_user_init \
+  "ffmpeg"
+_blackintro \
+  _get \
+    "in" \
+    "file" \
+  _get \
+    "out" \
+    "file" \
+  _get \
+    "intro" \
+    "length"

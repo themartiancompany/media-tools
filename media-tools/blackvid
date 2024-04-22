@@ -16,7 +16,8 @@ source \
 # shellcheck disable=SC2034
 _global_variables() {
   in_file=""
-  vid_duration=""
+  out_file=""
+  vid_length=""
   color=""
   quiet=""
 }
@@ -28,8 +29,6 @@ _requirements() {
     "ffmpeg"
 }
 
-
-export _in="fullnm.mp4" _seconds="$(scale=5; echo 7.5 | bc)" _audio_in="../Music/pr.m4a" _in_endcut="40" _audio_endcut="42" _video_out="prfm.mp4" _black_outro="3" && echo "${_seconds}" && ffmpeg -i "${_in}" -vf "trim=0:${_seconds},geq=0:128:128" -af "atrim=0:${_seconds},volume=0" -video_track_timescale 600 "b${_seconds}.mp4" -y && ffmpeg -i "${_in}" -vf "trim=0:${_black_outro},geq=0:128:128" -af "atrim=0:${_black_outro},volume=0" -video_track_timescale 600 "bo${_black_outro}.mp4" && ffmpeg -i "${_in}" -c copy -video_track_timescale 600 "${_in}.600.mp4" -y && bash  ~/media-tools/media-tools/vidcat "edit.mp4" "b${_seconds}.mp4" "${_in}.600.mp4" &&  bash ~/media-tools/media-tools/mediacut "edit.mp4" 0 "${_in_endcut}" "edit.cut.mp4" && bash ~/media-tools/media-tools/vidcat "edit.bo.mp4" "edit.cut.mp4" "bo${_black_outro}.mp4" && bash ~/media-tools/media-tools/audiovid2vid "${_video_out}" "${_audio_in}" "edit.bo.mp4"
 _ffmpeg_options_load() {
   local \
     ffmpeg_options
@@ -63,7 +62,7 @@ _blackvid() {
   ffmpeg \
     -i \
       "${_in}" \
-    "${_ffmpeg_opts[@]}" \
+    "${_opts[@]}" \
     "${_out}"
 }
 
@@ -159,7 +158,7 @@ _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
-_ytencode \
+_blackvid \
   "$( \
     _get \
       "in" \
@@ -170,20 +169,5 @@ _ytencode \
       "file")" \
   "$( \
     _get \
-      "encode" \
-      "mode")"
-_out="${1}"
-_len="${2}"
-
-# [[ "${_out}" != *".mpeg" ]] || \
-(( $# < 2 )) && \
-  _msg_err \
-    "Usage:" \
-    "${app_name} <out>.mpeg <duration> ( [video] )"
-shift 2
-_vids=("$@")
-
-_blackvid \
-  "${_out}" \
-  "${_len}" \
-  "${_vids[@]}"
+      "vid" \
+      "length")"
