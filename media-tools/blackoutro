@@ -17,7 +17,7 @@ source \
 _global_variables() {
   in_file=""
   out_file=""
-  intro_length=""
+  outro_length=""
   color=""
   quiet=""
 }
@@ -41,19 +41,19 @@ _ffmpeg_options_load() {
   true
 }
 
-# Add a blank intro to a video file
+# Add a blank outro to a video file
 # $1: input video files to infer size
 # $2: output video file
 # $3: length of resulting file
-_blackintro() {
+_blackoutro() {
   local \
     _in="${1}" \
     _out="${2}" \
     _length="${3}" \
     _opts=() \
     _norm \
-    _intro
-  _intro="$( \
+    _outro
+  _outro="$( \
     mktemp)"
   _norm="$( \
     mktemp)"
@@ -71,8 +71,8 @@ _blackintro() {
     "${_norm}"
   vidcat \
     "${_out}" \
-    "${_intro}" \
-    "${_norm}"
+    "${_norm}" \
+    "${_outro}"
 }
 
 _set_overrides() {
@@ -99,14 +99,14 @@ _usage() {
       -d '' \
       _usage_text << \
         ENDUSAGETEXT || true
-Add a black intro to a video
+Add a black outro to a video
 
 Usage:
   $(_get "app" "name")
     [options]
     <input_file>
     <output_file>
-    <intro_length>
+    <outro_length>
   options:
      -h                   This message.
      -v                   Enable verbose output
@@ -160,13 +160,13 @@ _set \
   "file" \
   "${2}"
 _set \
-  "intro" \
+  "outro" \
   "length" \
   "${3}"
 _set_overrides
 _config_user_init \
   "ffmpeg"
-_blackintro \
+_blackoutro \
   _get \
     "in" \
     "file" \
@@ -174,5 +174,5 @@ _blackintro \
     "out" \
     "file" \
   _get \
-    "intro" \
+    "outro" \
     "length"
