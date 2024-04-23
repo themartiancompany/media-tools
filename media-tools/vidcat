@@ -6,48 +6,73 @@
 # $1: output video file
 # $@: input video files (sorted)
 _vidcat() {
-
   local \
     _out="${1}" \
     _i=1 \
     _in=() \
+    _opts=()
     _vf="" \
     _vids
-  shift 1
-  _in=("$@")
-
-  _vids="$(mktemp)"
-  for _vid in "${_in[@]}"; do
-   _vid="$(realpath "${_vid}")"
-   echo "file '${_vid}'" >> "${_vids}"
+  shift \
+    1
+  _in=(
+    "$@"
+  )
+  _vids="$( \
+    mktemp)"
+  for _vid \
+    in "${_in[@]}"; do
+    _vid="$( \
+      realpath \
+        "${_vid}")"
+    echo \
+      "file '${_vid}'" >> \
+      "${_vids}"
    _vf="${_vf} [${_i}:v] [${_i}:a]"
    _i=$((_i + 1))
   done
-
   _vf="${_vf} concat=n=${_i}:v=1:a=1 [v] [a]"
-
-  cat $_vids
+  cat \
+    "${_vids}"
+  _opts=(
+    -safe
+      0
+    -i
+      ${_vids}
+    -filter_complex
+      "${_vf}"
+    -map
+      "[v]"
+    -map
+      "[a]"
+    -f
+      mp4
+    -vcodec
+      libx265
+  )
   ffmpeg \
-    -safe 0 \
-    -i ${_vids} \
-    -filter_complex "${_vf}" \
-    -map "[v]" \
-    -map "[a]" \
-    -f mp4 \
-    -vcodec lix265 \
+    "${_opts[@]}" \
     "${_out}"
-  # echo $_mm
+  # echo \
+  #   "${_mm}"
   [[ ! $? -eq 0 ]] && \
     _concat
 }
 
 _concat() {
-
+  local \
+    _opts=()
+  _opts=(
+    -f
+      concat
+    -safe
+      0
+    -i
+      "${_vids}"
+    -c
+      copy
   ffmpeg \
-    -f concat \
-    -safe 0 \
-    -i "${_vids}" \
-    -c copy \
+    "${_opts[@]}" \
     "${_out}"
 
 }
