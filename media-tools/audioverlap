@@ -23,10 +23,8 @@ _requirements() {
 # shellcheck disable=SC2034
 _global_variables() {
   out_stdout=""
-  in_file=""
-  fade_start=""
-  fade_duration=""
   out_file=""
+  in_files=()
   color=""
   quiet=""
 }
@@ -41,19 +39,21 @@ _ffmpeg_options_load() {
   true
 }
 
-# Add a fade to audio file
-# $1: input video file
-# $2: delay seconds
-# $3: output video file
-_addfade() {
+# Overlap media files
+# $1: output file
+# $@: files to overlap
+_audioverlap() {
   local \
-    _in="${1}" \
-    _start="${2}" \
-    _seconds="${3}" \
-    _out=(
-      "${4}"
-    ) \
-    _opts=()
+    _out="${1}" \
+    _in=() \
+    _opts=() \
+    _in_opts=() \
+    _media
+  shift \
+    1
+  _in=(
+    "$@"
+  )
   _msg_info \
     "out: ${_out[*]}"
   if [[ "${_out[*]}" == "" ]] || \
@@ -64,14 +64,18 @@ _addfade() {
       -
     )
   fi
+  for _media \
+    in "${_in[@]}"; do
+    _in_opts+=(
+      -i
+        "${_media[@]}"
+    )
+  done
   _opts+=(
     "${_ffmpeg_opts[@]}"
-    -i 
-      "${_in}"
-    -c:a
-      aac
-    -af
-      "afade=type=in:start_time=${_start}:duration=${_seconds}"
+    "${_in_opts[@]}"
+    -filter_complex 
+      "amix=inputs=${#_in[@]}:duration=longest"
   )
   ffmpeg \
     "${_opts[@]}" \
@@ -81,20 +85,6 @@ _addfade() {
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
-  _set_override \
-    "fade" \
-    "start" \
-    "0"
-  _set_override \
-    "out" \
-    "file" \
-    "$( \
-      _get \
-        "in" \
-	"file").$( \
-	   _get \
-	     "delay" \
-	     "seconds").fade.m4a"
   _set_override \
     "out" \
     "stdout" \
@@ -123,15 +113,13 @@ _usage() {
       _usage_text << \
         ENDUSAGETEXT || true
 
-Add fade to audio file
+Overlay media files
 
 Usage:
   $(_get "app" "name")
     [options]
-    <in_file>
-    <fade_start>
-    <fade_duration>
-    (<out_file>)
+    <out_file>
+    [in_files]
   options:
      -s                   Output to stdout.
      -h                   This message.
@@ -175,25 +163,19 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-
 (( $# < 3 )) && \
   _usage \
     1
-(( $# < 3 )) && \
-  _msg_info \
-    "no output file given, will return to stdout"
-    
-in_file="${1}"
-fade_start="${2}"
-fade_duration="${3}"
-(( $# == 3 )) && \
-  out_file="${3}"
+out_file="${1}"
+shift \
+  1
+in_files=(
+  "$@"
+)
 _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
-_addfade \
-  "${in_file}" \
-  "${fade_start}" \
-  "${fade_duration}" \
-  "${out_file}"
+_audioverlap \
+  "${out_file}" \
+  "${in_files[@]}"
