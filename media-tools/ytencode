@@ -45,7 +45,7 @@ _ytencode() {
     _out="${2}" \
     _encode_mode="${3}" \
     _opts=() \
-    _crf
+    _crf=0
   [[ "${_encode_mode}" == "quality" ]] && \
     _crf=18
   [[ "${_encode_mode}" == "size" ]] && \
@@ -74,10 +74,13 @@ _ytencode() {
    -movflags
      +faststart
   )
+  [[ "${_encode_mode}" == "fake" ]] && \
+    _opts=(
+      "${_ffmpeg_opts[@]}")
   ffmpeg \
     -i \
       "${_in}" \
-    "${_ffmpeg_opts[@]}" \
+    "${_opts[@]}" \
     "${_out}"
 }
 
