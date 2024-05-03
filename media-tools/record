@@ -23,10 +23,10 @@ _requirements() {
 # shellcheck disable=SC2034
 _global_variables() {
   out_stdout=""
-  in_file=""
-  fade_start=""
-  fade_duration=""
   out_file=""
+  bit_rate=""
+  buffer_length=""
+  recording_length=""
   color=""
   quiet=""
 }
@@ -47,13 +47,22 @@ _ffmpeg_options_load() {
 # $3: output video file
 _record() {
   local \
-    _in="${1}" \
-    _start="${2}" \
-    _seconds="${3}" \
+    _rate="${1}" \
+    _buffer="${2}" \
+    _length="${3}" \
     _out=(
       "${4}"
     ) \
-    _opts=()
+    _opts=() \
+    _screenrecord \
+    _tmp_dir \
+    _tmp \
+    _chunks \
+    _i=0
+  _screenrecord="/system/bin/screenrecord"
+  _tmp_dir="$( \
+    mktemp \
+      -d)"
   _msg_info \
     "out: ${_out[*]}"
   if [[ "${_out[*]}" == "" ]] || \
@@ -64,15 +73,34 @@ _record() {
       -
     )
   fi
-  _opts+=(
-    "${_ffmpeg_opts[@]}"
-    -i 
-      "${_in}"
-    -c:a
-      aac
-    -af
-      "afade=type=in:start_time=${_start}:duration=${_seconds}"
+  _ytencode_opts+=(
+    -m
+      "fake"
   )
+  _chunks="$(( _length / _buffer ))"
+  while (( i < _chunks )); do
+    _run \
+      "screenrecord" \
+      "${_buffer}" \
+      "sync" \
+      "${_screenrecord}" \
+        --bit-rate \
+          "${_rate}" \
+        "${_tmp_dir}/${_i}.mp4"
+    _run \
+      "compress" \
+      "0" \
+      "sync" \
+      "${_screenrecord}" \
+        --bit-rate \
+          "${_rate}" \
+        "${_tmp_dir}/${_i}.mp4"
+
+  done
+  "${_screenrecord}" \
+    --bit-rate \
+      "${_rate}" \
+      "${_tmp_dir}/${_i}.mp4"
   ffmpeg \
     "${_opts[@]}" \
     "${_out[*]}"
@@ -86,15 +114,13 @@ _set_overrides() {
     "rate" \
     "16000000" # 16 Mb?
   _set_override \
-    "out" \
-    "file" \
-    "$( \
-      _get \
-        "in" \
-	"file").$( \
-	   _get \
-	     "delay" \
-	     "seconds").fade.m4a"
+    "buffer" \
+    "length" \
+    "60" # 60 seconds
+  _set_override \
+    "recording" \
+    "length" \
+    "$(( 24 * 60 * 60 ))" # 24 hours
   _set_override \
     "out" \
     "stdout" \
@@ -128,9 +154,11 @@ Record
 Usage:
   $(_get "app" "name")
     [options]
-    <bit_rate>
     (<out_file>)
   options:
+     -b                   Video bitrate.
+     -k                   Encoding buffer length.
+     -l                   Length of the recording.
      -s                   Output to stdout.
      -h                   This message.
      -v                   Enable verbose output
@@ -149,10 +177,13 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'scvh?' \
+    'b:k:l:scvh?' \
     arg; do
   case \
     "${arg}" in
+    b) override_bit_rate="${OPTARG}" ;;
+    k) override_buffer_length="${OPTARG}" ;;
+    l) override_recording_length="${OPTARG}" ;;
     s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
@@ -173,21 +204,21 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-
-(( $# < 1 )) && \
-  _usage \
-    1
 (( $# == 1 )) && \
   _msg_info \
     "no output file given, will return to stdout"
-bit_rate="${1}"
-(( $# == 2 )) && \
-  out_file="${2}"
+(( $# == 1 )) && \
+  out_file="${1}"
 _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
-_record \
-  "${bit_rate}" \
-  "${chunk_size}"
-  "${out_file}"
+_run \
+  "testprogram" \
+  "5" \
+  sleep 100
+# _record \
+#   "${bit_rate}" \
+#   "${buffer_size}" \
+#   "${recording_length}"
+#   "${out_file}"
