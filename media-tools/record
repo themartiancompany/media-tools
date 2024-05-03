@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    'ffmpeg'
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  out_stdout=""
+  in_file=""
+  fade_start=""
+  fade_duration=""
+  out_file=""
+  color=""
+  quiet=""
+}
+
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+# Add a fade to audio file
+# $1: input video file
+# $2: delay seconds
+# $3: output video file
+_record() {
+  local \
+    _in="${1}" \
+    _start="${2}" \
+    _seconds="${3}" \
+    _out=(
+      "${4}"
+    ) \
+    _opts=()
+  _msg_info \
+    "out: ${_out[*]}"
+  if [[ "${_out[*]}" == "" ]] || \
+     [[ "$(_get \
+             "out" \
+	     "stdout")" == "y" ]]; then
+    _out+=(
+      -
+    )
+  fi
+  _opts+=(
+    "${_ffmpeg_opts[@]}"
+    -i 
+      "${_in}"
+    -c:a
+      aac
+    -af
+      "afade=type=in:start_time=${_start}:duration=${_seconds}"
+  )
+  ffmpeg \
+    "${_opts[@]}" \
+    "${_out[*]}"
+}
+
+# Set defaults and, if present, overrides
+# from arch-grub command line option parameters
+_set_overrides() {
+  _set_override \
+    "bit" \
+    "rate" \
+    "16000000" # 16 Mb?
+  _set_override \
+    "out" \
+    "file" \
+    "$( \
+      _get \
+        "in" \
+	"file").$( \
+	   _get \
+	     "delay" \
+	     "seconds").fade.m4a"
+  _set_override \
+    "out" \
+    "stdout" \
+    "n"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Record
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <bit_rate>
+    (<out_file>)
+  options:
+     -s                   Output to stdout.
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'scvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    s) override_out_stdout="y" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+
+(( $# < 1 )) && \
+  _usage \
+    1
+(( $# == 1 )) && \
+  _msg_info \
+    "no output file given, will return to stdout"
+bit_rate="${1}"
+(( $# == 2 )) && \
+  out_file="${2}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
+_record \
+  "${bit_rate}" \
+  "${chunk_size}"
+  "${out_file}"
