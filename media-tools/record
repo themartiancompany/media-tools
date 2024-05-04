@@ -97,7 +97,8 @@ _record() {
   )
   _chunks="$(( \
     _length / _buffer ))"
-  while (( i < _chunks )); do
+  while \
+    (( _i < _chunks )); do
     _run \
       "screenrecord" \
       "${_buffer}" \
@@ -111,7 +112,7 @@ _record() {
       "0" \
       "async" \
       _encode \
-        "${_tmp_dir}/${_i}.hq.mp4"
+        "${_tmp_dir}/${_i}.hq.mp4" \
         "${_tmp_dir}/${_i}.mp4"
     _vids+=(
       "${_tmp_dir}/${_i}.mp4"
@@ -228,9 +229,8 @@ shift \
 _set_overrides
 _config_user_init \
   "media-tools"
-_ffmpeg_options_load
 _record \
   "${bit_rate}" \
   "${buffer_length}" \
-  "${recording_length}"
+  "${recording_length}" \
   "${out_file}"
