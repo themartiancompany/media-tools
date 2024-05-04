@@ -28,11 +28,10 @@ _requirements() {
   true
 }
 
-
 _ffmpeg_options_load() {
   local \
     ffmpeg_options
-  ffmpeg_options="${_share}/media-tools/ffmpeg_options"
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
   [ -e "${ffmpeg_options}" ] && \
     source \
       "${ffmpeg_options}" || \
