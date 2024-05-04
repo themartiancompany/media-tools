@@ -135,9 +135,11 @@ _record() {
       _i + 1))"
   done
   sleep \
-    "$(_get \
-      "encoding" \
-      "delay")"
+    "$(( \
+      _buffer +
+      $(_get \
+        "encoding" \
+	"delay") ))"
   vidcat \
     "${_out}" \
     "${_vids[@]}"
