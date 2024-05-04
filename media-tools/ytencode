@@ -192,7 +192,7 @@ _set \
     "${2}"
 _set_overrides
 _config_user_init \
-  "ffmpeg"
+  "media-tools"
 _ytencode \
   "$( \
     _get \
