@@ -27,6 +27,7 @@ _global_variables() {
   bit_rate=""
   buffer_length=""
   recording_length=""
+  encoding_delay=""
   color=""
   quiet=""
 }
@@ -50,6 +51,12 @@ _encode() {
     -m
       "fake"
   )
+  sleep \
+    "$(_get \
+      "encoding" \
+      "delay")"
+  _msg_info \
+    "encoding ${_in}"
   ytencode \
     "${_ytencode_opts[@]}" \
     "${_in}" \
@@ -107,6 +114,13 @@ _record() {
         --bit-rate \
           "${_rate}" \
         "${_tmp_dir}/${_i}.hq.mp4"
+    # timeout \
+    #   "${_buffer}" \
+    #   "${_screenrecord}" \
+    #     --bit-rate \
+    #       "${_rate}" \
+    #     "${_tmp_dir}/${_i}.hq.mp4" || \
+    #     true
     _run \
       "compress" \
       "0" \
@@ -117,7 +131,13 @@ _record() {
     _vids+=(
       "${_tmp_dir}/${_i}.mp4"
     )
+    _i="$(( \
+      _i + 1))"
   done
+  sleep \
+    "$(_get \
+      "encoding" \
+      "delay")"
   vidcat \
     "${_out}" \
     "${_vids[@]}"
@@ -142,6 +162,10 @@ _set_overrides() {
     "out" \
     "stdout" \
     "n"
+  _set_override \
+    "encoding" \
+    "delay" \
+    "10"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then

@@ -63,6 +63,7 @@ _concat() {
   local \
     _opts=()
   _opts=(
+    -y
     -f
       concat
     -safe
@@ -71,10 +72,10 @@ _concat() {
       "${_vids}"
     -c
       copy
+  )
   ffmpeg \
     "${_opts[@]}" \
     "${_out}"
-
 }
 
 (( $# < 1 )) && \
