@@ -85,7 +85,7 @@ _ytencode() {
 }
 
 # Set defaults and, if present, overrides
-# from arch-grub command line option parameters
+# from command line option parameters
 _set_overrides() {
   _set_override \
     "encode" \

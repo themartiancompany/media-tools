@@ -2,6 +2,44 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+# shellcheck disable=SC2034
+_global_variables() {
+  in_files=()
+  out_file=""
+  encode_mode=""
+  color=""
+  quiet=""
+}
+
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    "ffmpeg"
+}
+
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+
 # Con(cat)enate video files
 # $1: output video file
 # $@: input video files (sorted)
@@ -78,18 +116,103 @@ _concat() {
     "${_out}"
 }
 
-(( $# < 1 )) && \
-  echo \
-    "vidcat <out> [vid]" && \
-  exit \
-    1
+# Set defaults and, if present, overrides
+# from command line option parameters
+_set_overrides() {
+  _set_override \
+    "encode" \
+    "mode" \
+    "quality"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
 
-_out="${1}"
-shift
-_vids=(
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+Concatenate media files
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <output_file>
+    [input_file>]
+  options:
+     -m                   Video encode mode (concat, filter).
+                          Default: $(_get "encode" "mode")
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'm:cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    m) override_encode_mode="${OPTARG}" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+         _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+(( ${#} < 1 )) && \
+  _usage \
+    1
+_set \
+  "in" \
+  "file" \
+  "${1}"
+shift \
+  1
+input_files=(
   "$@"
 )
-
+_set_overrides
+_config_user_init \
+  "media-tools"
 _vidcat \
-  "${_out}" \
-  "${_vids[@]}"
+  "$(_get \
+       "out" \
+       "file")" \
+  "${input_files[@]}"
