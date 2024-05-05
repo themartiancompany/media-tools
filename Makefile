@@ -45,6 +45,7 @@ install-media:
 	install -vDm 755 media-tools/picscale "$(BIN_DIR)"
 	install -vDm 755 media-tools/picstitch "$(BIN_DIR)"
 	install -vDm 755 media-tools/reverse_logarithmic_presser "$(BIN_DIR)"
+	install -vDm 755 media-tools/record "$(BIN_DIR)"
 	install -vDm 755 media-tools/stretchpic "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidrotate "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidscale "$(BIN_DIR)"
