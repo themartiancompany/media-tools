@@ -90,7 +90,7 @@ _set_overrides() {
   _set_override \
     "encode" \
     "mode" \
-    "quality"
+    "fake"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -122,7 +122,8 @@ Usage:
     <input_file>
     <output_file>
   options:
-     -m                   Video encode mode ('quolity', 'size').
+     -m                   Video encode mode
+                          ('quality', 'size', 'fake').
                           Default: $(_get "encode" "mode")
      -h                   This message.
      -v                   Enable verbose output

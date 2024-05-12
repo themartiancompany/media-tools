@@ -64,10 +64,12 @@ _vidscale() {
     "flags=neighbor"
   )
   _opts=(
-    -i "${_in}"
-    -vf "$(IFS=":"; \
-           echo \
-	     "${_scale_opts[*]}")"
+    -i
+      "${_in}"
+    -vf
+      "$(IFS=":"; \
+         echo \
+	   "${_scale_opts[*]}")"
     -c:v
       libx265
     -preset
@@ -79,7 +81,7 @@ _vidscale() {
   _msg_info \
     "ffmpeg opts: ${_opts[*]}"
   ffmpeg \
-    ${_opts[@]} \
+    "${_opts[@]}" \
     "${_out}"
 }
 

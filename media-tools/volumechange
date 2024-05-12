@@ -13,20 +13,21 @@ _share="${_bin}/../share"
 source \
   "${_lib}/libcrash-bash/crash-bash"
 
-# shellcheck disable=SC2034
-_global_variables() {
-  in_files=()
-  out_file=""
-  encode_mode=""
-  color=""
-  quiet=""
-}
-
 # Check all required programs
 # are available
 _requirements() {
   _check_cmd \
-    "ffmpeg"
+    'ffmpeg'
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  out_stdout=""
+  in_file=""
+  volume_scale=""
+  out_file=""
+  color=""
+  quiet=""
 }
 
 _ffmpeg_options_load() {
@@ -39,87 +40,57 @@ _ffmpeg_options_load() {
   true
 }
 
-# Con(cat)enate video files
-# $1: output video file
-# $@: input video files (sorted)
-_vidcat() {
+# Add silence to audio file
+# $1: input video file
+# $2: volume scale factor
+# $3: output video file
+_volumechange() {
   local \
-    _out="${1}" \
-    _i=1 \
-    _in=() \
-    _opts=() \
-    _vf="" \
-    _vids
-  shift \
-    1
-  _in=(
-    "$@"
-  )
-  _vids="$( \
-    mktemp)"
-  for _vid \
-    in "${_in[@]}"; do
-    _vid="$( \
-      realpath \
-        "${_vid}")"
-    echo \
-      "file '${_vid}'" >> \
-      "${_vids}"
-   _vf="${_vf} [${_i}:v] [${_i}:a]"
-   _i=$((_i + 1))
-  done
-  _vf="${_vf} concat=n=${_i}:v=1:a=1 [v] [a]"
-  cat \
-    "${_vids}"
-  _opts=(
-    -safe
-      0
-    -i
-      ${_vids}
-    -filter_complex
-      "${_vf}"
-    -map
-      "[v]"
-    -map
-      "[a]"
-    -f
-      mp4
-    -vcodec
-      libx265
-  )
-  ffmpeg \
-    "${_opts[@]}" \
-    "${_out}"
-  # echo \
-  #   "${_mm}"
-  [[ ! $? -eq 0 ]] && \
-    _concat
-}
-
-_concat() {
-  local \
+    _in="${1}" \
+    _volume="${2}" \
+    _out=(
+      "${3}"
+    ) \
     _opts=()
-  _opts=(
-    -y
-    -f
-      concat
-    -i
-      "${_vids}"
-    -c
-      copy
+  _msg_info \
+    "out: ${_out[*]}"
+  if [[ "${_out[*]}" == "" ]] || \
+     [[ "$(_get \
+             "out" \
+	     "stdout")" == "y" ]]; then
+    _out+=(
+      -
+    )
+  fi
+  _opts+=(
+    "${_ffmpeg_opts[@]}"
+    -i 
+      "${_in}"
+    -af
+      "volume=${_volume}"
   )
   ffmpeg \
     "${_opts[@]}" \
-    "${_out}"
+    "${_out[*]}"
 }
 
 # Set defaults and, if present, overrides
-# from vidcat command line option parameters
+# from arch-grub command line option parameters
 _set_overrides() {
   _set_override \
-    "encode" \
-    "mode" \
-    "auto"
+    "out" \
+    "file" \
+    "$( \
+      _get \
+        "in" \
+	"file").$( \
+	   _get \
+	     "volume" \
+	     "scale").volume"
+  _set_override \
+    "out" \
+    "stdout" \
+    "n"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -132,6 +103,7 @@ _set_overrides() {
   fi
 }
 
+
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
@@ -143,17 +115,17 @@ _usage() {
       -d '' \
       _usage_text << \
         ENDUSAGETEXT || true
-Concatenate video files
+
+Change volume to a media file
 
 Usage:
   $(_get "app" "name")
     [options]
-    <output_file>
-    [input_file]
+    <in_file>
+    <volume_scale>
+    (<out_file>)
   options:
-     -m                   Video encode mode
-                          ('quality', 'size', 'auto').
-                          Default: $(_get "encode" "mode")
+     -s                   Output to stdout.
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -171,20 +143,21 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'm:cvh?' \
+    'scvh?' \
     arg; do
   case \
     "${arg}" in
-    m) override_encode_mode="${OPTARG}" ;;
+    s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
-         _usage \
+	 _usage \
            0 ;;
     *)
     _msg_error \
       "Invalid argument '${arg}'" \
-      0
+      0 && \
+    _set_overrides && \
     _usage \
       1
     ;;
@@ -194,17 +167,23 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-(( ${#} < 2 )) && \
+
+(( $# < 3 )) && \
   _usage \
     1
-out_file="${1}"
-shift \
-  1
-in_files=(
-  "$@"
-)
-_vidcat \
-  "$(_get \
-       "out" \
-       "file")" \
-  "${in_files[@]}"
+(( $# < 3 )) && \
+  _msg_info \
+    "no output file given, will return to stdout"
+    
+in_file="${1}"
+delay_seconds="${2}"
+(( $# == 3 )) && \
+  out_file="${3}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
+_volumechange \
+  "${in_file}" \
+  "${volume_scale}" \
+  "${out_file}"
