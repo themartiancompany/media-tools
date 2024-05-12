@@ -168,15 +168,21 @@ shift \
     OPTIND - 1 \
   ))
 
-(( $# < 3 )) && \
+(( $# < 2 )) && \
   _usage \
     1
 (( $# < 3 )) && \
   _msg_info \
     "no output file given, will return to stdout"
     
-in_file="${1}"
-delay_seconds="${2}"
+_set \
+  "in" \
+  "file" \
+  "${1}"
+_set \
+  "volume" \
+  "scale" \
+  "${2}"
 (( $# == 3 )) && \
   out_file="${3}"
 _set_overrides
