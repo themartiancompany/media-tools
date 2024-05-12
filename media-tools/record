@@ -92,7 +92,7 @@ _record() {
     _out=(
       "${5}"
     ) \
-    _opts=() \
+    _screenrecord_opts=() \
     _screenrecord \
     _tmp_dir \
     _tmp \
@@ -113,24 +113,23 @@ _record() {
       -
     )
   fi
-  _ytencode_opts+=(
-    -m
-      "fake"
+  _screenrecord_opts+=(
+    --bit-rate
+      "${_rate}"
   )
   _chunks="$(( \
     _length / _buffer ))"
   while \
     (( _i < _chunks )); do
     _run \
-      "screenrecord${_i}" \
+      "record_${_i}" \
       "${_buffer}" \
       "sync" \
       "${_screenrecord}" \
-        --bit-rate \
-          "${_rate}" \
+        "${_screenrecord_opts[@]}" \
         "${_tmp_dir}/${_i}.hq.mp4"
     _run \
-      "encode${_i}" \
+      "encode_${_i}" \
       "0" \
       "async" \
       _encode \
@@ -147,13 +146,12 @@ _record() {
   while \
     (( _i < _chunks )); do
     wait \
-      "$(cat \
-        "$(_get \
-	  "encode${_i}" \
-	  "pid")")"
+      "$( \
+        _get_pid \
+	"encode_${_i}")"
     _i="$(( \
       _i + 1))"
-  done
+  done 
   sleep \
     "$(_get \
         "encoding" \

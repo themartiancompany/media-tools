@@ -114,7 +114,7 @@ _concat() {
 }
 
 # Set defaults and, if present, overrides
-# from vidcat command line option parameters
+# from command line option parameters
 _set_overrides() {
   _set_override \
     "encode" \
@@ -143,7 +143,7 @@ _usage() {
       -d '' \
       _usage_text << \
         ENDUSAGETEXT || true
-Concatenate video files
+Concatenate media files
 
 Usage:
   $(_get "app" "name")
@@ -151,8 +151,7 @@ Usage:
     <output_file>
     [input_file]
   options:
-     -m                   Video encode mode
-                          ('quality', 'size', 'auto').
+     -m                   Video encode mode (concat, filter).
                           Default: $(_get "encode" "mode")
      -h                   This message.
      -v                   Enable verbose output
@@ -197,12 +196,18 @@ shift \
 (( ${#} < 2 )) && \
   _usage \
     1
-out_file="${1}"
+_set \
+  "out" \
+  "file" \
+  "${1}"
 shift \
   1
 in_files=(
   "$@"
 )
+_set_overrides
+_config_user_init \
+  "media-tools"
 _vidcat \
   "$(_get \
        "out" \

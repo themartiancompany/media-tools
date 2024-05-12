@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
 # SPDX-License-Identifier: AGPL-3.0
-
 _bin="$( \
   dirname \
     "$( \
@@ -15,9 +14,10 @@ source \
 
 # shellcheck disable=SC2034
 _global_variables() {
+  in_file=""
+  out_file=""
+  scale_factor=""
   encode_mode=""
-  input_video=""
-  output_video=""
   color=""
   quiet=""
 }
@@ -25,7 +25,8 @@ _global_variables() {
 # Check all required programs
 # are available
 _requirements() {
-  true
+  _check_cmd \
+    "ffmpeg"
 }
 
 _ffmpeg_options_load() {
@@ -48,9 +49,9 @@ _vidscale() {
     _opts=() \
     _crf \
     _preset
+  _preset="fast"
   if [[ "${_mode}" == 'quality' ]]; then
     _crf=18
-    _preset="fast"
   fi
   if [[ "${_mode}" == 'size' ]]; then
     _crf=30
@@ -64,6 +65,7 @@ _vidscale() {
     "flags=neighbor"
   )
   _opts=(
+    "${ffmpeg_opts[@]}"
     -i
       "${_in}"
     -vf
@@ -71,12 +73,14 @@ _vidscale() {
          echo \
 	   "${_scale_opts[*]}")"
     -c:v
-      libx265
+      'libx265'
     -preset
       "${_preset}"
+  )
+  [[ "${_mode}" != 'auto' ]] && \
+  _opts+=(
     -crf
       "${_crf}"
-    "${_ffmpeg_opts[@]}"
   )
   _msg_info \
     "ffmpeg opts: ${_opts[*]}"
@@ -123,8 +127,8 @@ Usage:
     <output_video>
     <scale>
   options:
-     -m                   Encode mode, 'quality', 'size'.
-                          (Default: $(_get "encode" "mode"))
+     -m                   Encode mode (quality, size, auto).
+                          Default: $(_get "encode" "mode")
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -168,20 +172,24 @@ shift \
 (( ${#} < 3 )) && \
   _usage \
     1
-
-_in="${1}"
-_out="${2}"
-_scale="${3}"
-
+in_file="${1}"
+out_file="${2}"
+scale_factor="${3}"
 _set_overrides
 _x265="true"
 _ffmpeg_options_load
 _config_user_init \
   "media-tools"
 _vidscale \
-  "${_in}" \
-  "${_out}" \
-  "${_scale}" \
+  "$(_get \
+      "in"  \
+      "file")" \
+  "$(_get \
+      "out"  \
+      "file")" \
+  "$(_get \
+      "scale"  \
+      "factor")" \
   "$(_get \
        "encode" \
        "mode")"
