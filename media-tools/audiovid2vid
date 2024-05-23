@@ -26,6 +26,7 @@ _global_variables() {
   in_audio=""
   in_videos=()
   video_encode=""
+  audio_mode=""
   out_stdout=""
   color=""
   quiet=""
@@ -47,40 +48,75 @@ _ffmpeg_options_load() {
 # $@: videos
 _audiovid2vid() {
   local \
+    _mode="${1}" \
     _out=(
-      "${1}"
+      "${2}"
     ) \
-    _aud="${2}" \
+    _aud="${3}" \
     _vids=() \
-    _opts=() 
+    _opts=() \
+    _overlap \
+    _vidaud \
+    _mute
   shift \
-    2
+    3
   _vids=(
     "$@"
   )
   _opts+=(
     "${_ffmpeg_opts[@]}"
-   #  -loop 1
-    -i "${_vids[@]}"
-    -i "${_aud}"
+    #  -loop 1
   )
+  if [[ "${_mode}" == 'replace' ]]; then
+    _opts+=(
+      -i "${_aud}"
+      -i "${_vids[@]}"
+    )
+  elif [[ "${_mode}" == "overlap" ]]; then
+    _vidaud="$( \
+      mktemp).opus"
+    _overlap="$( \
+      mktemp).opus"
+    _mute="$( \
+      mktemp)"
+    ffmpeg \
+      -i \
+        "${_vids}" \
+      "${_vidaud}"
+    audioverlap \
+      "${_overlap}" \
+      "${_aud}" \
+      "${_vidaud}"
+     vidmute \
+       "${_vids}" \
+       "${_mute}"
+     _opts+=(
+       -i "${_overlap}"
+       -i "${_mute}"
+     )
+  fi
   [[ "$(_get \
 	  "video" \
 	  "encode")" == "y" ]] && \
     _x265="true" && \
     _opts+=(
-      -c:v libx265
-      -pix_fmt yuv420p
+      -c:v
+        libx265
+      -pix_fmt
+        yuv420p
   )
   [[ "$(_get \
 	  "video" \
 	  "encode")" == "n" ]] && \
     _opts+=(
-      -c:v copy
+      -c:v
+        copy
   )
   _opts+=(
-    -c:a aac
-    -b:a 48k
+    -c:a
+      aac
+    -b:a
+      48k
     -shortest
   )
   if [[ "${_out[*]}" == "" ]] || \
@@ -99,6 +135,10 @@ _audiovid2vid() {
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
+  _set_override \
+    "audio" \
+    "mode" \
+    "replace"
   _set_override \
     "video" \
     "encode" \
@@ -140,6 +180,8 @@ Usage:
     <input_audio>
     [input_video]
   options:
+     -m                   Audio mode (replace, overlap)
+                          Default: $(_get "audio" "mode")
      -e                   Whether to encode the resulting video
                           or use encoder from input media.
 			  Default: $(_get "video" "encode")
@@ -162,10 +204,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'scevh?' \
+    'm:scevh?' \
     arg; do
   case \
     "${arg}" in
+    m) override_audio_mode="${OPTARG}" ;;
     s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     e) override_video_encode="y" ;;
@@ -210,6 +253,9 @@ _config_user_init \
   "media-tools"
 _ffmpeg_options_load
 _audiovid2vid \
+  "$(_get \
+       "audio" \
+       "mode")" \
   "$(_get \
        "out" \
        "video")" \
