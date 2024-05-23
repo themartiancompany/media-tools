@@ -64,6 +64,8 @@ _vidmute() {
     -i 
       "${_in}"
     -an
+    -c:v
+      copy
   )
   ffmpeg \
     "${_opts[@]}" \
