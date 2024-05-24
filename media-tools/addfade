@@ -24,6 +24,7 @@ _requirements() {
 _global_variables() {
   out_stdout=""
   in_file=""
+  fade_type=""
   fade_start=""
   fade_duration=""
   out_file=""
@@ -43,17 +44,21 @@ _ffmpeg_options_load() {
 
 # Add a fade to audio file
 # $1: input video file
-# $2: delay seconds
-# $3: output video file
+# $2: fade start
+# $3: fade duration
+# $4: output video file
 _addfade() {
   local \
-    _in="${1}" \
-    _start="${2}" \
-    _seconds="${3}" \
+    _type="${1}" \
+    _in="${2}" \
+    _start="${3}" \
+    _seconds="${4}" \
     _out=(
-      "${4}"
+      "${5}"
     ) \
-    _opts=()
+    _opts=() \
+    _ext
+  _ext="${_in##*.}"
   _msg_info \
     "out: ${_out[*]}"
   if [[ "${_out[*]}" == "" ]] || \
@@ -69,9 +74,11 @@ _addfade() {
     -i 
       "${_in}"
     -c:a
-      aac
+      "${_ext}"
+    -strict
+      -2
     -af
-      "afade=type=in:start_time=${_start}:duration=${_seconds}"
+      "afade=type=${_type}:start_time=${_start}:duration=${_seconds}"
   )
   ffmpeg \
     "${_opts[@]}" \
@@ -81,6 +88,10 @@ _addfade() {
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
+  _set_override \
+    "fade" \
+    "type" \
+    "in"
   _set_override \
     "fade" \
     "start" \
@@ -93,8 +104,8 @@ _set_overrides() {
         "in" \
 	"file").$( \
 	   _get \
-	     "delay" \
-	     "seconds").fade.m4a"
+	     "fade" \
+	     "duration").fade.m4a"
   _set_override \
     "out" \
     "stdout" \
@@ -133,6 +144,8 @@ Usage:
     <fade_duration>
     (<out_file>)
   options:
+     -t                   Fade type.
+                          Default: $(_get "fade" "type")
      -s                   Output to stdout.
      -h                   This message.
      -v                   Enable verbose output
@@ -151,10 +164,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'scvh?' \
+    't:scvh?' \
     arg; do
   case \
     "${arg}" in
+    t) override_fade_type="${OPTARG}" ;;
     s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
@@ -186,13 +200,14 @@ shift \
 in_file="${1}"
 fade_start="${2}"
 fade_duration="${3}"
-(( $# == 3 )) && \
-  out_file="${3}"
+(( $# == 4 )) && \
+  out_file="${4}"
 _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
 _addfade \
+  "${fade_type}" \
   "${in_file}" \
   "${fade_start}" \
   "${fade_duration}" \
