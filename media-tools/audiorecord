@@ -1,0 +1,289 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    'ffmpeg'
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  out_stdout=""
+  out_file=""
+  bit_rate=""
+  buffer_length=""
+  recording_length=""
+  encoding_delay=""
+  record_method=""
+  color=""
+  quiet=""
+}
+
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+_encode() {
+  local \
+    _in="${1}" \
+    _out="${2}" \
+    _scale="${3}" \
+    _ytencode_opts=() \
+    _wip
+  _wip="$( \
+    mktemp).mp4"
+  _ytencode_opts+=(
+    -m
+      "fake"
+  )
+  sleep \
+    "$(_get \
+      "encoding" \
+      "delay")"
+  _msg_info \
+    "encoding ${_in}"
+  if [[ "${_scale}" != "1" ]]; then
+    vidscale \
+      "${_in}" \
+      "${_wip}" \
+      "${_scale}"
+    rm \
+      "${_in}"
+    _in="${_wip}"
+  fi
+  ytencode \
+    "${_ytencode_opts[@]}" \
+    "${_in}" \
+    "${_out}"
+  rm \
+    "${_in}"
+}
+
+# Add a fade to audio file
+# $1: input video file
+# $2: delay seconds
+# $3: output video file
+_audiorecord() {
+  local \
+    _rate="${1}" \
+    _buffer="${2}" \
+    _length="${3}" \
+    _method="${4}" \
+    _out=(
+      "${5}"
+    ) \
+    _screenrecord_opts=() \
+    _screenrecord \
+    _tmp_dir \
+    _tmp \
+    _chunks \
+    _i=0 \
+    _vids=()
+  _screenrecord="/system/bin/screenrecord"
+  _tmp_dir="$( \
+    mktemp \
+      -d)"
+  _msg_info \
+    "out: ${_out[*]}"
+  if [[ "${_out[*]}" == "" ]] || \
+     [[ "$(_get \
+             "out" \
+	     "stdout")" == "y" ]]; then
+    _out+=(
+      -
+    )
+  fi
+  _screenrecord_opts+=(
+    --bit-rate
+      "${_rate}"
+  )
+  _chunks="$(( \
+    _length / _buffer ))"
+  while \
+    (( _i < _chunks )); do
+    _run \
+      "record_${_i}" \
+      "${_buffer}" \
+      "sync" \
+      "${_screenrecord}" \
+        "${_screenrecord_opts[@]}" \
+        "${_tmp_dir}/${_i}.hq.mp4"
+    _run \
+      "encode_${_i}" \
+      "0" \
+      "async" \
+      _encode \
+        "${_tmp_dir}/${_i}.hq.mp4" \
+        "${_tmp_dir}/${_i}.mp4" \
+	"${_scale}"
+    _vids+=(
+      "${_tmp_dir}/${_i}.mp4"
+    )
+    _i="$(( \
+      _i + 1))"
+  done
+  _i=0
+  while \
+    (( _i < _chunks )); do
+    wait \
+      "$( \
+        _get_pid \
+	"encode_${_i}")"
+    _i="$(( \
+      _i + 1))"
+  done 
+  sleep \
+    "$(_get \
+        "encoding" \
+	"delay")"
+  vidcat \
+    "${_out}" \
+    "${_vids[@]}"
+}
+
+# Set defaults and, if present, overrides
+# from arch-grub command line option parameters
+_set_overrides() {
+  _set_override \
+    "bit" \
+    "rate" \
+    "16000000" # 16 Mb?
+  _set_override \
+    "buffer" \
+    "length" \
+    "60" # 60 seconds
+  _set_override \
+    "recording" \
+    "length" \
+    "$(( 24 * 60 * 60 ))" # 24 hours
+  _set_override \
+    "scale" \
+    "factor" \
+    "1"
+  _set_override \
+    "out" \
+    "stdout" \
+    "n"
+  _set_override \
+    "encoding" \
+    "delay" \
+    "10"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Audio record
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    (<out_file>)
+  options:
+     -b                   Video bitrate.
+                          Default ($(_get "bit" "rate"))
+     -k                   Encoding buffer length.
+                          Default ($(_get "buffer" "length"))
+     -l                   Length of the recording.
+                          Default ($(_get "recording" "length"))
+     -r                   Scale factor.
+                          Default ($(_get "scale" "factor"))
+     -s                   Output to stdout.
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'b:k:l:m:r:scvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    b) override_bit_rate="${OPTARG}" ;;
+    k) override_buffer_length="${OPTARG}" ;;
+    l) override_recording_length="${OPTARG}" ;;
+    m) override_record_method="${OPTARG}" ;;
+    s) override_out_stdout="y" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+(( $# == 1 )) && \
+  _msg_info \
+    "no output file given, will return to stdout"
+(( $# == 1 )) && \
+  out_file="${1}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_record \
+  "${bit_rate}" \
+  "${buffer_length}" \
+  "${recording_length}" \
+  "${record_method}" \
+  "${out_file}"
