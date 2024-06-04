@@ -92,28 +92,26 @@ _audiorecord() {
     _out=(
       "${5}"
     ) \
-    _screenrecord_opts=() \
-    _screenrecord \
+    _recorder_opts=() \
+    _recorder \
     _tmp_dir \
     _tmp \
     _chunks \
     _i=0 \
-    _vids=()
-  _screenrecord="/system/bin/screenrecord"
+    _recs=()
+  if [[ "${_method}" == "termux" ]]; then
+    _recorder="termux-microphone-record"
+    _recorder_opts+=(
+      -l
+        "${_rate}"
+    )
+  fi
   _tmp_dir="$( \
     mktemp \
       -d)"
   _msg_info \
     "out: ${_out[*]}"
-  if [[ "${_out[*]}" == "" ]] || \
-     [[ "$(_get \
-             "out" \
-	     "stdout")" == "y" ]]; then
-    _out+=(
-      -
-    )
-  fi
-  _screenrecord_opts+=(
+  _recorder_opts+=(
     --bit-rate
       "${_rate}"
   )
@@ -125,19 +123,20 @@ _audiorecord() {
       "record_${_i}" \
       "${_buffer}" \
       "sync" \
-      "${_screenrecord}" \
-        "${_screenrecord_opts[@]}" \
-        "${_tmp_dir}/${_i}.hq.mp4"
+      "${_recorder}" \
+        "${_recorder_opts[@]}" \
+        -f \
+	  "${_tmp_dir}/${_i}.hq.aac"
     _run \
       "encode_${_i}" \
       "0" \
       "async" \
       _encode \
-        "${_tmp_dir}/${_i}.hq.mp4" \
-        "${_tmp_dir}/${_i}.mp4" \
+        "${_tmp_dir}/${_i}.hq.aac" \
+        "${_tmp_dir}/${_i}.opus" \
 	"${_scale}"
-    _vids+=(
-      "${_tmp_dir}/${_i}.mp4"
+    _recs+=(
+      "${_tmp_dir}/${_i}.opus"
     )
     _i="$(( \
       _i + 1))"
@@ -156,9 +155,9 @@ _audiorecord() {
     "$(_get \
         "encoding" \
 	"delay")"
-  vidcat \
+  audiocat \
     "${_out}" \
-    "${_vids[@]}"
+    "${_recs[@]}"
 }
 
 # Set defaults and, if present, overrides
@@ -167,7 +166,7 @@ _set_overrides() {
   _set_override \
     "bit" \
     "rate" \
-    "16000000" # 16 Mb?
+    "480000" # 480 Kb?
   _set_override \
     "buffer" \
     "length" \
@@ -176,14 +175,6 @@ _set_overrides() {
     "recording" \
     "length" \
     "$(( 24 * 60 * 60 ))" # 24 hours
-  _set_override \
-    "scale" \
-    "factor" \
-    "1"
-  _set_override \
-    "out" \
-    "stdout" \
-    "n"
   _set_override \
     "encoding" \
     "delay" \
@@ -219,7 +210,7 @@ Usage:
     [options]
     (<out_file>)
   options:
-     -b                   Video bitrate.
+     -b                   Audio bitrate (for supported methods).
                           Default ($(_get "bit" "rate"))
      -k                   Encoding buffer length.
                           Default ($(_get "buffer" "length"))
