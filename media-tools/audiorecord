@@ -216,8 +216,8 @@ Usage:
                           Default ($(_get "buffer" "length"))
      -l                   Length of the recording.
                           Default ($(_get "recording" "length"))
-     -r                   Scale factor.
-                          Default ($(_get "scale" "factor"))
+     -m                   Record method.
+                          Default ($(_get "record" "method"))
      -s                   Output to stdout.
      -h                   This message.
      -v                   Enable verbose output
@@ -272,7 +272,7 @@ shift \
 _set_overrides
 _config_user_init \
   "media-tools"
-_record \
+_audiorecord \
   "${bit_rate}" \
   "${buffer_length}" \
   "${recording_length}" \

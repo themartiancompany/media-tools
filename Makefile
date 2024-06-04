@@ -28,6 +28,7 @@ install-media:
 	install -vDm 755 media-tools/addsilence "$(BIN_DIR)"
 	install -vDm 755 media-tools/audiopic2vid "$(BIN_DIR)"
 	install -vDm 755 media-tools/audioverlap "$(BIN_DIR)"
+	install -vDm 755 media-tools/audiorecord "$(BIN_DIR)"
 	install -vDm 755 media-tools/blackintro "$(BIN_DIR)"
 	install -vDm 755 media-tools/blackoutro "$(BIN_DIR)"
 	install -vDm 755 media-tools/blackvid "$(BIN_DIR)"
