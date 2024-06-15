@@ -26,6 +26,7 @@ install-media:
 	install -vdm 755 "$(BIN_DIR)"
 	install -vDm 755 media-tools/addfade "$(BIN_DIR)"
 	install -vDm 755 media-tools/addsilence "$(BIN_DIR)"
+	install -vDm 755 media-tools/audiocat "$(BIN_DIR)"
 	install -vDm 755 media-tools/audiopic2vid "$(BIN_DIR)"
 	install -vDm 755 media-tools/audioverlap "$(BIN_DIR)"
 	install -vDm 755 media-tools/audiorecord "$(BIN_DIR)"

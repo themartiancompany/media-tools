@@ -48,14 +48,11 @@ _encode() {
   local \
     _in="${1}" \
     _out="${2}" \
-    _scale="${3}" \
-    _ytencode_opts=() \
+    _opts=() \
     _wip
-  _wip="$( \
-    mktemp).mp4"
-  _ytencode_opts+=(
-    -m
-      "fake"
+  _opts+=(
+    -i
+      "${_in}"
   )
   sleep \
     "$(_get \
@@ -63,18 +60,8 @@ _encode() {
       "delay")"
   _msg_info \
     "encoding ${_in}"
-  if [[ "${_scale}" != "1" ]]; then
-    vidscale \
-      "${_in}" \
-      "${_wip}" \
-      "${_scale}"
-    rm \
-      "${_in}"
-    _in="${_wip}"
-  fi
-  ytencode \
-    "${_ytencode_opts[@]}" \
-    "${_in}" \
+  ffmpeg \
+    "${_opts[@]}" \
     "${_out}"
   rm \
     "${_in}"
@@ -104,7 +91,7 @@ _audiorecord() {
     _recorder="termux-microphone-record"
     _recorder_opts+=(
       -l
-        "${_rate}"
+        "${_buffer}"
     )
   fi
   _tmp_dir="$( \
@@ -134,8 +121,7 @@ _audiorecord() {
       "async" \
       _encode \
         "${_tmp_dir}/${_i}.hq.aac" \
-        "${_tmp_dir}/${_i}.opus" \
-	"${_scale}"
+        "${_tmp_dir}/${_i}.opus"
     _recs+=(
       "${_tmp_dir}/${_i}.opus"
     )
@@ -190,7 +176,7 @@ _set_overrides() {
   _set_override \
     "recording" \
     "length" \
-    "$(( 24 * 60 * 60 ))" # 24 hours
+    "$(( 2 * 60 ))" # 24 hours
   _set_override \
     "encoding" \
     "delay" \
@@ -217,6 +203,7 @@ _show_config() {
   _msg_info "                   Length:   $(_get "recording" "length")"
   _msg_info "              Output file:   $(_get "out" "file")"
 }
+
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {

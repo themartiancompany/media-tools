@@ -43,61 +43,61 @@ _ffmpeg_options_load() {
 # Con(cat)enate video files
 # $1: output video file
 # $@: input video files (sorted)
-_vidcat() {
+_audiocat() {
   local \
     _out="${1}" \
+    _mode="${2}" \
     _i=1 \
     _in=() \
     _opts=() \
     _vf="" \
-    _vid \
-    _vids
+    _rec \
+    _recs
   shift \
-    1
+    2
   _in=(
     "$@"
   )
-  _vids="$( \
+  _recs="$( \
     mktemp)"
-  for _vid \
+  for _rec \
     in "${_in[@]}"; do
-    _vid="$( \
+    _rec="$( \
       realpath \
-        "${_vid}")"
+        "${_rec}")"
     echo \
-      "file '${_vid}'" >> \
-      "${_vids}"
-   _vf="${_vf} [${_i}:v] [${_i}:a]"
+      "file '${_rec}'" >> \
+      "${_recs}"
+   # _vf="${_vf} [${_i}:v] [${_i}:a]"
+   _vf="${_vf} [${_i}:a]"
    _i=$((_i + 1))
   done
-  _vf="${_vf} concat=n=${_i}:v=1:a=1 [v] [a]"
+  "_${_mode}"
+}
+
+_filter() {
+  _vf="${_vf} concat=n=${_i}:a=1 [a]"
   _msg_info \
-    "vids:\n $( \
-       cat \
-         "${_vids}")"
+    "recs:\n $( \
+      cat \
+        "${_recs}")"
   _opts=(
     -safe
       0
     -i
-      ${_vids}
+      ${_recs}
     -filter_complex
       "${_vf}"
     -map
-      "[v]"
-    -map
       "[a]"
     -f
-      mp4
-    -vcodec
-      libx265
+      opus
+    -acodec
+      opus
   )
   ffmpeg \
     "${_opts[@]}" \
     "${_out}"
-  # echo \
-  #   "${_mm}"
-  [[ ! $? -eq 0 ]] && \
-    _concat
 }
 
 _concat() {
@@ -138,15 +138,6 @@ _set_overrides() {
   elif [[ -z "${quiet}" ]]; then
     quiet="y"
   fi
-}
-
-# Shows configuration options.
-_show_config() {
-  _msg_info "${app_name} configuration"
-  _msg_info "              Encode date:   $(_get "encode" "date")"
-  _msg_info "            Encode method:   $(_get "encode" "method")"
-  _msg_info "                 In files:   ${in_files[*]}"
-  _msg_info "              Output file:   $(_get "out" "file")"
 }
 
 # Show help usage, with an exit status.
@@ -225,7 +216,6 @@ in_files=(
 _set_overrides
 _config_user_init \
   "media-tools"
-_show_config
 _vidcat \
   "$(_get \
        "out" \
