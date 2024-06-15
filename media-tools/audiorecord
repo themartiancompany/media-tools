@@ -22,13 +22,14 @@ _requirements() {
 
 # shellcheck disable=SC2034
 _global_variables() {
+  recording_date=""
   out_stdout=""
   out_file=""
   bit_rate=""
   buffer_length=""
   recording_length=""
   encoding_delay=""
-  record_method=""
+  recording_method=""
   color=""
   quiet=""
 }
@@ -93,7 +94,7 @@ _audiorecord() {
       "${5}"
     ) \
     _recorder_opts=() \
-    _recorder \
+    _recorder="" \
     _tmp_dir \
     _tmp \
     _chunks \
@@ -112,7 +113,7 @@ _audiorecord() {
   _msg_info \
     "out: ${_out[*]}"
   _recorder_opts+=(
-    --bit-rate
+    -b
       "${_rate}"
   )
   _chunks="$(( \
@@ -160,9 +161,24 @@ _audiorecord() {
     "${_recs[@]}"
 }
 
-# Set defaults and, if present, overrides
-# from arch-grub command line option parameters
 _set_overrides() {
+  _set_override \
+    "recording" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "out" \
+    "file" \
+    "$( \
+      realpath \
+        "recording_$( \
+	  _get \
+            "recording" \
+	    "date")")"
+  _set_override \
+    "recording" \
+    "method" \
+    "termux"
   _set_override \
     "bit" \
     "rate" \
@@ -191,6 +207,16 @@ _set_overrides() {
   fi
 }
 
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "           Recording date:   $(_get "recording" "date")"
+  _msg_info "         Recording method:   $(_get "recording" "method")"
+  _msg_info "                 Bit rate:   $(_get "bit" "rate")"
+  _msg_info "            Buffer length:   $(_get "buffer" "length")"
+  _msg_info "                   Length:   $(_get "recording" "length")"
+  _msg_info "              Output file:   $(_get "out" "file")"
+}
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
@@ -216,8 +242,8 @@ Usage:
                           Default ($(_get "buffer" "length"))
      -l                   Length of the recording.
                           Default ($(_get "recording" "length"))
-     -m                   Record method.
-                          Default ($(_get "record" "method"))
+     -m                   Recording method.
+                          Default ($(_get "recording" "method"))
      -s                   Output to stdout.
      -h                   This message.
      -v                   Enable verbose output
@@ -243,7 +269,7 @@ while \
     b) override_bit_rate="${OPTARG}" ;;
     k) override_buffer_length="${OPTARG}" ;;
     l) override_recording_length="${OPTARG}" ;;
-    m) override_record_method="${OPTARG}" ;;
+    m) override_recording_method="${OPTARG}" ;;
     s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
@@ -272,9 +298,10 @@ shift \
 _set_overrides
 _config_user_init \
   "media-tools"
+_show_config
 _audiorecord \
   "${bit_rate}" \
   "${buffer_length}" \
   "${recording_length}" \
-  "${record_method}" \
+  "${recording_method}" \
   "${out_file}"
