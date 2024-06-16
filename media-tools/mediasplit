@@ -18,6 +18,8 @@ source \
 _requirements() {
   _check_cmd \
     'ffmpeg'
+  _check_cmd \
+    'bc'
 }
 
 # shellcheck disable=SC2034
@@ -44,17 +46,22 @@ _ffmpeg_options_load() {
 }
 
 _uniform_split() {
-  _length="$(( \
-    ${_duration} / _amount + 1 ))"
+  _length="$( \
+    echo \
+      "${_duration} / ${_amount}" | \
+      bc)"
 }
 
 _fixed_split() {
-  _amount="$(( \
-    _duration / _length + 1 ))"
+  _amount="$( \
+    echo \
+      "${_duration} / ${_length};" \
+      "scale 0" | \
+      bc)"
 }
 
 # Cut video by chunks amount
-# or length; precision is in seconds
+# or length
 # $1: input media file
 # $2: filename prefix for media file
 # $3: split mode ('uniform' or 'fixed')
@@ -90,8 +97,10 @@ _mediasplit() {
     in "$(seq \
             "${_amount}")"; do
     if [[ *" ${_chunk} "* == " ${_chunks[*]} " ]]; then
-      _start="$(( \
-        (_chunk - 1) * _length ))"
+      _start="$( \
+        echo \
+	  "(${_chunk} - 1) * ${_length}" | \
+	  bc)"
       _out="${_prefix}.${_chunk}.${_ext}"
       mediaclip \
         "${_in}" \
@@ -107,7 +116,7 @@ _mediasplit() {
 # from arch-grub command line option parameters
 _set_overrides() {
   _set_override \
-    "encode" \
+    "split" \
     "date" \
     "$(_get_date_human)"
   _set_override \

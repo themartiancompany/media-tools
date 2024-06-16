@@ -27,8 +27,11 @@ _global_variables() {
 _requirements() {
   _check_cmd \
     "addfade"
+  _check_cmd \
     "addsilence"
+  _check_cmd \
     "audioverlap"
+  _check_cmd \
     "bc"
 }
 
