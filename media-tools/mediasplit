@@ -136,6 +136,19 @@ _set_overrides() {
   fi
 }
 
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "               Split date:   $(_get "split" "date")"
+  _msg_info "               Split mode:   $(_get "split" "mode")"
+  _msg_info "                  In file:   ${in_file}"
+  _msg_info "            Output prefix:   $(_get "out" "prefix")"
+  _msg_info "            Chunks amount:   $(_get "chunks" "amount")"
+  _msg_info "            Chunks length:   $(_get "chunks" "length")"
+  _msg_info "          Selected chunks:   ${selected_chunks[*]}"
+}
+
+
 
 # Show help usage, with an exit status.
 # $1: exit status number.
@@ -233,6 +246,7 @@ _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
+_show_config
 _mediasplit \
   "${in_file}" \
   "${split_mode}" \
