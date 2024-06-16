@@ -63,8 +63,8 @@ _fixed_split() {
 _mediasplit() {
   local \
     _in="${1}" \
-    _prefix="${2}" \
-    _mode="${3}" \
+    _mode="${2}" \
+    _prefix="${3}" \
     _amount="${4}" \
     _length="${5}" \
     _chunk \
@@ -236,7 +236,7 @@ _ffmpeg_options_load
 _mediasplit \
   "${in_file}" \
   "${split_mode}" \
+  "${out_prefix}" \
   "${chunks_amount}" \
   "${chunks_length}" \
-  "${out_prefix}" \
   "${chunks_selected[@]}"
