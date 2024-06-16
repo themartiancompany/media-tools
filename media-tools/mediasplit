@@ -102,9 +102,9 @@ _mediasplit() {
   for _chunk \
     in "$(seq \
             "${_amount}")"; do
-    _msg_info \
-      "rendering chunk ${_chunk}"
     if [[ *" ${_chunk} "* == " ${_chunks[*]} " ]]; then
+      _msg_info \
+        "rendering chunk ${_chunk}"
       _start="$( \
         echo \
 	  "(${_chunk} - 1) * ${_length}" | \
