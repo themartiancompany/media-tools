@@ -93,9 +93,17 @@ _mediasplit() {
     medialength \
       "${_in}")"
   "_${_mode}_split"
+  if [[ "${_chunks[*]}" == "" ]]; then
+    _chunks+=(
+      $(seq \
+          "${_amount}")
+    )
+  fi
   for _chunk \
     in "$(seq \
             "${_amount}")"; do
+    _msg_info \
+      "rendering chunk ${_chunk}"
     if [[ *" ${_chunk} "* == " ${_chunks[*]} " ]]; then
       _start="$( \
         echo \
