@@ -28,6 +28,7 @@ _global_variables() {
   chunks_length=""
   out_prefix=""
   chunks_selected=()
+  split_date=""
   color=""
   quiet=""
 }
@@ -105,6 +106,10 @@ _mediasplit() {
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
+  _set_override \
+    "encode" \
+    "date" \
+    "$(_get_date_human)"
   _set_override \
     "out" \
     "prefix" \
