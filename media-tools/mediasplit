@@ -16,7 +16,8 @@ source \
 # Check all required programs
 # are available
 _requirements() {
-  true
+  _check_cmd \
+    'ffmpeg'
 }
 
 
@@ -24,9 +25,10 @@ _requirements() {
 _global_variables() {
   out_stdout=""
   in_file=""
-  cut_start=""
-  cut_length=""
-  out_file=""
+  chunks_amount=""
+  chunks_length=""
+  out_prefix=""
+  chunks_selected=()
   color=""
   quiet=""
 }
@@ -46,7 +48,7 @@ _ffmpeg_options_load() {
 # $2: time to cut in (in seconds)
 # $3: time to cut in (in seconds)
 # $4: input video file
-_mediacut() {
+_mediaclip() {
   local \
     _in="${1}" \
     _start="${2}" \
@@ -88,6 +90,18 @@ _mediacut() {
 # from arch-grub command line option parameters
 _set_overrides() {
   _set_override \
+    "split" \
+    "mode" \
+    "uniform"
+  _set_override \
+    "chunks" \
+    "amount" \
+    "2"
+  _set_override \
+    "chunks" \
+    "length" \
+    "600"
+ _set_override \
     "out" \
     "stdout" \
     "n"
@@ -116,16 +130,30 @@ _usage() {
       _usage_text << \
         ENDUSAGETEXT || true
 
-Cut media files
+Split media files
 
 Usage:
   $(_get "app" "name")
     [options]
     <in_file>
-    <cut_start>
-    <cut_length>
-    <out_file>
+    (<out_prefix>)
+  modes:
+     uniform              to split the media in a given amount
+                          of uniformly sized chunks
+     fixed                to split the media in chunks of
+                          a given length
   options:
+     -m                   Split mode;
+                          Default: $(_get "split" "mode")
+     -n                   Amount of uniform chunks in which
+                          the media has to be split when
+			  'uniform' split mode is selected.
+                          Default: $(_get "chunks" "amount")
+     -l                   Length of the chunks in seconds
+                          in which the media has to be split
+			  when 'fixed' split mode is selected.
+                          Default: $(_get "chunks" "length")
+     -r                   Returns only selected chunks.
      -s                   Output to stdout.
      -h                   This message.
      -v                   Enable verbose output
@@ -144,10 +172,16 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'scvh?' \
+    'm:n:l:r:scvh?' \
     arg; do
   case \
     "${arg}" in
+    m) override_split_mode="${OPTARG}" ;;
+    n) override_chunks_amount="${OPTARG}" ;;
+    l) override_chunks_length="${OPTARG}" ;;
+    r) chunks_selected+=(
+	"${OPTARG}"
+       ) ;;
     s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
@@ -169,24 +203,23 @@ shift \
     OPTIND - 1 \
   ))
 
-(( $# < 3 )) && \
+(( $# < 1 )) && \
   _usage \
     1
-(( $# < 3 )) && \
+(( $# < 2 )) && \
   _msg_info \
-    "no output file givon, will return to stdout"
-    
+    "no prefix given for output files, same as the input filename will be used"
 in_file="${1}"
-cut_start="${2}"
-cut_end="${3}"
-(( $# == 4 )) && \
-  out_file="${4}"
+(( $# == 2 )) && \
+  out_prefix="${2}"
 _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
-_mediacut \
+_mediasplit \
   "${in_file}" \
-  "${cut_start}" \
-  "${cut_end}" \
-  "${out_file}"
+  "${split_mode}" \
+  "${chunks_amount}" \
+  "${chunks_length}" \
+  "${out_prefix}" \
+  "${chunks_selected[@]}"

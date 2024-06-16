@@ -140,6 +140,15 @@ _set_overrides() {
   fi
 }
 
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "              Encode date:   $(_get "encode" "date")"
+  _msg_info "            Encode method:   $(_get "encode" "method")"
+  _msg_info "                 In files:   ${in_files[*]}"
+  _msg_info "              Output file:   $(_get "out" "file")"
+}
+
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
@@ -216,6 +225,7 @@ in_files=(
 _set_overrides
 _config_user_init \
   "media-tools"
+_show_config
 _vidcat \
   "$(_get \
        "out" \

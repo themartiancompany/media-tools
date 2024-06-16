@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+# Check all required programs
+# are available
+_requirements() {
+  true
+}
+
+
+# shellcheck disable=SC2034
+_global_variables() {
+  out_stdout=""
+  in_file=""
+  cut_start=""
+  cut_length=""
+  out_file=""
+  color=""
+  quiet=""
+}
+
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+# Cut video from A to B
+# $1: output video file
+# $2: time to cut in (in seconds)
+# $3: time to cut in (in seconds)
+# $4: input video file
+_mediaclip() {
+  local \
+    _in="${1}" \
+    _start="${2}" \
+    _length="${3}" \
+    _out=(
+      "${4}"
+    ) \
+    _opts=()
+  _msg_info "out: ${_out[*]}"
+  if [[ "${_out[*]}" == "" ]] || \
+     [[ "$(_get \
+             "out" \
+	     "stdout")" == "y" ]]; then
+    _out+=(
+      -
+    )
+  fi
+  _opts+=(
+    "${_ffmpeg_opts[@]}"
+    -ss 
+      "${_start}"
+    -i
+      "${_in}"
+    -to
+      "${_length}"
+    -reset_timestamps
+      1
+    -map 
+      0
+    -c 
+      copy
+  )
+  ffmpeg \
+    "${_opts[@]}" \
+    "${_out[*]}"
+}
+
+# Set defaults and, if present, overrides
+# from arch-grub command line option parameters
+_set_overrides() {
+  _set_override \
+    "out" \
+    "stdout" \
+    "n"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Cut media files
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <in_file>
+    <cut_start>
+    <cut_length>
+    <out_file>
+  options:
+     -s                   Output to stdout.
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'scvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    s) override_out_stdout="y" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+
+(( $# < 3 )) && \
+  _usage \
+    1
+(( $# < 3 )) && \
+  _msg_info \
+    "no output file givon, will return to stdout"
+    
+in_file="${1}"
+cut_start="${2}"
+cut_end="${3}"
+(( $# == 4 )) && \
+  out_file="${4}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
+_mediaclip \
+  "${in_file}" \
+  "${cut_start}" \
+  "${cut_end}" \
+  "${out_file}"
