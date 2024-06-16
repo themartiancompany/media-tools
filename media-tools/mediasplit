@@ -60,7 +60,7 @@ _fixed_split() {
 # $4: chunks amount if 'uniform' mode is selected
 # $5: chunks length if 'fixed' mode is selected
 # $@: only render these chunks
-_mediaclip() {
+_mediasplit() {
   local \
     _in="${1}" \
     _prefix="${2}" \
