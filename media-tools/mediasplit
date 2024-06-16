@@ -45,7 +45,7 @@ _ffmpeg_options_load() {
 
 _uniform_split() {
   _length="$(( \
-    _duration / _amount + 1 ))"
+    ${_duration} / _amount + 1 ))"
 }
 
 _fixed_split() {
