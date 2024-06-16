@@ -20,7 +20,6 @@ _requirements() {
     'ffmpeg'
 }
 
-
 # shellcheck disable=SC2034
 _global_variables() {
   out_stdout=""
@@ -43,52 +42,76 @@ _ffmpeg_options_load() {
   true
 }
 
-# Cut video from A to B
-# $1: output video file
-# $2: time to cut in (in seconds)
-# $3: time to cut in (in seconds)
-# $4: input video file
+_uniform_split() {
+  _length="$(( \
+    _duration / _amount + 1 ))"
+}
+
+_fixed_split() {
+  _amount="$(( \
+    _duration / _length + 1 ))"
+}
+
+# Cut video by chunks amount
+# or length; precision is in seconds
+# $1: input media file
+# $2: filename prefix for media file
+# $3: split mode ('uniform' or 'fixed')
+# $4: chunks amount if 'uniform' mode is selected
+# $5: chunks length if 'fixed' mode is selected
+# $@: only render these chunks
 _mediaclip() {
   local \
     _in="${1}" \
-    _start="${2}" \
-    _length="${3}" \
-    _out=(
-      "${4}"
-    ) \
-    _opts=()
-  _msg_info "out: ${_out[*]}"
-  if [[ "${_out[*]}" == "" ]] || \
-     [[ "$(_get \
-             "out" \
-	     "stdout")" == "y" ]]; then
-    _out+=(
-      -
-    )
-  fi
-  _opts+=(
-    "${_ffmpeg_opts[@]}"
-    -ss 
-      "${_start}"
-    -i
-      "${_in}"
-    -to
-      "${_length}"
-    -reset_timestamps
-      1
-    -map 
-      0
-    -c 
-      copy
+    _prefix="${2}" \
+    _mode="${3}" \
+    _amount="${4}" \
+    _length="${5}" \
+    _chunk \
+    _chunks=() \
+    _duration \
+    _start \
+    _out \
+    _ext
+  shift \
+    5
+  _chunks=(
+    "$@"
   )
-  ffmpeg \
-    "${_opts[@]}" \
-    "${_out[*]}"
+  _ext="$( \
+    _get_ext \
+      "${_in}")"
+  _duration="$( \
+    medialength \
+      "${_in}")"
+  "_${_mode}_split"
+  for _chunk \
+    in "$(seq \
+            "${_amount}")"; do
+    if [[ *" ${_chunk} "* == " ${_chunks[*]} " ]]; then
+      _start="$(( \
+        (_chunk - 1) * _length ))"
+      _out="${_prefix}.${_chunk}.${_ext}"
+      mediaclip \
+        "${_in}" \
+	"${_start}" \
+	"${_length}" \
+	"${_out}"
+    fi
+  done || \
+    true
 }
 
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
+  _set_override \
+    "out" \
+    "prefix" \
+    "$(_rm_ext \
+         "$(_get \
+	      "in" \
+	      "file")")"
   _set_override \
     "split" \
     "mode" \
@@ -101,10 +124,6 @@ _set_overrides() {
     "chunks" \
     "length" \
     "600"
- _set_override \
-    "out" \
-    "stdout" \
-    "n"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -154,7 +173,6 @@ Usage:
 			  when 'fixed' split mode is selected.
                           Default: $(_get "chunks" "length")
      -r                   Returns only selected chunks.
-     -s                   Output to stdout.
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -182,7 +200,6 @@ while \
     r) chunks_selected+=(
 	"${OPTARG}"
        ) ;;
-    s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \

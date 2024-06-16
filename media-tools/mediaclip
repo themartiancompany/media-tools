@@ -178,7 +178,7 @@ shift \
     
 in_file="${1}"
 cut_start="${2}"
-cut_end="${3}"
+cut_length="${3}"
 (( $# == 4 )) && \
   out_file="${4}"
 _set_overrides
@@ -188,5 +188,5 @@ _ffmpeg_options_load
 _mediaclip \
   "${in_file}" \
   "${cut_start}" \
-  "${cut_end}" \
+  "${cut_length}" \
   "${out_file}"

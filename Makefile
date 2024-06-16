@@ -54,7 +54,8 @@ install-media:
 	install -vDm 755 media-tools/vidcat "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidmute "$(BIN_DIR)"
 	install -vDm 755 media-tools/volumechange "$(BIN_DIR)"
-	install -vDm 755 media-tools/mediacut "$(BIN_DIR)"
+	install -vDm 755 media-tools/mediaclip "$(BIN_DIR)"
+	install -vDm 755 media-tools/mediasplit "$(BIN_DIR)"
 	install -vDm 755 media-tools/ytxclip "$(BIN_DIR)"
 	install -vDm 755 media-tools/ytencode "$(BIN_DIR)"
 
