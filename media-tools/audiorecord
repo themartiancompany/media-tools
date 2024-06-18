@@ -206,6 +206,7 @@ _set_overrides() {
 _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "           Recording date:   $(_get "recording" "date")"
+  _msg_info "         Recording format:   $(_get "recording" "format")"
   _msg_info "         Recording method:   $(_get "recording" "method")"
   _msg_info "                 Bit rate:   $(_get "bit" "rate")"
   _msg_info "            Buffer length:   $(_get "buffer" "length")"
