@@ -226,7 +226,7 @@ _set_overrides
 _config_user_init \
   "media-tools"
 _show_config
-_vidcat \
+_audiocat \
   "$(_get \
        "out" \
        "file")" \
