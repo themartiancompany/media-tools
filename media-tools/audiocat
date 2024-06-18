@@ -144,7 +144,7 @@ _set_overrides() {
 _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "              Encode date:   $(_get "encode" "date")"
-  _msg_info "            Encode method:   $(_get "encode" "method")"
+  _msg_info "            Encode method:   $(_get "encode" "mode")"
   _msg_info "                 In files:   ${in_files[*]}"
   _msg_info "              Output file:   $(_get "out" "file")"
 }
@@ -230,4 +230,7 @@ _audiocat \
   "$(_get \
        "out" \
        "file")" \
+  "$(_get \
+       "encode" \
+       "mode")" \
   "${in_files[@]}"
