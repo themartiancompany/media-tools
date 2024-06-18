@@ -40,6 +40,11 @@ _ffmpeg_options_load() {
   true
 }
 
+_auto_detect_mode() {
+  echo \
+    "concat"
+}
+
 # Con(cat)enate video files
 # $1: output video file
 # $@: input video files (sorted)
@@ -58,6 +63,9 @@ _audiocat() {
   _in=(
     "$@"
   )
+  if [[ "${_mode}" == "auto" ]]; then
+    _mode="$(_auto_detect_mode)"
+  fi
   _recs="$( \
     mktemp)"
   for _rec \
