@@ -234,14 +234,16 @@ Usage:
     [options]
     (<out_file>)
   options:
+     -f                   Recording format
+                          Default: $(_get "recording" "format")
      -b                   Audio bitrate (for supported methods).
-                          Default ($(_get "bit" "rate"))
+                          Default: $(_get "bit" "rate").
      -k                   Encoding buffer length.
-                          Default ($(_get "buffer" "length"))
+                          Default: $(_get "buffer" "length").
      -l                   Length of the recording.
-                          Default ($(_get "recording" "length"))
+                          Default: $(_get "recording" "length").
      -m                   Recording method.
-                          Default ($(_get "recording" "method"))
+                          Default: $(_get "recording" "method").
      -s                   Output to stdout.
      -h                   This message.
      -v                   Enable verbose output
