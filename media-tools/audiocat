@@ -112,6 +112,7 @@ _concat() {
   local \
     _opts=()
   _opts=(
+    -safe
     -y
     -f
       concat
