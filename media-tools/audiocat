@@ -45,9 +45,9 @@ _auto_detect_mode() {
     "concat"
 }
 
-# Con(cat)enate video files
-# $1: output video file
-# $@: input video files (sorted)
+# Con(cat)enate audio files
+# $1: output audio file
+# $@: input audio files (sorted)
 _audiocat() {
   local \
     _out="${1}" \
@@ -116,7 +116,7 @@ _concat() {
     -f
       concat
     -i
-      "${_vids}"
+      "${_recs}"
     -c
       copy
   )
