@@ -113,6 +113,7 @@ _concat() {
     _opts=()
   _opts=(
     -safe
+      0
     -y
     -f
       concat
