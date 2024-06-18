@@ -30,6 +30,7 @@ _global_variables() {
   recording_length=""
   encoding_delay=""
   recording_method=""
+  recording_format=""
   color=""
   quiet=""
 }
@@ -48,6 +49,7 @@ _encode() {
   local \
     _in="${1}" \
     _out="${2}" \
+    _delay="${3}" \
     _opts=() \
     _wip
   _opts+=(
@@ -77,8 +79,10 @@ _audiorecord() {
     _buffer="${2}" \
     _length="${3}" \
     _method="${4}" \
+    _delay="${5}" \
+    _format="${6}" \
     _out=(
-      "${5}"
+      "${7}"
     ) \
     _recorder_opts=() \
     _recorder="" \
@@ -121,7 +125,8 @@ _audiorecord() {
       "async" \
       _encode \
         "${_tmp_dir}/${_i}.hq.aac" \
-        "${_tmp_dir}/${_i}.opus"
+        "${_tmp_dir}/${_i}.opus" \
+	"${_delay}"
     _recs+=(
       "${_tmp_dir}/${_i}.opus"
     )
@@ -139,15 +144,17 @@ _audiorecord() {
       _i + 1))"
   done 
   sleep \
-    "$(_get \
-        "encoding" \
-	"delay")"
+    "${_delay}"
   audiocat \
     "${_out}" \
     "${_recs[@]}"
 }
 
 _set_overrides() {
+  _set_override \
+    "recording" \
+    "format" \
+    "opus"
   _set_override \
     "recording" \
     "date" \
@@ -160,7 +167,9 @@ _set_overrides() {
         "recording_$( \
 	  _get \
             "recording" \
-	    "date")")"
+	    "date").$(_get \
+                        "recording" \
+		        "format")")"
   _set_override \
     "recording" \
     "method" \
@@ -200,6 +209,7 @@ _show_config() {
   _msg_info "         Recording method:   $(_get "recording" "method")"
   _msg_info "                 Bit rate:   $(_get "bit" "rate")"
   _msg_info "            Buffer length:   $(_get "buffer" "length")"
+  _msg_info "           Encoding delay:   $(_get "encoding" "delay")"
   _msg_info "                   Length:   $(_get "recording" "length")"
   _msg_info "              Output file:   $(_get "out" "file")"
 }
@@ -249,14 +259,16 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'b:k:l:m:r:scvh?' \
+    'b:k:l:m:f:scvh?' \
     arg; do
   case \
     "${arg}" in
     b) override_bit_rate="${OPTARG}" ;;
     k) override_buffer_length="${OPTARG}" ;;
+    d) override_encoding_delay="${OPTARG}" ;;
     l) override_recording_length="${OPTARG}" ;;
     m) override_recording_method="${OPTARG}" ;;
+    f) override_recording_format="${OPTARG}" ;;
     s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
@@ -291,4 +303,6 @@ _audiorecord \
   "${buffer_length}" \
   "${recording_length}" \
   "${recording_method}" \
+  "${encoding_delay}" \
+  "${recording_format}" \
   "${out_file}"
