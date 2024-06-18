@@ -167,7 +167,7 @@ _show_config() {
   _msg_info "            Output prefix:   $(_get "out" "prefix")"
   _msg_info "            Chunks amount:   $(_get "chunks" "amount")"
   _msg_info "            Chunks length:   $(_get "chunks" "length")"
-  _msg_info "          Selected chunks:   ${selected_chunks[*]}"
+  _msg_info "          Selected chunks:   ${chunks_selected[*]}"
 }
 
 
