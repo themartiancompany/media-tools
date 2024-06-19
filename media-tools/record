@@ -107,12 +107,23 @@ _method_auto_detect() {
 }
 
 _audio_auto_detect() {
+  if [[ "${quiet}" == "n" ]]; then
+    _audiorecord_opts+=(
+      -v
+    )
+  fi
   if [[ "$(uname -o)" == "Android" ]]; then
     _audiorecord_opts+=(
       -m
         'termux'
     )
   fi
+  _audiorecord_opts+=(
+    -k
+      "${_buffer}"
+    -l
+      "${_buffer}"
+  )
   echo \
     "true"
 }
@@ -179,7 +190,7 @@ _record() {
     if [[ "${_audio}" == "true" ]]; then
       _run \
         "audiorecord_${_i}" \
-        0 \ # "${_buffer}" \
+        "0" \
         "async" \
         "audiorecord" \
           "${_audiorecord_opts[@]}" \
@@ -302,7 +313,7 @@ _show_config() {
   _msg_info "                 Bit rate:   $(_get "bit" "rate")"
   _msg_info "            Buffer length:   $(_get "buffer" "length")"
   _msg_info "           Encoding delay:   $(_get "encoding" "delay")"
-  _msg_info "                   Length:   $(_get "recording" "length")"
+  _msg_info "         Recording length:   $(_get "recording" "length")"
   _msg_info "              Output file:   $(_get "out" "file")"
 }
 

@@ -23,7 +23,6 @@ _requirements() {
 # shellcheck disable=SC2034
 _global_variables() {
   recording_date=""
-  out_stdout=""
   out_file=""
   bit_rate=""
   buffer_length=""
@@ -244,7 +243,6 @@ Usage:
                           Default: $(_get "recording" "length").
      -m                   Recording method.
                           Default: $(_get "recording" "method").
-     -s                   Output to stdout.
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -292,9 +290,6 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-(( $# == 1 )) && \
-  _msg_info \
-    "no output file given, will return to stdout"
 (( $# == 1 )) && \
   out_file="${1}"
 _set_overrides
