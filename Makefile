@@ -37,7 +37,7 @@ install-media:
 	install -vDm 755 media-tools/hflipvid "$(BIN_DIR)"
 	install -vDm 755 media-tools/ispic "$(BIN_DIR)"
 	install -vDm 755 media-tools/medialength "$(BIN_DIR)"
-	install -vDm 755 media-tools/mkaudiovid "$(BIN_DIR)"
+	install -vDm 755 media-tools/mkaudiovideo "$(BIN_DIR)"
 	install -vDm 755 media-tools/mkaudioloop "$(BIN_DIR)"
 	install -vDm 755 media-tools/mkgif "$(BIN_DIR)"
 	install -vDm 755 media-tools/mkpad "$(BIN_DIR)"

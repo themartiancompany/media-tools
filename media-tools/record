@@ -103,11 +103,6 @@ _method_auto_detect() {
 }
 
 _audio_auto_detect() {
-  if [[ "${quiet}" == "n" ]]; then
-    _audiorecord_opts+=(
-      -v
-    )
-  fi
   if [[ "$(uname -o)" == "Android" ]]; then
     _audiorecord_opts+=(
       -m
@@ -120,8 +115,7 @@ _audio_auto_detect() {
     -l
       "${_buffer}"
   )
-  echo \
-    "true"
+  _audio="true"
 }
 
 _root_screenrecord(){
@@ -164,8 +158,12 @@ _record() {
       _method_auto_detect)"
   fi
   if [[ "${_audio}" == "auto" ]]; then
-    _audio="$( \
-      _audio_auto_detect)"
+    if [[ "${quiet}" != "y" ]]; then
+      _audiorecord_opts+=(
+        -v
+      )
+    fi
+    _audio_auto_detect
   fi
   "_${_method}_screenrecord"
   _tmp_dir="$( \

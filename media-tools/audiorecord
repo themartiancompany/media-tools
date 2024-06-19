@@ -109,7 +109,7 @@ _audiorecord() {
   while \
     (( _i < _chunks )); do
     _run \
-      "record_${_i}" \
+      "audiorecord_${_i}" \
       "${_buffer}" \
       "sync" \
       "${_recorder}" \
