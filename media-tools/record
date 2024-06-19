@@ -55,8 +55,8 @@ _encode() {
     _audio="${4}" \
     _delay="${5}" \
     _ytencode_opts=() \
-    _wip \
-    _audio_wip
+    _scaled \
+    _audiovideo
   _ytencode_opts+=(
     -m
       "fake"
@@ -66,26 +66,26 @@ _encode() {
   _msg_info \
     "encoding ${_in}"
   if [[ "${_scale}" != "1" ]]; then
-    _wip="$( \
+    _scaled="$( \
       mktemp).mp4"
     vidscale \
       "${_in}" \
-      "${_wip}" \
+      "${_scaled}" \
       "${_scale}"
     rm \
       "${_in}"
-    _in="${_wip}"
+    _in="${_scaled}"
   fi
   if [[ "${_audio}" != "" ]]; then
-    _audio_wip="$( \
+    _audiovideo="$( \
       mktemp).mp4"
-    audiovid2vid \
-      "${_audio_wip}" \
+    mkaudiovideo \
+      "${_audiovideo}" \
       "${_audio}" \
       "${_in}"
     rm \
       "${_in}"
-    _in="${_audio_wip}"
+    _in="${_audiovideo}"
   fi
   ytencode \
     "${_ytencode_opts[@]}" \
@@ -100,7 +100,6 @@ _method_auto_detect() {
     echo \
       'root'
   fi
-
 }
 
 _audio_auto_detect() {
