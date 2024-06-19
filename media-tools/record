@@ -230,7 +230,7 @@ _set_overrides() {
   _set_override \
     "audio" \
     "record" \
-    "true"
+    "auto"
   _set_override \
     "recording" \
     "format" \
@@ -239,6 +239,10 @@ _set_overrides() {
     "recording" \
     "date" \
     "$(_get_date_human)"
+  _set_override \
+    "recording" \
+    "method" \
+    "auto"
   _set_override \
     "out" \
     "file" \
@@ -288,7 +292,7 @@ _set_overrides() {
 
 # Shows configuration options.
 _show_config() {
-  _msg_info "${ggapp_name} configuration"
+  _msg_info "${app_name} configuration"
   _msg_info "           Recording date:   $(_get "recording" "date")"
   _msg_info "         Recording format:   $(_get "recording" "format")"
   _msg_info "             Audio record:   $(_get "audio" "record")"
