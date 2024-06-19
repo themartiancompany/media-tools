@@ -53,19 +53,16 @@ _encode() {
     _out="${2}" \
     _scale="${3}" \
     _audio="${4}" \
+    _delay="${5}" \
     _ytencode_opts=() \
     _wip \
     _audio_wip
-  _wip="$( \
-    mktemp).mp4"
   _ytencode_opts+=(
     -m
       "fake"
   )
   sleep \
-    "$(_get \
-      "encoding" \
-      "delay")"
+    "${_delay}"
   _msg_info \
     "encoding ${_in}"
   if [[ "${_scale}" != "1" ]]; then
@@ -150,12 +147,14 @@ _record() {
     _buffer="${5}" \
     _length="${6}" \
     _scale="${7}" \
+    _delay="${8}" \
     _out=(
-      "${8}"
+      "${9}"
     ) \
     _screenrecord_opts=() \
     _screenrecord \
     _audiorecord_opts=() \
+    _audio_file \
     _tmp_dir \
     _tmp \
     _chunks \
@@ -187,14 +186,17 @@ _record() {
     _length / _buffer ))"
   while \
     (( _i < _chunks )); do
+    _audio_file=""
     if [[ "${_audio}" == "true" ]]; then
+      _audio_file="${_tmp_dir}/${_i}.opus"
       _run \
         "audiorecord_${_i}" \
         "0" \
         "async" \
         "audiorecord" \
           "${_audiorecord_opts[@]}" \
-          "${_tmp_dir}/${_i}.opus"
+          "${_audio_file}" || \
+	true
     fi
     _run \
       "record_${_i}" \
@@ -202,7 +204,8 @@ _record() {
       "sync" \
       "${_screenrecord}" \
         "${_screenrecord_opts[@]}" \
-        "${_tmp_dir}/${_i}.hq.mp4"
+        "${_tmp_dir}/${_i}.hq.mp4" || \
+      true
     _run \
       "encode_${_i}" \
       "0" \
@@ -211,7 +214,9 @@ _record() {
         "${_tmp_dir}/${_i}.hq.mp4" \
         "${_tmp_dir}/${_i}.${_format}" \
 	"${_scale}" \
-        "${_tmp_dir}/${_i}.opus"
+        "${_audio_file}" \
+	"${_delay}" || \
+      true
     _vids+=(
       "${_tmp_dir}/${_i}.${_format}"
     )
@@ -229,9 +234,8 @@ _record() {
       _i + 1))"
   done 
   sleep \
-    "$(_get \
-        "encoding" \
-	"delay")"
+    "$(( \
+      _delay + 2))"
   vidcat \
     "${_out}" \
     "${_vids[@]}"
@@ -278,7 +282,7 @@ _set_overrides() {
   _set_override \
     "recording" \
     "length" \
-    "$(( 24 * 60 * 60 ))" # 24 hours
+    "120" # "$(( 24 * 60 * 60 ))" # 24 hours
   _set_override \
     "scale" \
     "factor" \
@@ -414,4 +418,5 @@ _record \
   "${buffer_length}" \
   "${recording_length}" \
   "${scale_factor}" \
+  "${encoding_delay}" \
   "${out_file}"

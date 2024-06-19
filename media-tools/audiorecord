@@ -56,9 +56,7 @@ _encode() {
       "${_in}"
   )
   sleep \
-    "$(_get \
-      "encoding" \
-      "delay")"
+    "${_delay}"  
   _msg_info \
     "encoding ${_in}"
   ffmpeg \
@@ -143,7 +141,8 @@ _audiorecord() {
       _i + 1))"
   done 
   sleep \
-    "${_delay}"
+    "$(( \
+      _delay + 2))"
   audiocat \
     "${_out}" \
     "${_recs[@]}"
@@ -188,7 +187,7 @@ _set_overrides() {
   _set_override \
     "encoding" \
     "delay" \
-    "10"
+    "2"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
