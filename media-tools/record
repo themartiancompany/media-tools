@@ -99,7 +99,7 @@ _encode() {
 }
 
 _method_auto_detect() {
-  if [[ "$(_uname -o)" == "Android" ]]; then
+  if [[ "$(uname -o)" == "Android" ]]; then
     _method='root'
   fi
 }
