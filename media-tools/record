@@ -100,8 +100,10 @@ _encode() {
 
 _method_auto_detect() {
   if [[ "$(uname -o)" == "Android" ]]; then
-    _method='root'
+    echo \
+      'root'
   fi
+
 }
 
 _audio_auto_detect() {
