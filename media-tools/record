@@ -105,7 +105,7 @@ _method_auto_detect() {
 }
 
 _audio_auto_detect() {
-  if [[ "$(_uname -o)" == "Android" ]]; then
+  if [[ "$(uname -o)" == "Android" ]]; then
     _audiorecord_opts+=(
       -m
         'termux'
