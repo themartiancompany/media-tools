@@ -79,7 +79,7 @@ _encode() {
   if [[ "${_audio}" != "" ]]; then
     _audiovideo="$( \
       mktemp).mp4"
-    mkaudiovideo \
+    mkmedia \
       "${_audiovideo}" \
       "${_audio}" \
       "${_in}"
