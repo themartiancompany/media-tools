@@ -54,9 +54,15 @@ _encode() {
     _scale="${3}" \
     _audio="${4}" \
     _delay="${5}" \
+    _mkmedia_opts=() \
     _ytencode_opts=() \
     _scaled \
     _audiovideo
+  if [[ "${quiet}" != "y" ]]; then
+    _mkmedia_opts+=(
+      -v
+    )
+  fi
   _ytencode_opts+=(
     -m
       "fake"
@@ -66,6 +72,8 @@ _encode() {
   _msg_info \
     "encoding ${_in}"
   if [[ "${_scale}" != "1" ]]; then
+    _msg_info \
+      "scaling ${_in}"
     _scaled="$( \
       mktemp).mp4"
     vidscale \
@@ -80,6 +88,7 @@ _encode() {
     _audiovideo="$( \
       mktemp).mp4"
     mkmedia \
+      "${_mkmedia_opts[@]}" \
       "${_audiovideo}" \
       "${_audio}" \
       "${_in}"
@@ -291,7 +300,7 @@ _set_overrides() {
   _set_override \
     "encoding" \
     "delay" \
-    "10"
+    "20"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
