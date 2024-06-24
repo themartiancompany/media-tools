@@ -102,8 +102,8 @@ _mediasplit() {
   fi
   for _chunk \
     in $(seq \
-            "${_amount}"); do
-    if [[ " ${_chunks[*]} " == " "*"${_chunk}"*" " ]]; then
+           "${_amount}"); do
+    if [[ " ${_chunks[*]} " == *" ${_chunk} "* ]]; then
       _msg_info \
         "rendering chunk ${_chunk}"
       _start="$( \
