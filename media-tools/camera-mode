@@ -1,0 +1,290 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+_requirements() {
+  local \
+    _os
+  _os="$( \
+    uname \
+      -o)"
+  if [[ "${_os}" == 'Android' ]]; then
+    _check_cmd \
+      "activity-launch"
+  fi
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  input_command=""
+  mode_duration=""
+  camera_app=""
+  color=""
+  quiet=""
+}
+
+_disable() {
+  local \
+    _duration="${1}" \
+    _app="${2}"
+    _cmd=()
+  _cmd=(
+    "mv"
+    "${_device}"
+    "${_device}.disabled"
+  )
+  su \
+    -c \
+    "${_cmd[*]}"
+}
+
+_start() {
+  local \
+    _device="${1}" \
+    _cmd=()
+
+  _cmd=(
+    "mv"
+    "${_device}.disabled"
+    "${_device}"
+  )
+  su \
+    -c \
+    "${_cmd[*]}"
+}
+
+_status() {
+  local \
+    _duration="${1}" \
+    _poll="${2}" \
+    _app="${3}" \
+    _status \
+    _conf
+  _conf="$( \
+    _get_conf_path)"
+  _status="$( \
+    _read_settings \
+      "${_conf}" \
+      "mode" \
+      "status")"
+  echo \
+    "${_status}"
+}
+
+_service() {
+  local \
+    _duration="${1}" \
+    _poll="${2}" \
+    _app="${3}" \
+    _time=0
+  while \
+    (( "${_time}" < "${_duration}" )); do
+    activity-launch \
+      "${_app}" \
+      "MainActivity"
+    bbrightnessctl \
+      -m \
+        root \
+      set \
+        0
+    touchctl \
+      disable
+    sleep \
+      "${_poll}"
+    _time="$(( \
+      _time + _poll ))"
+  done
+}
+
+_auto_detect_method() {
+  local \
+    _os \
+    _method
+  _os="$( \
+    uname \
+      -o)"
+  if [[ "${_os}" == "Android" ]]; then
+    _method="root"
+    if [[ "$(command \
+               -v \
+               "su")" ]]; then
+      _method="root"
+    fi
+  fi
+  echo \
+    "${_method}"
+}
+
+_camera_mode() {
+  local \
+    _cmd="${1}" \
+    _duration="${2}" \
+    _duration="${3}" \
+    _app="${4}" \
+    _opts=() \
+    _conf
+  shift \
+    4
+  _opts=(
+    "$@"
+  )
+  _conf="$( \
+    _get_conf_path)"
+  _a="$( \
+      _read_settings \
+        "${_conf}" \
+        "${_host}" \
+        "port")"
+
+  'net.sourceforge.opencamera' 'MainActivity'
+  "_${_cmd}" \
+    "${_duration}" \
+    "${_app}" \
+    "${_poll}" \
+    "${_opts[*]}"
+}
+
+_camera_app_auto_detect() {
+  local \
+    _os
+  _os="$( \
+    uname \
+      -o)"
+  if [[ "${_os}" == 'Android' ]]; then
+    echo \
+      'net.sourceforge.opencamera'
+  fi
+}
+
+_get_conf_path() {
+  local \
+    _dir \
+    _conf
+  _dir="${HOME}/.config/media-tools"
+  _conf="${_dir}/$( \
+    _get \
+      "app" \
+      "name").cfg"
+  echo \
+    "${_conf}"
+}
+
+_set_overrides() {
+  _set_override \
+    "mode" \
+    "duration" \
+    "$(( 60 * 60 * 24 ))"
+  _set_override \
+    "camera" \
+    "app" \
+    "$(_camera_app_auto_detect)"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Camera device mode
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <command>
+  commands:
+    enable
+    disable
+    status
+  options:
+     -t                   Camera mode duration in seconds.
+			  Default: $(_get "mode" "duration")
+     -a                   Camera app.
+			  Default: $(_get "camera" "app")
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    't:a:cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    t) override_mode_duration="${OPTARG}" ;;
+    a) override_camera_app="${OPTARG}" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+(( $# <= 1 )) && \
+  _usage \
+    1
+_set \
+  "input" \
+  "command" \
+  "${1}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_camera_mode \
+  "$(_get \
+       "mode" \
+       "duration")" \
+  "$(_get \
+       "camera" \
+       "app")"
+
+# vim:set sw=2 sts=-1 et:
