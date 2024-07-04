@@ -1,0 +1,253 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    "ffmpeg"
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  out_video=""
+  in_audio=""
+  in_videos=()
+  box_x=""
+  box_y=""
+  box_width=""
+  box_height=""
+  out_stdout=""
+  color=""
+  quiet=""
+}
+
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+# Crop a video file
+# $1: output file
+# $2: input file
+# $3: box upper left vertex x location
+# $4: box width
+# $5: box height
+_crop() {
+  local \
+    _in="${1}" \
+    _out=(
+      "${2}"
+    ) \
+    _box_x="${3}" \
+    _box_y="${4}" \
+    _box_width="${5}" \
+    _box_eight="${6}" \
+    _opts=() \
+    _ext
+  _opts+=(
+    "${_ffmpeg_opts[@]}"
+    #  -loop 1
+  )
+  _opts+=(
+    -i
+      "${_in}"
+    -vf
+      "crop=${_box_width}:${_box_height}:${_box_x}:${_box_y}"
+  )
+  if [[ "${_out[*]}" == "" ]] || \
+     [[ "$(_get \
+             "out" \
+	     "stdout")" == "y" ]]; then
+    _out+=(
+      -
+    )
+  fi
+  ffmpeg \
+    "${_opts[@]}" \
+    "${_out[*]}"
+}
+
+# Set defaults and, if present, overrides
+# from crop command line option parameters
+_set_overrides() {
+  _set_override \
+    "box" \
+    "x" \
+    "0"
+  _set_override \
+    "box" \
+    "y" \
+    "0"
+  _set_override \
+    "box" \
+    "width" \
+    "100"
+  _set_override \
+    "box" \
+    "height" \
+    "100"
+  _set_override \
+    "out" \
+    "stdout" \
+    "n"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Crop videos
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <input_audio>
+    <output_video>
+    <box_x>
+    <box_y>
+    <box_width>
+    <box_height>
+  Parameters:
+     box_x                Box left upper vertex x position
+                          Default: $(_get "box" "x")
+     box_y                Box left upper vertex y position
+                          Default: $(_get "box" "y")
+     box_width            Box width
+                          Default: $(_get "box" "width")
+     box_height           Box height
+                          Default: $(_get "box" "height")
+  options:
+     -s                   Output to stdout.
+			  Default: $(_get "out" "stdout")
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'svh?' \
+    arg; do
+  case \
+    "${arg}" in
+    s) override_out_stdout="y" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+
+(( $# < 2 )) && \
+  _set_overrides && \
+  _usage \
+    1
+_set \
+  "in" \
+  "video" \
+  "${1}"
+_set \
+  "out" \
+  "video" \
+  "${2}"
+_set \
+  "box" \
+  "x" \
+  "${3}"
+_set \
+  "box" \
+  "y" \
+  "${4}"
+_set \
+  "box" \
+  "length" \
+  "${5}"
+_set \
+  "box" \
+  "height" \
+  "${6}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
+opts=(
+  "$(_get \
+       "in" \
+       "video")"
+  "$(_get \
+       "out" \
+       "video")"
+  "$(_get \
+       "box" \
+       "x")"
+  "$(_get \
+       "box" \
+       "y")"
+  "$(_get \
+       "box" \
+       "length")"
+  "$(_get \
+       "box" \
+       "height")"
+)
+_crop \
+  "${opts[@]}"
