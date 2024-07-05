@@ -51,6 +51,7 @@ install-media:
 	install -vDm 755 media-tools/vidscale "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidcat "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidmute "$(BIN_DIR)"
+	install -vDm 755 media-tools/vidsize "$(BIN_DIR)"
 	install -vDm 755 media-tools/volumechange "$(BIN_DIR)"
 	install -vDm 755 media-tools/mediaclip "$(BIN_DIR)"
 	install -vDm 755 media-tools/mediasplit "$(BIN_DIR)"

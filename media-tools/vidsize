@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_vidsize() {
+  local \
+    _media="${1}" \
+    _ffprobe_opts=()
+  _ffprobe_opts=(
+    -select_streams
+      v:0
+    -show_entries 
+      stream="width,height"
+    -v
+      'quiet'
+    -of
+     csv="s=x:p=0"
+  )
+  ffprobe \
+    -i \
+      "${_media}" \
+    ${_ffprobe_opts[@]}
+}
+
+_media="${1}"
+
+(( $# < 1 )) && \
+  _usage=(
+    "Usage:"
+      "vidsize"
+        "<video_file>"
+  ) && \
+  echo \
+    "${_usage[*]}" && \
+    exit
+
+_vidsize \
+  "${_media}" \
+
+# vim: ft=sh syn=sh et
