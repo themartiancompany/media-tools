@@ -32,6 +32,7 @@ install-media:
 	install -vDm 755 media-tools/blackintro "$(BIN_DIR)"
 	install -vDm 755 media-tools/blackoutro "$(BIN_DIR)"
 	install -vDm 755 media-tools/blackvid "$(BIN_DIR)"
+	install -vDm 755 media-tools/crop "$(BIN_DIR)"
 	install -vDm 755 media-tools/hflip "$(BIN_DIR)"
 	install -vDm 755 media-tools/hflipvid "$(BIN_DIR)"
 	install -vDm 755 media-tools/ispic "$(BIN_DIR)"
