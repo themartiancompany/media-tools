@@ -19,19 +19,20 @@ _requirements() {
   _check_cmd \
     'bc'
   _check_cmd \
-    'mediaclip'
+    'crop'
+
 }
 
 # shellcheck disable=SC2034
 _global_variables() {
   out_stdout=""
   in_file=""
-  split_mode=""
-  chunks_amount=""
-  chunks_length=""
+  crop_mode=""
+  grid_columns=""
+  grid_rows=""
   out_prefix=""
-  chunks_selected=()
-  split_date=""
+  crops_selected=()
+  crop_date=""
   color=""
   quiet=""
 }
@@ -47,18 +48,16 @@ _ffmpeg_options_load() {
 }
 
 _uniform_split() {
-  _length="$( \
-    echo \
-      "${_duration} / ${_amount}" | \
-      bc)"
-}
-
-_fixed_split() {
-  _amount="$( \
-    echo \
-      "${_duration} / ${_length};" \
-      "scale 0" | \
-      bc)"
+  _width="${_resolution%%x*}"
+  _height="${_resolution##*x}"
+  _crop_width="$( \
+   echo \
+     "${_width} / ${_columns}" | \
+     bc)"
+  _crop_eight="$( \
+   echo \
+     "${_eight} / ${_rows}" | \
+     bc)"
 }
 
 # Cut video by chunks amount
@@ -69,62 +68,81 @@ _fixed_split() {
 # $4: chunks amount if 'uniform' mode is selected
 # $5: chunks length if 'fixed' mode is selected
 # $@: only render these chunks
-_mediasplit() {
+_gridcrop() {
   local \
     _in="${1}" \
     _mode="${2}" \
     _prefix="${3}" \
-    _amount="${4}" \
-    _length="${5}" \
-    _chunk \
-    _chunks=() \
-    _duration \
-    _start \
+    _rows="${4}" \
+    _columns="${5}" \
+    _row \
+    _column \
+    _crops=() \
+    _resolution \
+    _crop_height \
+    _crop_width \
     _out \
     _ext
   shift \
     5
-  _chunks=(
+  _crops=(
     "$@"
   )
   _ext="$( \
     _get_ext \
       "${_in}")"
-  _duration="$( \
-    medialength \
+  _resolution="$( \
+    vidsize \
       "${_in}")"
   "_${_mode}_split"
-  if [[ "${_chunks[*]}" == "" ]]; then
-    _chunks+=(
-      $(seq \
-          "${_amount}")
-    )
+  if [[ "${_crops[*]}" == "" ]]; then
+    for _row \
+      in $(seq \
+             "${_rows}"); do
+      for _column \
+        in $(seq \
+               "${_columns}"); do
+        _crops+=(
+	  "${_row}.${_column}"
+        )  
+      done
+    done
   fi
-  for _chunk \
+  for _row \
     in $(seq \
-           "${_amount}"); do
-    if [[ " ${_chunks[*]} " == *" ${_chunk} "* ]]; then
-      _msg_info \
-        "rendering chunk ${_chunk}"
-      _start="$( \
-        echo \
-	  "(${_chunk} - 1) * ${_length}" | \
-	  bc)"
-      _out="${_prefix}.${_chunk}.${_ext}"
-      mediaclip \
-        "${_in}" \
-	"${_start}" \
-	"${_length}" \
-	"${_out}"
-    fi
+           "${_rows}"); do
+    for _column \
+      in $(seq \
+             "${_columns}"); do
+      if [[ " ${_crops[*]} " == *" ${_row}.${_column} "* ]]; then
+        _msg_info \
+          "rendering sector ${_row}.${_column}"
+        _box_x="$( \
+          echo \
+            "(${_column} - 1) * ${_crop_width}" | \
+            bc)"
+        _box_y="$( \
+          echo \
+            "(${_row} - 1) * ${_crop_height}" | \
+            bc)"
+        _out="${_prefix}.${_row}.${_column}.${_ext}"
+        crop \
+          "${_in}" \
+          "${_out}" \
+          "${_box_x}" \
+          "${_box_y}" \
+          "${_crop_width}" \
+          "${_crop_height}"
+      fi
+    done
   done
 }
 
 # Set defaults and, if present, overrides
-# from arch-grub command line option parameters
+# from gridcrop command line option parameters
 _set_overrides() {
   _set_override \
-    "split" \
+    "crop" \
     "date" \
     "$(_get_date_human)"
   _set_override \
@@ -135,17 +153,17 @@ _set_overrides() {
 	      "in" \
 	      "file")")"
   _set_override \
-    "split" \
+    "crop" \
     "mode" \
     "uniform"
   _set_override \
-    "chunks" \
-    "amount" \
+    "grid" \
+    "rows" \
     "2"
   _set_override \
-    "chunks" \
-    "length" \
-    "600"
+    "grid" \
+    "columns" \
+    "1"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -161,15 +179,14 @@ _set_overrides() {
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "               Split date:   $(_get "split" "date")"
-  _msg_info "               Split mode:   $(_get "split" "mode")"
+  _msg_info "                Crop date:   $(_get "crop" "date")"
+  _msg_info "                Crop mode:   $(_get "crop" "mode")"
   _msg_info "                  In file:   ${in_file}"
   _msg_info "            Output prefix:   $(_get "out" "prefix")"
-  _msg_info "            Chunks amount:   $(_get "chunks" "amount")"
-  _msg_info "            Chunks length:   $(_get "chunks" "length")"
-  _msg_info "          Selected chunks:   ${chunks_selected[*]}"
+  _msg_info "                Grid rows:   $(_get "grid" "rows")"
+  _msg_info "             Grid columns:   $(_get "grid" "columns")"
+  _msg_info "           Selected crops:   ${crops_selected[*]}"
 }
-
 
 
 # Show help usage, with an exit status.
@@ -184,7 +201,7 @@ _usage() {
       _usage_text << \
         ENDUSAGETEXT || true
 
-Split media files
+Crop media files into a grid
 
 Usage:
   $(_get "app" "name")
@@ -192,22 +209,16 @@ Usage:
     <in_file>
     (<out_prefix>)
   modes:
-     uniform              to split the media in a given amount
-                          of uniformly sized chunks
-     fixed                to split the media in chunks of
-                          a given length
+     uniform              to split the media using an uniform grid
   options:
-     -m                   Split mode;
-                          Default: $(_get "split" "mode")
-     -n                   Amount of uniform chunks in which
-                          the media has to be split when
-			  'uniform' split mode is selected.
-                          Default: $(_get "chunks" "amount")
-     -l                   Length of the chunks in seconds
-                          in which the media has to be split
-			  when 'fixed' split mode is selected.
-                          Default: $(_get "chunks" "length")
-     -r                   Returns only selected chunks.
+     -m                   crop mode;
+                          Default: $(_get "crop" "mode")
+     -p                   Grid rows
+                          Default: $(_get "grid" "rows")
+     -q                   Grid columns
+                          Default: $(_get "grid" "columns")
+     -r                   Returns only selected crops, 
+                          written as 'row.column'.
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -229,10 +240,10 @@ while \
     arg; do
   case \
     "${arg}" in
-    m) override_split_mode="${OPTARG}" ;;
-    n) override_chunks_amount="${OPTARG}" ;;
-    l) override_chunks_length="${OPTARG}" ;;
-    r) chunks_selected+=(
+    m) override_crop_mode="${OPTARG}" ;;
+    p) override_grid_rows="${OPTARG}" ;;
+    q) override_grid_columns="${OPTARG}" ;;
+    r) crops_selected+=(
 	"${OPTARG}"
        ) ;;
     c) override_color="y" ;;
@@ -269,10 +280,10 @@ _config_user_init \
   "media-tools"
 _ffmpeg_options_load
 _show_config
-_mediasplit \
+_gridcrop \
   "${in_file}" \
-  "${split_mode}" \
+  "${crop_mode}" \
   "${out_prefix}" \
-  "${chunks_amount}" \
-  "${chunks_length}" \
-  "${chunks_selected[@]}"
+  "${grid_rows}" \
+  "${grid_columns}" \
+  "${crops_selected[@]}"

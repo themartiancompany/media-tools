@@ -59,7 +59,7 @@ _crop() {
     _box_x="${3}" \
     _box_y="${4}" \
     _box_width="${5}" \
-    _box_eight="${6}" \
+    _box_height="${6}" \
     _opts=() \
     _ext
   _opts+=(
