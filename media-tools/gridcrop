@@ -54,9 +54,9 @@ _uniform_split() {
    echo \
      "${_width} / ${_columns}" | \
      bc)"
-  _crop_eight="$( \
+  _crop_height="$( \
    echo \
-     "${_eight} / ${_rows}" | \
+     "${_height} / ${_rows}" | \
      bc)"
 }
 
@@ -127,6 +127,7 @@ _gridcrop() {
             bc)"
         _out="${_prefix}.${_row}.${_column}.${_ext}"
         crop \
+	  -v \
           "${_in}" \
           "${_out}" \
           "${_box_x}" \
