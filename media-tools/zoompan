@@ -184,7 +184,7 @@ _zoompan() {
     if [[ "${_direction}" == "in" ]]; then
       _fun="min"
       _op="+"
-    elif [[ "${_direction}" == "in" ]]; then
+    elif [[ "${_direction}" == "out" ]]; then
       _fun="max"
       _op="-"
     fi
