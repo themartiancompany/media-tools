@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+INPUT="$1"
+OUTPUT="${INPUT%%.*}_zoom.MP4"
+MAX_ZOOM="${2:-2.5}"
+
+DURATION_SECONDS="${3:-5}"
+FPS="30"
+DURATION=$(bc <<< "${DURATION_SECONDS}*${FPS}")
+ZOOM_SPEED=$(bc <<< "scale=4;(${MAX_ZOOM}-1)/${DURATION}")
+
+SIZE=$(ffprobe -v error -select_streams v -show_entries stream=width,height -of csv=p=0:s=x "$INPUT")
+OW=$(echo $SIZE | cut -d'x' -f1)
+OH=$(echo $SIZE | cut -d'x' -f2)
+
+if (( $(bc -l <<< "scale=4;${OW}/${OH} >= 16/9") ))
+then
+  R=$(bc <<< "scale=4;${OH}/1080")
+  W=$(bc <<< "${OW}/${R}")
+  H=$(bc <<< "${OH}/${R}")
+else
+  R=$(bc <<< "scale=4;${OW}/1920")
+  W=$(bc <<< "${OW}/${R}")
+  H=$(bc <<< "${OH}/${R}")
+  if (( $(bc <<< "${H}%2") ))
+  then
+    H=$(bc <<< "${H}-1")
+  fi
+fi
+
+if [[ -z "$4" || -z "$5" ]]
+then
+  XP="50"
+  YP="50"
+else
+  XP=$(bc <<< "100*${4}/${OW}")
+  YP=$(bc <<< "100*${5}/${OH}")
+fi
+
+ffmpeg -i "$INPUT" \
+       -vf "zoompan=z='min(zoom+${ZOOM_SPEED},${MAX_ZOOM})':x='iw/2-iw*(1/2-${XP}/100)*on/${DURATION}-iw/zoom/2':y='ih/2-ih*(1/2-${YP}/100)*on/${DURATION}-ih/zoom/2':d=${DURATION}:fps=${FPS}:s=${W}x${H}" \
+       -c:v libx264 "$OUTPUT" -y
