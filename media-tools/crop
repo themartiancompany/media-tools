@@ -219,7 +219,7 @@ _set \
   "${4}"
 _set \
   "box" \
-  "length" \
+  "width" \
   "${5}"
 _set \
   "box" \
@@ -244,7 +244,7 @@ opts=(
        "y")"
   "$(_get \
        "box" \
-       "length")"
+       "width")"
   "$(_get \
        "box" \
        "height")"

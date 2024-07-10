@@ -37,7 +37,9 @@ install-media:
 	install -vDm 755 media-tools/hflip "$(BIN_DIR)"
 	install -vDm 755 media-tools/hflipvid "$(BIN_DIR)"
 	install -vDm 755 media-tools/ispic "$(BIN_DIR)"
+	install -vDm 755 media-tools/mediaclip "$(BIN_DIR)"
 	install -vDm 755 media-tools/medialength "$(BIN_DIR)"
+	install -vDm 755 media-tools/mediasplit "$(BIN_DIR)"
 	install -vDm 755 media-tools/mkmedia "$(BIN_DIR)"
 	install -vDm 755 media-tools/mkaudioloop "$(BIN_DIR)"
 	install -vDm 755 media-tools/mkgif "$(BIN_DIR)"
@@ -55,10 +57,9 @@ install-media:
 	install -vDm 755 media-tools/vidmute "$(BIN_DIR)"
 	install -vDm 755 media-tools/vidsize "$(BIN_DIR)"
 	install -vDm 755 media-tools/volumechange "$(BIN_DIR)"
-	install -vDm 755 media-tools/mediaclip "$(BIN_DIR)"
-	install -vDm 755 media-tools/mediasplit "$(BIN_DIR)"
 	install -vDm 755 media-tools/ytxclip "$(BIN_DIR)"
 	install -vDm 755 media-tools/ytencode "$(BIN_DIR)"
+	install -vDm 755 media-tools/zoompan "$(BIN_DIR)"
 
 install-configs:
 

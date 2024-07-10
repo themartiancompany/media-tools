@@ -1,44 +1,357 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # SPDX-License-Identifier: AGPL-3.0
 
-INPUT="$1"
-OUTPUT="${INPUT%%.*}_zoom.MP4"
-MAX_ZOOM="${2:-2.5}"
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
 
-DURATION_SECONDS="${3:-5}"
-FPS="30"
-DURATION=$(bc <<< "${DURATION_SECONDS}*${FPS}")
-ZOOM_SPEED=$(bc <<< "scale=4;(${MAX_ZOOM}-1)/${DURATION}")
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    "bc"
+  _check_cmd \
+    "ffmpeg"
+  _check_cmd \
+    "vidsize"
+}
 
-SIZE=$(ffprobe -v error -select_streams v -show_entries stream=width,height -of csv=p=0:s=x "$INPUT")
-OW=$(echo $SIZE | cut -d'x' -f1)
-OH=$(echo $SIZE | cut -d'x' -f2)
+# shellcheck disable=SC2034
+_global_variables() {
+  out_video=""
+  in_video=""
+  zoom_max=""
+  zoom_duration=""
+  box_x=""
+  box_y=""
+  out_stdout=""
+  color=""
+  quiet=""
+}
 
-if (( $(bc -l <<< "scale=4;${OW}/${OH} >= 16/9") ))
-then
-  R=$(bc <<< "scale=4;${OH}/1080")
-  W=$(bc <<< "${OW}/${R}")
-  H=$(bc <<< "${OH}/${R}")
-else
-  R=$(bc <<< "scale=4;${OW}/1920")
-  W=$(bc <<< "${OW}/${R}")
-  H=$(bc <<< "${OH}/${R}")
-  if (( $(bc <<< "${H}%2") ))
-  then
-    H=$(bc <<< "${H}-1")
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+# Zoom and pan a video file
+# $1: output file
+# $2: input file
+# $3: maximum zoom
+# $4: zoom duration
+# $5: box upper left vertex x location in percentage
+# $6: box upper left vertex y location in percentage
+_zoompan() {
+  local \
+    _in="${1}" \
+    _out=(
+      "${2}"
+    ) \
+    _zoom_max="${3}" \
+    _zoom_duration="${4}" \
+    _box_x="${5}" \
+    _box_y="${6}" \
+    _fps='30' \
+    _opts=() \
+    _vf=() \
+    _ext \
+    _duration \
+    _speed \
+    _size \
+    _width \
+    _width_new \
+    _height \
+    _height_new \
+    _ratio \
+    _ratio_new
+  _opts+=(
+    "${_ffmpeg_opts[@]}"
+    #  -loop 1
+  )
+  _duration=$( \
+    bc <<< \
+      "${_zoom_duration} * ${_fps}")
+  _speed="$( \
+    bc <<< \
+      "$(echo \
+         "scale=4;" \
+	 "( ${_zoom_max} - 1) / ${_duration}")")"
+  _size="$( \
+    vidsize \
+      "${_in}")"
+  _width="$( \
+    echo \
+      "${_size}" | \
+      cut \
+	-d'x' \
+	-f1)"
+  _eigth="$( \
+    echo \
+      "${_size}" | \
+      cut \
+	-d'x' \
+	-f2)"
+  _ratio="$( \
+    bc \
+      -l <<< \
+      "$(echo \
+           "scale=4;" \
+           "${_width}/${_height}")")"
+  if (( "${_ratio}" >= 16/9 )); then
+    _ratio_new=$( \
+      bc <<< \
+        "scale=4; ${_height} / 1080")
+    _width_new=$( \
+      bc <<< \
+        "${_width} / ${_ratio_new}")
+    _height_new=$( \
+      bc <<< \
+        "${_height} / ${_ratio_new}")
+  else
+    _ratio_new=$( \
+      bc <<< \
+        "scale=4; ${_width} / 1920")
+    _width_new=$( \
+      bc <<< \
+        "${_width} / ${_ratio_new}")
+    _height_new=$( \
+      bc <<< \
+        "${_height} / ${_ratio}")
+    if \
+      (( $(bc <<< \
+             "${_height_new} % 2") )); then
+      _height_new=$( \
+        bc <<< \
+	  "${_height_new} - 1")
+    fi
   fi
-fi
+  if [[ -z "${_box_x}" || \
+	-z "${_box_y}" ]]; then
+    _box_x="50"
+    _box_y="50"
+  else
+    _box_x=$( \
+      bc <<< \
+        "100 * ${_box_x} / ${_width}")
+    _box_y=$( \
+      bc <<< \
+	"100 * ${_box_y} /${_height}")
+  fi
+  _vf=(
+    "z='min(zoom+${_speed},${_zoom_max})'"
+    "x='iw/2-iw*(1/2-${_box_x}/100)*on/${_duration}-iw/zoom/2'"
+    "y='ih/2-ih*(1/2-${_box_y}/100)*on/${_duration}-ih/zoom/2'"
+    "d=${_duration}"
+    "fps=${_fps}"
+    "s=${_width_new}x${_height_new}"
+  )
+  _opts+=(
+    -i
+      "${_in}"
+    -vf
+       "zoompan=$( \
+	 IFS=":" \
+         echo \
+	   "${_vf[*]}")"
+    -c:v
+      'libx264' 
+    -y
+  )
+  if [[ "${_out[*]}" == "" ]] || \
+     [[ "$(_get \
+             "out" \
+	     "stdout")" == "y" ]]; then
+    _out+=(
+      -
+    )
+  fi
+  ffmpeg \
+    "${_opts[@]}" \
+    "${_out[*]}"
+}
 
-if [[ -z "$4" || -z "$5" ]]
-then
-  XP="50"
-  YP="50"
-else
-  XP=$(bc <<< "100*${4}/${OW}")
-  YP=$(bc <<< "100*${5}/${OH}")
-fi
+# Set defaults and, if present, overrides
+# from zoompan command line option parameters
+_set_overrides() {
+  _set_override \
+    "zoom" \
+    "max" \
+    "2.5"
+  _set_override \
+    "zoom" \
+    "duration" \
+    "5"
+  _set_override \
+    "box" \
+    "x" \
+    ""
+  _set_override \
+    "box" \
+    "y" \
+    ""
+  _set_override \
+    "out" \
+    "stdout" \
+    "n"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
 
-ffmpeg -i "$INPUT" \
-       -vf "zoompan=z='min(zoom+${ZOOM_SPEED},${MAX_ZOOM})':x='iw/2-iw*(1/2-${XP}/100)*on/${DURATION}-iw/zoom/2':y='ih/2-ih*(1/2-${YP}/100)*on/${DURATION}-ih/zoom/2':d=${DURATION}:fps=${FPS}:s=${W}x${H}" \
-       -c:v libx264 "$OUTPUT" -y
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Zoom and pan videos
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <input_video>
+    <output_video>
+    <zoom_max>
+    <zoom_duration>
+    <box_x>
+    <box_y>
+  Parameters:
+     zoom_max             Max zoom
+                          Default: $(_get "zoom" "max")
+     zoom_duration        Zoom time duration
+                          Default: $(_get "zoom" "duration")
+     box_x                Box left upper vertex x position
+                          as a percentage
+                          Default: $(_get "box" "x")
+     box_y                Box left upper vertex y position
+                          as a percentage
+                          Default: $(_get "box" "y")
+ options:
+     -s                   Output to stdout.
+			  Default: $(_get "out" "stdout")
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'svh?' \
+    arg; do
+  case \
+    "${arg}" in
+    s) override_out_stdout="y" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+
+(( $# < 2 )) && \
+  _set_overrides && \
+  _usage \
+    1
+_set \
+  "in" \
+  "video" \
+  "${1}"
+_set \
+  "out" \
+  "video" \
+  "${2}"
+(( $# == 3 )) && \
+  _set \
+    "zoom" \
+    "max" \
+    "${3}"
+(( $# == 4 )) && \
+  _set \
+    "zoom" \
+    "duration" \
+    "${4}"
+(( $# == 5 )) && \
+  _set \
+    "box" \
+    "x" \
+    "${5}"
+(( $# == 6 )) && \
+  _set \
+    "box" \
+    "y" \
+    "${6}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
+opts=(
+  "$(_get \
+       "in" \
+       "video")"
+  "$(_get \
+       "out" \
+       "video")"
+  "$(_get \
+       "zoom" \
+       "max")"
+  "$(_get \
+       "zoom" \
+       "duration")"
+  "$(_get \
+       "box" \
+       "x")"
+  "$(_get \
+       "box" \
+       "y")"
+)
+_zoompan \
+  "${opts[@]}"
