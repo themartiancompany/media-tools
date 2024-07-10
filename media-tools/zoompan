@@ -299,8 +299,10 @@ Usage:
                           as a percentage
                           Default: $(_get "box" "y")
  options:
-     -r                   Output resolution (ld, sd, hd, fhd).
+     -r <resolution>      Output resolution (ld, sd, hd, fhd).
 			  Default: $(_get "out" "resolution")
+     -f <fps>             Encoding frames per second.
+			  Default: $(_get "encoding" "fps")
      -s                   Output to stdout.
 			  Default: $(_get "out" "stdout")
      -h                   This message.
