@@ -26,6 +26,7 @@ _requirements() {
 
 # shellcheck disable=SC2034
 _global_variables() {
+  op_date=""
   out_video=""
   in_video=""
   zoom_max=""
@@ -79,7 +80,7 @@ _zoompan() {
     _height \
     _height_new \
     _height_scale \
-    _ratio
+    _ratio_new
   _opts+=(
     "${_ffmpeg_opts[@]}"
     #  -loop 1
@@ -128,25 +129,25 @@ _zoompan() {
              "scale=4;" \
              "${_width}/${_height}" ">=" \
 	     "16/9")") )); then
-    _ratio=$( \
+    _ratio_new=$( \
       bc <<< \
         "scale=4; ${_height} / ${_height_scale}")
     _width_new=$( \
       bc <<< \
-        "${_width} / ${_ratio}")
+        "${_width} / ${_ratio_new}")
     _height_new=$( \
       bc <<< \
-        "${_height} / ${_ratio}")
+        "${_height} / ${_ratio_new}")
   else
     _ratio_new=$( \
       bc <<< \
         "scale=4; ${_width} / ${_width_scale}")
     _width_new=$( \
       bc <<< \
-        "${_width} / ${_ratio}")
+        "${_width} / ${_ratio_new}")
     _height_new=$( \
       bc <<< \
-        "${_height} / ${_ratio}")
+        "${_height} / ${_ratio_new}")
     if \
       (( $(bc <<< \
              "${_height_new} % 2") )); then
@@ -180,8 +181,8 @@ _zoompan() {
       "${_in}"
     -vf
        "zoompan=$( \
-	 IFS=":" \
-         echo \
+	 IFS=":"; \
+         printf \
 	   "${_vf[*]}")"
     -c:v
       'libx264' 
@@ -203,6 +204,10 @@ _zoompan() {
 # Set defaults and, if present, overrides
 # from zoompan command line option parameters
 _set_overrides() {
+  _set_override \
+    "op" \
+    "date" \
+    "$(_get_date_human)"
   _set_override \
     "zoom" \
     "max" \
@@ -243,7 +248,7 @@ _set_overrides() {
 _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "           Operation date:   $(_get "op" "date")"
-  _msg_info "              Input video:   $(_get "input" "video")"
+  _msg_info "              Input video:   $(_get "in" "video")"
   _msg_info "             Output video:   $(_get "out" "video")"
   _msg_info "                 Max zoom:   $(_get "zoom" "max")"
   _msg_info "            Zoom duration:   $(_get "zoom" "duration")"
