@@ -188,8 +188,8 @@ _zoompan() {
       _x="iw/2-iw/zoom/2"
       _y="ih/2-ih/zoom/2"
     elif [[ "${_direction}" == "out" ]]; then
-      _fun="max"
-      _op="-"
+      _fun="min"
+      _op="+"
       _zoom="${_fun}(pzoom${_op}${_speed},${_zoom_max})"
       _x="2-iw/iw/zoom/2"
       _y="2-ih/ih/zoom/2"
