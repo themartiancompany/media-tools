@@ -35,6 +35,7 @@ _global_variables() {
   box_y=""
   out_resolution=""
   encoding_fps=""
+  media_type=""
   out_stdout=""
   color=""
   quiet=""
@@ -69,6 +70,7 @@ _zoompan() {
     _box_y="${6}" \
     _quality="${7}" \
     _fps="${8}" \
+    _type="${9}" \
     _opts=() \
     _vf=() \
     _ext \
@@ -81,7 +83,10 @@ _zoompan() {
     _height \
     _height_new \
     _height_scale \
-    _ratio_new
+    _ratio_new \
+    _zoom \
+    _x \
+    _y
   _opts+=(
     "${_ffmpeg_opts[@]}"
     #  -loop 1
@@ -99,14 +104,6 @@ _zoompan() {
     _width_scale=640
     _height_scale=360
   fi
-  _duration=$( \
-    bc <<< \
-      "${_zoom_duration} * ${_fps}")
-  _speed="$( \
-    bc <<< \
-      "$(echo \
-         "scale=4;" \
-	 "( ${_zoom_max} - 1) / ${_duration}")")"
   _size="$( \
     vidsize \
       "${_in}")"
@@ -130,31 +127,31 @@ _zoompan() {
              "scale=4;" \
              "${_width}/${_height}" ">=" \
 	     "16/9")") )); then
-    _ratio_new=$( \
+    _ratio_new="$( \
       bc <<< \
-        "scale=4; ${_height} / ${_height_scale}")
-    _width_new=$( \
+        "scale=4; ${_height} / ${_height_scale}")"
+    _width_new="$( \
       bc <<< \
-        "${_width} / ${_ratio_new}")
-    _height_new=$( \
+        "${_width} / ${_ratio_new}")"
+    _height_new="$( \
       bc <<< \
-        "${_height} / ${_ratio_new}")
+        "${_height} / ${_ratio_new}")"
   else
-    _ratio_new=$( \
+    _ratio_new="$( \
       bc <<< \
-        "scale=4; ${_width} / ${_width_scale}")
-    _width_new=$( \
+        "scale=4; ${_width} / ${_width_scale}")"
+    _width_new="$( \
       bc <<< \
-        "${_width} / ${_ratio_new}")
-    _height_new=$( \
+        "${_width} / ${_ratio_new}")"
+    _height_new="$( \
       bc <<< \
-        "${_height} / ${_ratio_new}")
+        "${_height} / ${_ratio_new}")"
     if \
-      (( $(bc <<< \
-             "${_height_new} % 2") )); then
-      _height_new=$( \
+      (( "$(bc <<< \
+             "${_height_new} % 2")" )); then
+      _height_new="$( \
         bc <<< \
-	  "${_height_new} - 1")
+	  "${_height_new} - 1")"
     fi
   fi
   if [[ -z "${_box_x}" || \
@@ -162,17 +159,41 @@ _zoompan() {
     _box_x="50"
     _box_y="50"
   else
-    _box_x=$( \
+    _box_x="$( \
       bc <<< \
-        "100 * ${_box_x} / ${_width}")
-    _box_y=$( \
+        "100 * ${_box_x} / ${_width}")"
+    _box_y="$( \
       bc <<< \
-	"100 * ${_box_y} /${_height}")
+	"100 * ${_box_y} /${_height}")"
+  fi
+  if [[ "${_type}" == "video" ]]; then
+    _duration="1"
+    _speed="$( \
+      bc <<< \
+        "$(echo \
+           "scale=4;" \
+           "( ${_zoom_max} - 1) / ${_duration}")")"
+    # _zoom="pzoom+${_speed}"
+    _zoom="min(pzoom+${_speed},${_zoom_max})"
+    _x="iw/2-iw/zoom/2"
+    _y="ih/2-ih/zoom/2"
+  elif [[ "${_type}" == "picture" ]]; then
+    _duration="$( \
+      bc <<< \
+        "${_zoom_duration} * ${_fps}")"
+    _speed="$( \
+      bc <<< \
+        "$(echo \
+           "scale=4;" \
+           "( ${_zoom_max} - 1) / ${_duration}")")"
+    _zoom="min(zoom+${_speed},${_zoom_max})"
+    _x="iw/2-iw*(1/2-${_box_x}/100)*on/${_duration}-iw/zoom/2"
+    _y="ih/2-ih*(1/2-${_box_y}/100)*on/${_duration}-ih/zoom/2"
   fi
   _vf=(
-    "z='min(zoom+${_speed},${_zoom_max})'"
-    "x='iw/2-iw*(1/2-${_box_x}/100)*on/${_duration}-iw/zoom/2'"
-    "y='ih/2-ih*(1/2-${_box_y}/100)*on/${_duration}-ih/zoom/2'"
+    "z='${_zoom}'"
+    "x='${_x}'"
+    "y='${_y}'"
     "d=${_duration}"
     "fps=${_fps}"
     "s=${_width_new}x${_height_new}"
@@ -234,6 +255,10 @@ _set_overrides() {
     "fps" \
     "30"
   _set_override \
+    "media" \
+    "type" \
+    "video"
+  _set_override \
     "out" \
     "stdout" \
     "n"
@@ -261,6 +286,7 @@ _show_config() {
   _msg_info "          Zoom y position:   $(_get "box" "y")"
   _msg_info "        Output resolution:   $(_get "out" "resolution")"
   _msg_info "             Encoding FPS:   $(_get "encoding" "fps")"
+  _msg_info "               Media type:   $(_get "media" "type")"
 }
 
 
@@ -303,6 +329,8 @@ Usage:
 			  Default: $(_get "out" "resolution")
      -f <fps>             Encoding frames per second.
 			  Default: $(_get "encoding" "fps")
+     -t <type>             Media type.
+			  Default: $(_get "media" "type")
      -s                   Output to stdout.
 			  Default: $(_get "out" "stdout")
      -h                   This message.
@@ -328,6 +356,7 @@ while \
     "${arg}" in
     r) override_out_resolution="${OPTARG}" ;;
     f) override_encoding_fps="${OPTARG}" ;;
+    t) override_media_type="${OPTARG}" ;;
     s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
@@ -410,6 +439,9 @@ opts=(
   "$(_get \
        "encoding" \
        "fps")"
+  "$(_get \
+       "media" \
+       "type")"
 )
 _show_config
 _zoompan \
