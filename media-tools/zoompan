@@ -32,6 +32,7 @@ _global_variables() {
   zoom_duration=""
   box_x=""
   box_y=""
+  out_resolution=""
   out_stdout=""
   color=""
   quiet=""
@@ -64,6 +65,7 @@ _zoompan() {
     _zoom_duration="${4}" \
     _box_x="${5}" \
     _box_y="${6}" \
+    _quality="${7}" \
     _fps='30' \
     _opts=() \
     _vf=() \
@@ -73,14 +75,29 @@ _zoompan() {
     _size \
     _width \
     _width_new \
+    _width_scale \
     _height \
     _height_new \
+    _height_scale \
     _ratio \
     _ratio_new
   _opts+=(
     "${_ffmpeg_opts[@]}"
     #  -loop 1
   )
+  if [[ "${_quality}" == "fhd" ]]; then
+    _width_scale=1920
+    _height_scale=1080
+  elif [[ "${_quality}" == "hd" ]]; then
+    _width_scale=1280
+    _height_scale=720
+  elif [[ "${_quality}" == "sd" ]]; then
+    _width_scale=854
+    _height_scale=480
+  elif [[ "${_quality}" == "ld" ]]; then
+    _width_scale=640
+    _height_scale=360
+  fi
   _duration=$( \
     bc <<< \
       "${_zoom_duration} * ${_fps}")
@@ -113,7 +130,7 @@ _zoompan() {
   if (( "${_ratio}" >= 16/9 )); then
     _ratio_new=$( \
       bc <<< \
-        "scale=4; ${_height} / 1080")
+        "scale=4; ${_height} / ${_height_scale}")
     _width_new=$( \
       bc <<< \
         "${_width} / ${_ratio_new}")
@@ -123,7 +140,7 @@ _zoompan() {
   else
     _ratio_new=$( \
       bc <<< \
-        "scale=4; ${_width} / 1920")
+        "scale=4; ${_width} / ${_width_scale}")
     _width_new=$( \
       bc <<< \
         "${_width} / ${_ratio_new}")
@@ -204,6 +221,10 @@ _set_overrides() {
     ""
   _set_override \
     "out" \
+    "resolution" \
+    "sd"
+  _set_override \
+    "out" \
     "stdout" \
     "n"
   if [[ -v override_color ]]; then
@@ -253,6 +274,8 @@ Usage:
                           as a percentage
                           Default: $(_get "box" "y")
  options:
+     -r                   Output resolution (ld, sd, hd, fhd).
+			  Default: $(_get "out" "resolution")
      -s                   Output to stdout.
 			  Default: $(_get "out" "stdout")
      -h                   This message.
@@ -272,10 +295,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'svh?' \
+    'r:svh?' \
     arg; do
   case \
     "${arg}" in
+    r) override_out_resolution="${OPTARG}" ;;
     s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
@@ -352,6 +376,9 @@ opts=(
   "$(_get \
        "box" \
        "y")"
+  "$(_get \
+       "out" \
+       "resolution")"
 )
 _zoompan \
   "${opts[@]}"
