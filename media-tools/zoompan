@@ -239,6 +239,19 @@ _set_overrides() {
   fi
 }
 
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "           Operation date:   $(_get "op" "date")"
+  _msg_info "              Input video:   $(_get "input" "video")"
+  _msg_info "             Output video:   $(_get "out" "video")"
+  _msg_info "                 Max zoom:   $(_get "zoom" "max")"
+  _msg_info "            Zoom duration:   $(_get "zoom" "duration")"
+  _msg_info "          Zoom x position:   $(_get "box" "x")"
+  _msg_info "          Zoom y position:   $(_get "box" "y")"
+}
+
+
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
@@ -380,5 +393,6 @@ opts=(
        "out" \
        "resolution")"
 )
+_show_config
 _zoompan \
   "${opts[@]}"
