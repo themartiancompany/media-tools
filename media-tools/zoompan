@@ -31,6 +31,7 @@ _global_variables() {
   in_video=""
   zoom_max=""
   zoom_duration=""
+  zoom_direction=""
   box_x=""
   box_y=""
   out_resolution=""
@@ -71,6 +72,7 @@ _zoompan() {
     _quality="${7}" \
     _fps="${8}" \
     _type="${9}" \
+    _direction="${10}" \
     _opts=() \
     _vf=() \
     _ext \
@@ -178,7 +180,15 @@ _zoompan() {
                "( ${_zoom_max} - 1) / ${_Duration}")")"
     # _zoom="pzoom+${_speed}"
     # _zoom="pzoom+0.01"
-    _zoom="min(pzoom+${_speed},${_zoom_max})"
+    #
+    if [[ "${_direction}" == "in" ]]; then
+      _fun="min"
+      _op="+"
+    elif [[ "${_direction}" == "in" ]]; then
+      _fun="max"
+      _op="-"
+    fi
+    _zoom="${_fun}(pzoom${_op}${_speed},${_zoom_max})"
     _x="iw/2-iw/zoom/2"
     _y="ih/2-ih/zoom/2"
   elif [[ "${_type}" == "picture" ]]; then
@@ -263,6 +273,10 @@ _set_overrides() {
     "type" \
     "video"
   _set_override \
+    "zoom" \
+    "direction" \
+    "in"
+  _set_override \
     "out" \
     "stdout" \
     "n"
@@ -286,6 +300,7 @@ _show_config() {
   _msg_info "             Output video:   $(_get "out" "video")"
   _msg_info "                 Max zoom:   $(_get "zoom" "max")"
   _msg_info "            Zoom duration:   $(_get "zoom" "duration")"
+  _msg_info "           Zoom direction:   $(_get "zoom" "direction")"
   _msg_info "          Zoom x position:   $(_get "box" "x")"
   _msg_info "          Zoom y position:   $(_get "box" "y")"
   _msg_info "        Output resolution:   $(_get "out" "resolution")"
@@ -329,6 +344,8 @@ Usage:
                           as a percentage
                           Default: $(_get "box" "y")
  options:
+     -d <direction>       Zoom diroction (in, out).
+			  Default: $(_get "zoom" "direction")
      -r <resolution>      Output resolution (ld, sd, hd, fhd).
 			  Default: $(_get "out" "resolution")
      -f <fps>             Encoding frames per second.
@@ -354,10 +371,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'r:f:svh?' \
+    'd:r:f:svh?' \
     arg; do
   case \
     "${arg}" in
+    d) override_zoom_direction="${OPTARG}" ;;
     r) override_out_resolution="${OPTARG}" ;;
     f) override_encoding_fps="${OPTARG}" ;;
     t) override_media_type="${OPTARG}" ;;
@@ -446,6 +464,9 @@ opts=(
   "$(_get \
        "media" \
        "type")"
+  "$(_get \
+       "zoom" \
+       "direction")"
 )
 _show_config
 _zoompan \
