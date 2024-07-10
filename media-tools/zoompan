@@ -126,8 +126,9 @@ _zoompan() {
       -l <<< \
       "$(echo \
            "scale=4;" \
-           "${_width}/${_height}")")"
-  if (( "${_ratio}" >= 16/9 )); then
+           "${_width}/${_height}" ">=" \
+	   "16/9")")"
+  if (( "${_ratio}" )); then
     _ratio_new=$( \
       bc <<< \
         "scale=4; ${_height} / ${_height_scale}")
