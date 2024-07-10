@@ -232,7 +232,7 @@ _set_overrides() {
   _set_override \
     "encoding" \
     "fps" \
-    "10"
+    "30"
   _set_override \
     "out" \
     "stdout" \
@@ -327,7 +327,7 @@ while \
   case \
     "${arg}" in
     r) override_out_resolution="${OPTARG}" ;;
-    f) override_oncoding_fps="${OPTARG}" ;;
+    f) override_encoding_fps="${OPTARG}" ;;
     s) override_out_stdout="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
