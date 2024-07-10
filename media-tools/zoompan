@@ -115,7 +115,7 @@ _zoompan() {
       cut \
 	-d'x' \
 	-f1)"
-  _eigth="$( \
+  _heigth="$( \
     echo \
       "${_size}" | \
       cut \
