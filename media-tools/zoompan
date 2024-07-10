@@ -79,8 +79,7 @@ _zoompan() {
     _height \
     _height_new \
     _height_scale \
-    _ratio \
-    _ratio_new
+    _ratio
   _opts+=(
     "${_ffmpeg_opts[@]}"
     #  -loop 1
@@ -121,30 +120,30 @@ _zoompan() {
       cut \
 	-d'x' \
 	-f2)"
-  _ratio="$( \
-    bc \
-      -l <<< \
-      "$(echo \
-           "scale=4;" \
-           "${_width}/${_height}" ">=" \
-	   "16/9")")"
-  if (( "${_ratio}" )); then
-    _ratio_new=$( \
+  if (( \
+    $( \
+      bc \
+        -l <<< \
+        "$(echo \
+             "scale=4;" \
+             "${_width}/${_height}" ">=" \
+	     "16/9")") )); then
+    _ratio=$( \
       bc <<< \
         "scale=4; ${_height} / ${_height_scale}")
     _width_new=$( \
       bc <<< \
-        "${_width} / ${_ratio_new}")
+        "${_width} / ${_ratio}")
     _height_new=$( \
       bc <<< \
-        "${_height} / ${_ratio_new}")
+        "${_height} / ${_ratio}")
   else
     _ratio_new=$( \
       bc <<< \
         "scale=4; ${_width} / ${_width_scale}")
     _width_new=$( \
       bc <<< \
-        "${_width} / ${_ratio_new}")
+        "${_width} / ${_ratio}")
     _height_new=$( \
       bc <<< \
         "${_height} / ${_ratio}")
