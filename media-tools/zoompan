@@ -173,7 +173,8 @@ _zoompan() {
         "$(echo \
            "scale=4;" \
            "( ${_zoom_max} - 1) / ${_duration}")")"
-    _zoom="pzoom+${_speed}"
+    # _zoom="pzoom+${_speed}"
+    _zoom="pzoom+0.01"
     # _zoom="min(pzoom+${_speed},${_zoom_max})"
     _x="iw/2-iw/zoom/2"
     _y="ih/2-ih/zoom/2"
