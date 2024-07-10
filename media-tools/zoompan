@@ -184,13 +184,16 @@ _zoompan() {
     if [[ "${_direction}" == "in" ]]; then
       _fun="min"
       _op="+"
+      _zoom="${_fun}(pzoom${_op}${_speed},${_zoom_max})"
+      _x="iw/2-iw/zoom/2"
+      _y="ih/2-ih/zoom/2"
     elif [[ "${_direction}" == "out" ]]; then
       _fun="max"
       _op="-"
+      _zoom="${_fun}(pzoom${_op}${_speed},${_zoom_max})"
+      _x="2-iw/iw/zoom/2"
+      _y="2-ih/ih/zoom/2"
     fi
-    _zoom="${_fun}(pzoom${_op}${_speed},${_zoom_max})"
-    _x="iw/2-iw/zoom/2"
-    _y="ih/2-ih/zoom/2"
   elif [[ "${_type}" == "picture" ]]; then
     _duration="$( \
       bc <<< \
