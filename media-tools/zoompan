@@ -185,15 +185,12 @@ _zoompan() {
       _fun="min"
       _op="+"
       _zoom="${_fun}(pzoom${_op}${_speed},${_zoom_max})"
-      _x="iw/2-iw/zoom/2"
-      _y="ih/2-ih/zoom/2"
     elif [[ "${_direction}" == "out" ]]; then
-      _fun="min"
-      _op="+"
-      _zoom="${_fun}(pzoom${_op}${_speed},${_zoom_max})"
-      _x="2-iw/iw/zoom/2"
-      _y="2-ih/ih/zoom/2"
+       echo ciao
+      _zoom="if(lte(pzoom,1.0),${_zoom_max},max(1.001,pzoom-${_speed}))"
     fi
+    _x="iw/2-iw/zoom/2"
+    _y="ih/2-ih/zoom/2"
   elif [[ "${_type}" == "picture" ]]; then
     _duration="$( \
       bc <<< \
@@ -415,22 +412,22 @@ _set \
   "out" \
   "video" \
   "${2}"
-(( $# == 3 )) && \
+(( $# >= 3 )) && \
   _set \
     "zoom" \
     "max" \
     "${3}"
-(( $# == 4 )) && \
+(( $# >= 4 )) && \
   _set \
     "zoom" \
     "duration" \
     "${4}"
-(( $# == 5 )) && \
+(( $# >= 5 )) && \
   _set \
     "box" \
     "x" \
     "${5}"
-(( $# == 6 )) && \
+(( $# >= 6 )) && \
   _set \
     "box" \
     "y" \
