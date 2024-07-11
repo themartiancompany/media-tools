@@ -216,7 +216,7 @@ _zoompan() {
     -i
       "${_in}"
     -vf
-       "zoompan=$( \
+       "scale=hd720,zoompan=$( \
 	 IFS=":"; \
          printf \
 	   "${_vf[*]}")"
