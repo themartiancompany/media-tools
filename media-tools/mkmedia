@@ -64,6 +64,11 @@ _audiovid2vid() {
   _vids=(
     "$@"
   )
+  if [[ "${quiet}" == "y" ]]; then
+    _ffmpeg_opts+=(
+      -y
+    )
+  fi
   _opts+=(
     "${_ffmpeg_opts[@]}"
     #  -loop 1
