@@ -115,10 +115,8 @@ _concat() {
     _in_vids=() \
     _vid
   _opts+=(
-    "${_out}"
     -y
-    # -safe
-    #  0
+    # -safe 0
   )
   for _vid in "${_in[@]}"; do
     _opts+=(
@@ -134,7 +132,8 @@ _concat() {
   _msg_info \
     "running ffmpeg with ${_opts[*]}"
   ffmpeg \
-    "${_opts[@]}" \
+    "${_out}" \
+    "${_opts[@]}"
 }
 
 # Set defaults and, if present, overrides
