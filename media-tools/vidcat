@@ -59,7 +59,9 @@ _vidcat() {
     "$@"
   )
   _vids="$( \
-    mktemp).txt"
+    mktemp \
+      --suffix \
+        ".txt")"
   for _vid \
     in "${_in[@]}"; do
     _vid="$( \
