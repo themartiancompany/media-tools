@@ -54,7 +54,7 @@ _vidcat() {
     _vid \
     _vids
   shift \
-    1
+    2 
   _in=(
     "$@"
   )
