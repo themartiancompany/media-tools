@@ -114,7 +114,7 @@ _concat() {
     _opts=() \
     _in_vids=() \
     _vid
-  _opts=(
+  _opts+=(
     -y
     "${_out}"
     # -safe
