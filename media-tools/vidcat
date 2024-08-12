@@ -101,7 +101,7 @@ _vidcat() {
       true
   elif [[ "${_mode}" == 'protocol' ]]; then
       _msg_info \
-        "running ffmpeg with concat method"
+        "running ffmpeg with concat protocol method"
       _protocol
   elif [[ "${_mode}" == 'concat' ]]; then
     # echo \
@@ -139,8 +139,7 @@ _protocol() {
         "${_ts_vids[*]}")" \
     -c \
       copy \
-    output.mp4
-
+    "${_out}"
 }
 
 _concat() {
