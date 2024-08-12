@@ -45,7 +45,8 @@ _ffmpeg_options_load() {
 # $@: input video files (sorted)
 _vidcat() {
   local \
-    _out="${1}" \
+    _mode="${1}" \
+    _out="${2}" \
     _i=1 \
     _in=() \
     _opts=() \
@@ -72,7 +73,7 @@ _vidcat() {
   done
   _vf="${_vf} concat=n=${_i}:v=1:a=1 [v] [a]"
   _msg_info \
-    "vids:\n $( \
+    "vids: $( \
        cat \
          "${_vids}")"
   _opts=(
@@ -93,10 +94,13 @@ _vidcat() {
   )
   ffmpeg \
     "${_opts[@]}" \
-    "${_out}"
+    "${_out}" || \
+    true
   # echo \
   #   "${_mm}"
   [[ ! $? -eq 0 ]] && \
+    _msg_info \
+      "running ffmpeg with concat method"
     _concat
 }
 
@@ -127,7 +131,7 @@ _set_overrides() {
   _set_override \
     "encode" \
     "mode" \
-    "auto"
+    "concat"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -223,11 +227,17 @@ in_files=(
   "$@"
 )
 _set_overrides
+app_opts=(
+  "$(_get \
+       "encode" \
+       "mode")"
+  "$(_get \
+       "out" \
+       "file")"
+  "${in_files[@]}"
+)
 _config_user_init \
   "media-tools"
 _show_config
 _vidcat \
-  "$(_get \
-       "out" \
-       "file")" \
-  "${in_files[@]}"
+  "${app_opts[@]}"
