@@ -118,20 +118,20 @@ _concat() {
     -y
     -safe
       0
-    -i
-      "${_vids}"
+  #   -i
+  #     "${_vids}"
     -f
       concat
     -c
       copy
   )
-  # for _vid in "${_in[@]}"; do
-  #   _opts+=(
-  #     -i "${_vid}"
-  #   )
-  # done
+  for _vid in "${_in[@]}"; do
+    _opts+=(
+      -i "${_vid}"
+    )
+  done
   _msg_info \
-    "running ffmpeg with ${_opts[@]}"
+    "running ffmpeg with ${_opts[*]}"
   ffmpeg \
     "${_opts[@]}" \
     "${_out}"
