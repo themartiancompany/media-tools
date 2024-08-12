@@ -22,6 +22,7 @@ _requirements() {
 
 # shellcheck disable=SC2034
 _global_variables() {
+  make_date=""
   out_video=""
   in_audio=""
   in_video=""
@@ -128,6 +129,10 @@ _audiovid2vid() {
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
+  _set_override \
+    "make" \
+    "date" \
+    "$(_get_date_human)"
   _set_override \
     "audio" \
     "mode" \
