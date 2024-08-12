@@ -173,7 +173,9 @@ _show_config() {
   _msg_info "                Make date:   $(_get "make" "date")"
   _msg_info "               Audio mode:   $(_get "audio" "mode")"
   _msg_info "                   Encode:   $(_get "video" "encode")"
-  _msg_info "              Output file:   $(_get "out" "file")"
+  _msg_info "             Output video:   $(_get "out" "video")"
+  _msg_info "              Input audio:   $(_get "in" "audio")"
+  _msg_info "              Input video:   $(_get "in" "video")"
 }
 
 # Show help usage, with an exit status.
