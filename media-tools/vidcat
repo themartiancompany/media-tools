@@ -116,8 +116,8 @@ _concat() {
     _vid
   _opts=(
     -y
-    -safe
-      0
+    # -safe
+    #  0
   )
   for _vid in "${_in[@]}"; do
     _opts+=(
