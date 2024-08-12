@@ -260,7 +260,7 @@ app_opts=(
   "$(_get \
        "in" \
        "audio")"
-  "${in_videos[@]}"
+  "${in_video}"
 )
 _audiovid2vid \
   "${app_opts[@]}"
