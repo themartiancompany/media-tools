@@ -109,18 +109,23 @@ _vidcat() {
 
 _concat() {
   local \
-    _opts=()
+    _opts=() \
+    _in_vids=() \
+    _vid
   _opts=(
     -y
     -safe
       0
     -f
       concat
-    -i
-      "${_vids}"
     -c
       copy
   )
+  for _vid in "${_in[@]}"; do
+    _opts+=(
+      -i "${_vid}"
+    )
+  done
   ffmpeg \
     "${_opts[@]}" \
     "${_out}"
