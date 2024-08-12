@@ -167,6 +167,15 @@ _set_overrides() {
   fi
 }
 
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "                Make date:   $(_get "make" "date")"
+  _msg_info "               Audio mode:   $(_get "audio" "mode")"
+  _msg_info "                   Encode:   $(_get "video" "encode")"
+  _msg_info "              Output file:   $(_get "out" "file")"
+}
+
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
@@ -184,17 +193,15 @@ Cut media files
 Usage:
   $(_get "app" "name")
     [options]
-    <output_video>
-    <input_audio>
-    [input_video]
+    <out_video>
+    <in_audio>
+    <in_video>
   options:
      -m                   Audio mode (replace, overlap)
                           Default: $(_get "audio" "mode")
      -e                   Whether to encode the resulting video
                           or use encoder from input media.
 			  Default: $(_get "video" "encode")
-     -s                   Output to stdout.
-			  Default: $(_get "out" "stdout")
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -212,14 +219,13 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'm:scevh?' \
+    'm:ecvh?' \
     arg; do
   case \
     "${arg}" in
     m) override_audio_mode="${OPTARG}" ;;
-    s) override_out_stdout="y" ;;
-    c) override_color="y" ;;
     e) override_video_encode="y" ;;
+    c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
 	 _usage \
@@ -260,14 +266,18 @@ _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
-_audiovid2vid \
+_show_config
+app_opts=(
   "$(_get \
        "audio" \
-       "mode")" \
+       "mode")"
   "$(_get \
        "out" \
-       "video")" \
+       "video")"
   "$(_get \
        "in" \
-       "audio")" \
+       "audio")"
   "${in_videos[@]}"
+)
+_audiovid2vid \
+  "${app_opts[@]}"
