@@ -179,7 +179,7 @@ _set_overrides() {
   _set_override \
     "encode" \
     "mode" \
-    "concat"
+    "protocol"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
