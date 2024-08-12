@@ -109,6 +109,8 @@ _concat() {
     _opts=()
   _opts=(
     -y
+    -safe
+      0
     -f
       concat
     -i
