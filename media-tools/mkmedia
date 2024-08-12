@@ -24,7 +24,7 @@ _requirements() {
 _global_variables() {
   out_video=""
   in_audio=""
-  in_videos=()
+  in_video=""
   video_encode=""
   audio_mode=""
   out_stdout=""
@@ -49,21 +49,14 @@ _ffmpeg_options_load() {
 _audiovid2vid() {
   local \
     _mode="${1}" \
-    _out=(
-      "${2}"
-    ) \
+    _out="${2}" \
     _aud="${3}" \
-    _vids=() \
+    _vid="${4}" \
     _opts=() \
     _overlap \
     _vidaud \
     _mute \
     _ext
-  shift \
-    3
-  _vids=(
-    "$@"
-  )
   if [[ "${quiet}" == "y" ]]; then
     _ffmpeg_opts+=(
       -y
@@ -76,7 +69,7 @@ _audiovid2vid() {
   if [[ "${_mode}" == 'replace' ]]; then
     _opts+=(
       -i "${_aud}"
-      -i "${_vids[@]}"
+      -i "${_vid}"
     )
   elif [[ "${_mode}" == "overlap" ]]; then
     _ext="${_vids##*.}"
@@ -88,14 +81,14 @@ _audiovid2vid() {
       mktemp).${_ext}"
     ffmpeg \
       -i \
-        "${_vids}" \
+        "${_vid}" \
       "${_vidaud}"
     audioverlap \
       "${_overlap}" \
       "${_aud}" \
       "${_vidaud}"
      vidmute \
-       "${_vids}" \
+       "${_vid}" \
        "${_mute}"
      _opts+=(
        -i "${_overlap}"
@@ -127,17 +120,9 @@ _audiovid2vid() {
       48k
     -shortest
   )
-  if [[ "${_out[*]}" == "" ]] || \
-     [[ "$(_get \
-             "out" \
-	     "stdout")" == "y" ]]; then
-    _out+=(
-      -
-    )
-  fi
   ffmpeg \
     "${_opts[@]}" \
-    "${_out[*]}"
+    "${_out}"
 }
 
 # Set defaults and, if present, overrides
@@ -259,11 +244,7 @@ _set \
   "in" \
   "audio" \
   "${2}"
-shift \
-  2
-in_videos=(
-  "$@"
-)
+in_video="${3}"
 _set_overrides
 _config_user_init \
   "media-tools"
