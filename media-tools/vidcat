@@ -116,6 +116,7 @@ _concat() {
     _vid
   _opts=(
     -y
+    "${_out}"
     # -safe
     #  0
   )
@@ -130,12 +131,10 @@ _concat() {
     -c
       copy
   )
-
   _msg_info \
     "running ffmpeg with ${_opts[*]}"
   ffmpeg \
     "${_opts[@]}" \
-    "${_out}"
 }
 
 # Set defaults and, if present, overrides
