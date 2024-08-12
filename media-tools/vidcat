@@ -99,6 +99,10 @@ _vidcat() {
       "${_opts[@]}" \
       "${_out}" || \
       true
+  elif [[ "${_mode}" == 'protocol' ]]; then
+      _msg_info \
+        "running ffmpeg with concat method"
+      _protocol
   elif [[ "${_mode}" == 'concat' ]]; then
     # echo \
     #   "${_mm}"
@@ -107,6 +111,36 @@ _vidcat() {
         "running ffmpeg with concat method"
       _concat
   fi
+}
+
+_protocol() {
+  local \
+    _ts_opts=() \
+    _ts_vids=()
+  for _vid in "${_in[@]}"; do
+    _ts_opts=(
+      -y
+      -i "${_vid}"
+      -c
+        copy
+    )
+    ffmpeg \
+      "${_ts_opts[@]}" \
+      "${_vid}.ts"
+    _ts_vids+=(
+      "${_vid}.ts"
+    )
+  done
+  ffmpeg \
+    -i \
+    "concat:$( \
+      IFS='|'; \
+      echo \
+        "${_ts_vids[*]}")" \
+    -c \
+      copy \
+    output.mp4
+
 }
 
 _concat() {
@@ -187,7 +221,7 @@ Usage:
     <output_file>
     [input_file]
   options:
-     -m                   Video encode mode (concat, filter).
+     -m                   Video encode mode (concat, filter, protocol).
                           Default: $(_get "encode" "mode")
      -h                   This message.
      -v                   Enable verbose output
