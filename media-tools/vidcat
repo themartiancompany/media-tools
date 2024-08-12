@@ -92,16 +92,19 @@ _vidcat() {
     -vcodec
       libx265
   )
-  ffmpeg \
-    "${_opts[@]}" \
-    "${_out}" || \
-    true
-  # echo \
-  #   "${_mm}"
-  [[ ! $? -eq 0 ]] && \
-    _msg_info \
-      "running ffmpeg with concat method"
-    _concat
+  if [[ "${_mode}" == 'filter' ]]; then
+    ffmpeg \
+      "${_opts[@]}" \
+      "${_out}" || \
+      true
+  elif [[ "${_mode}" == 'concat' ]]; then
+    # echo \
+    #   "${_mm}"
+    # [[ ! $? -eq 0 ]] && \
+      _msg_info \
+        "running ffmpeg with concat method"
+      _concat
+  fi
 }
 
 _concat() {
@@ -150,7 +153,7 @@ _set_overrides() {
 _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "              Encode date:   $(_get "encode" "date")"
-  _msg_info "            Encode method:   $(_get "encode" "method")"
+  _msg_info "              Encode mode:   $(_get "encode" "mode")"
   _msg_info "                 In files:   ${in_files[*]}"
   _msg_info "              Output file:   $(_get "out" "file")"
 }
