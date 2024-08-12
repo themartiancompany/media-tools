@@ -126,6 +126,8 @@ _concat() {
       -i "${_vid}"
     )
   done
+  _msg_info \
+    "running ffmpeg with ${_opts[@]}"
   ffmpeg \
     "${_opts[@]}" \
     "${_out}"
