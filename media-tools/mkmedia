@@ -117,6 +117,8 @@ _audiovid2vid() {
     _opts+=(
       -c:v
         copy
+      -c:a
+        copy
     )
   fi
   ffmpeg \
