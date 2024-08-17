@@ -105,6 +105,11 @@ _audiovid2vid() {
         libx265
       -pix_fmt
         yuv420p
+      -c:a
+        aac
+      -b:a
+        48k
+      -shortest
   )
   elif [[ "$(_get \
                "video" \
@@ -114,13 +119,6 @@ _audiovid2vid() {
         copy
     )
   fi
-  _opts+=(
-    -c:a
-      aac
-    -b:a
-      48k
-    -shortest
-  )
   ffmpeg \
     "${_opts[@]}" \
     "${_out}"
