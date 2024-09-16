@@ -140,6 +140,10 @@ _protocol() {
     -c \
       copy \
     "${_out}"
+  rm \
+    -rf \
+    "${_ts_vids[@]}" || \
+    true
 }
 
 _concat() {
