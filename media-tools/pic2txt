@@ -18,7 +18,7 @@ source \
 _requirements() {
   _check_cmd \
     "base64" \
-    "core-utils"
+    "coreutils"
   _check_cmd \
     "pic2ascii" \
     "media-tools"
@@ -86,15 +86,11 @@ _chunk_split() {
     "finished"
 }
 
-# Converts picture to various text formats
-# $1: input picture
-# $2: out text
 _pic2txt() {
     _in="${1}" \
     _out="${2}" \
     _format="${3}" \
     _length="${4}" \ 
-    _opts=() \
     _outs=() \
     _pic_tmp \
     _encoded
