@@ -54,6 +54,7 @@ install-media:
 	install -vDm 755 $(_PROJECT)/picstitch "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/reverse_logarithmic_presser "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/stretchpic "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/txt2vid "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/vidrotate "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/vidscale "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/vidcat "$(BIN_DIR)"
