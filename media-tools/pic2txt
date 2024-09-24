@@ -66,15 +66,16 @@ _chunk_split() {
     in $(seq \
            "$(( ${_chunks}))"); do
     _head="$(( \
-      _chunk * _length + _length))"
+      _chunk * _length ))"
     _msg_info \
       "getting kirsh ${_head} lines from ${_total}"
-    _cut="$( \
-      echo \
-        "${_in}" | \
-	head \
-	  -n \
-	    "${_head}")"
+    _cut="${_in:0:${_head}}"
+    # _cut="$( \
+    #   echo \
+    #     "${_in}" | \
+    #     head \
+    #       -n \
+    #       "${_head}")"
     _msg_info \
       "got ${#_cut} lines"
     _msg_info \
