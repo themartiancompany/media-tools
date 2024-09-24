@@ -85,18 +85,6 @@ _set_overrides() {
     "make" \
     "date" \
     "$(_get_date_human)"
-  _set_override \
-    "audio" \
-    "mode" \
-    "replace"
-  _set_override \
-    "video" \
-    "encode" \
-    "n"
-  _set_override \
-    "out" \
-    "stdout" \
-    "n"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
