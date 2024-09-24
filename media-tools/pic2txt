@@ -77,7 +77,7 @@ _chunk_split() {
 	      "${_length}")"
     _out="${_prefix}.${_chunk}"
     _msg_info \
-      "Writing chunk ${_chunk} '${_out}' out of ${_chunks}"
+      "Writing chunk ${_chunk} '${_out}' of length ${#_content} out of ${_chunks}"
     echo \
       "${_content}" > \
       "${_out}"
