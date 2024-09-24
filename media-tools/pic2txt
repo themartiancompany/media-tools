@@ -65,11 +65,13 @@ _chunk_split() {
   for _chunk \
     in $(seq \
            "$(( ${_chunks}))"); do
+    _head_start="$(( \
+      _chunk * _length - _length ))"
     _head="$(( \
       _chunk * _length ))"
     _msg_info \
       "getting kirsh ${_head} lines from ${_total}"
-    _cut="${_in:0:${_head}}"
+    _cut="${_in:${_head_start}:${_length}}"
     # _cut="$( \
     #   echo \
     #     "${_in}" | \
@@ -80,18 +82,18 @@ _chunk_split() {
       "got ${#_cut} lines"
     _msg_info \
       "getting last ${_length} lines"
-    _content="${_cut:-${_length}}"
-    _content="$( \
-      echo \
-        "${_cut}" | \
-          tail \
-	    -n \
-	      "${_length}")"
+    # _content="${_cut:-${_length}}"
+    # _content="$( \
+    #   echo \
+    #     "${_cut}" | \
+    #     tail \
+    #       -n \
+    #         "${_length}")"
     _out="${_prefix}.${_chunk}"
     _msg_info \
-      "Writing chunk ${_chunk} '${_out}' of length ${#_content} out of ${_chunks}"
+      "Writing chunk ${_chunk} '${_out}' of length ${#_cut} out of ${_chunks}"
     echo \
-      "${_content}" > \
+      "${_cut}" > \
       "${_out}"
   done
   _msg_info \
