@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+_PROJECT=media-tools
 PREFIX ?= /usr/local
-DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/media-tools
+DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/$(_PROJECT)
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
-DATA_DIR=$(DESTDIR)$(PREFIX)/share/media-tools
+DATA_DIR=$(DESTDIR)$(PREFIX)/share/$(_PROJECT)
 
 DOC_FILES=$(wildcard *.rst)
-SCRIPT_FILES=$(wildcard media-tools/*)
+SCRIPT_FILES=$(wildcard $(_PROJECT)/*)
 
 all:
 
@@ -24,42 +25,44 @@ install-doc:
 install-media:
 
 	install -vdm 755 "$(BIN_DIR)"
-	install -vDm 755 media-tools/addfade "$(BIN_DIR)"
-	install -vDm 755 media-tools/addsilence "$(BIN_DIR)"
-	install -vDm 755 media-tools/audiocat "$(BIN_DIR)"
-	install -vDm 755 media-tools/audiopic2vid "$(BIN_DIR)"
-	install -vDm 755 media-tools/audioverlap "$(BIN_DIR)"
-	install -vDm 755 media-tools/blackintro "$(BIN_DIR)"
-	install -vDm 755 media-tools/blackoutro "$(BIN_DIR)"
-	install -vDm 755 media-tools/blackvid "$(BIN_DIR)"
-	install -vDm 755 media-tools/crop "$(BIN_DIR)"
-	install -vDm 755 media-tools/gridcrop "$(BIN_DIR)"
-	install -vDm 755 media-tools/hflip "$(BIN_DIR)"
-	install -vDm 755 media-tools/hflipvid "$(BIN_DIR)"
-	install -vDm 755 media-tools/ispic "$(BIN_DIR)"
-	install -vDm 755 media-tools/mediaclip "$(BIN_DIR)"
-	install -vDm 755 media-tools/medialength "$(BIN_DIR)"
-	install -vDm 755 media-tools/mediasplit "$(BIN_DIR)"
-	install -vDm 755 media-tools/mkmedia "$(BIN_DIR)"
-	install -vDm 755 media-tools/mkaudioloop "$(BIN_DIR)"
-	install -vDm 755 media-tools/mkgif "$(BIN_DIR)"
-	install -vDm 755 media-tools/mkpad "$(BIN_DIR)"
-	install -vDm 755 media-tools/mkvs2webm "$(BIN_DIR)"
-	install -vDm 755 media-tools/opus2ogg "$(BIN_DIR)"
-	install -vDm 755 media-tools/pic2pdf "$(BIN_DIR)"
-	install -vDm 755 media-tools/picscale "$(BIN_DIR)"
-	install -vDm 755 media-tools/picstitch "$(BIN_DIR)"
-	install -vDm 755 media-tools/reverse_logarithmic_presser "$(BIN_DIR)"
-	install -vDm 755 media-tools/stretchpic "$(BIN_DIR)"
-	install -vDm 755 media-tools/vidrotate "$(BIN_DIR)"
-	install -vDm 755 media-tools/vidscale "$(BIN_DIR)"
-	install -vDm 755 media-tools/vidcat "$(BIN_DIR)"
-	install -vDm 755 media-tools/vidmute "$(BIN_DIR)"
-	install -vDm 755 media-tools/vidsize "$(BIN_DIR)"
-	install -vDm 755 media-tools/volumechange "$(BIN_DIR)"
-	install -vDm 755 media-tools/ytxclip "$(BIN_DIR)"
-	install -vDm 755 media-tools/ytencode "$(BIN_DIR)"
-	install -vDm 755 media-tools/zoompan "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/addfade "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/addsilence "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/audiocat "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/audiopic2vid "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/audioverlap "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/blackintro "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/blackoutro "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/blackvid "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/crop "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/gridcrop "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/hflip "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/hflipvid "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/ispic "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/mediaclip "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/medialength "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/mediasplit "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/mkmedia "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/mkaudioloop "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/mkgif "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/mkpad "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/mkvs2webm "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/opus2ogg "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/pic2pdf "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/pic2ascii "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/pic2ascii "$(BIN_DIR)/pic2txt"
+	install -vDm 755 $(_PROJECT)/picscale "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/picstitch "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/reverse_logarithmic_presser "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/stretchpic "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/vidrotate "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/vidscale "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/vidcat "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/vidmute "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/vidsize "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/volumechange "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/ytxclip "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/ytencode "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/zoompan "$(BIN_DIR)"
 
 install-configs:
 
