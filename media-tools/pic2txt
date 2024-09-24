@@ -87,13 +87,14 @@ _chunk_split() {
 }
 
 _pic2txt() {
+  local \
     _in="${1}" \
     _out="${2}" \
     _format="${3}" \
-    _length="${4}" \ 
-    _outs=() \
+    _length="${4}" \
     _pic_tmp \
     _encoded
+  _outs=()
   if [[ "${_format}" == "ascii" ]]; then
     _outs+=(
       "${_out}"
