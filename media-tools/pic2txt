@@ -17,6 +17,12 @@ source \
 # are available
 _requirements() {
   _check_cmd \
+    "base64" \
+    "core-utils"
+  _check_cmd \
+    "base64" \
+    "core-utils"
+  _check_cmd \
     "pic2ascii" \
     "media-tools"
 }
@@ -58,6 +64,10 @@ _pic2txt() {
       "${_out}"
   elif [[ "${_format}" == "base64" ]]; then
     base64 \
+      "${_in}" \
+      "${_out}"
+  elif [[ "${_format}" == "base128" ]]; then
+    base128 \
       "${_in}" \
       "${_out}"
   fi
@@ -115,7 +125,7 @@ Usage:
     <in_pic>
     <out_txt>
   options:
-     -f                   Encoding format ('ascii', 'base128').
+     -f                   Encoding format ('ascii', 'base64', 'base128').
                           Default: '$(_get "encoding" "format")'
      -h                   This message.
      -v                   Enable verbose output
