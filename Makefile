@@ -49,7 +49,7 @@ install-media:
 	install -vDm 755 $(_PROJECT)/opus2ogg "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/pic2pdf "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/pic2ascii "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/pic2ascii "$(BIN_DIR)/pic2txt"
+	install -vDm 755 $(_PROJECT)/pic2txt "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/picscale "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/picstitch "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/reverse_logarithmic_presser "$(BIN_DIR)"
