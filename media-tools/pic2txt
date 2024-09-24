@@ -80,6 +80,7 @@ _chunk_split() {
       "got ${#_cut} lines"
     _msg_info \
       "getting last ${_length} lines"
+    _content="${_cut:-${_length}}"
     _content="$( \
       echo \
         "${_cut}" | \
