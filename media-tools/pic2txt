@@ -55,6 +55,7 @@ _chunk_split() {
     _total \
     _head \
     _content \
+    _cut \
     _out
   _total="${#_in}"
   _chunks="$(( \
@@ -65,13 +66,22 @@ _chunk_split() {
     in $(seq \
            "$(( ${_chunks}))"); do
     _head="$(( \
-      (${_chunk} + 1) * ${_length} ))"
-    _content="$( \
+      _chunk * _length + _length))"
+    _msg_info \
+      "getting kirsh ${_head} lines from ${_total}"
+    _cut="$( \
       echo \
         "${_in}" | \
-        head \
-          -n \
-	    "${_head}" | \
+	head \
+	  -n \
+	    "${_head}")"
+    _msg_info \
+      "got ${#_cut} lines"
+    _msg_info \
+      "getting last ${_length} lines"
+    _content="$( \
+      echo \
+        "${_cut}" | \
           tail \
 	    -n \
 	      "${_length}")"
