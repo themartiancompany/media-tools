@@ -54,30 +54,31 @@ _ytencode() {
     "${_ffmpeg_opts[@]}"
     -vf
      "yadif,format=yuv420p"
-   -force_key_frames
-     "expr:gte(t,n_forced/2)"
-   -c:v
-     "libx265"
-   -crf
-     "${_crf}"
-   -bf 2
-   -c:a
-     "aac"
-   -q:a
-     1
-   -ac
-     2
-   -ar
-     48000
-   -use_editlist
-     0
-   -movflags
-     +faststart
+    -force_key_frames
+      "expr:gte(t,n_forced/2)"
+    -c:v
+      "libx265"
+    -crf
+      "${_crf}"
+    -bf 2
+    -c:a
+      "aac"
+    -q:a
+      1
+    -ac
+      2
+    -ar
+      48000
+    -use_editlist
+      0
+    -movflags
+      +faststart
   )
   [[ "${_encode_mode}" == "fake" ]] && \
     _opts=(
       "${_ffmpeg_opts[@]}")
   ffmpeg \
+    -y \
     -i \
       "${_in}" \
     "${_opts[@]}" \
