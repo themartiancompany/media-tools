@@ -64,11 +64,11 @@ _pic2txt() {
       "${_out}"
   elif [[ "${_format}" == "base64" ]]; then
     base64 \
-      "${_in}" \
+      "${_in}" > \
       "${_out}"
   elif [[ "${_format}" == "base128" ]]; then
     base128 \
-      "${_in}" \
+      "${_in}" > \
       "${_out}"
   fi
 }
@@ -169,7 +169,10 @@ shift \
     OPTIND - 1 \
   ))
 
-(( $# < 3 )) && \
+(( $# < 2 )) && \
+  _msg_error \
+    "missing arguments" \
+    0 && \
   _set_overrides && \
   _usage \
     1
@@ -181,7 +184,6 @@ _set \
   "out" \
   "txt" \
   "${2}"
-in_video="${3}"
 _set_overrides
 _config_user_init \
   "media-tools"
