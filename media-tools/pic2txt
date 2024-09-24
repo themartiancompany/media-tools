@@ -123,6 +123,9 @@ Usage:
   options:
      -f                   Encoding format ('ascii', 'base64').
                           Default: '$(_get "encoding" "format")'
+     -L <string_length>   String chunk length.
+                          Default: '$(_get "string" "length")'
+
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -145,6 +148,7 @@ while \
   case \
     "${arg}" in
     f) override_encoding_format="${OPTARG}" ;;
+    L) override_chunk__format="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
