@@ -20,9 +20,6 @@ _requirements() {
     "base64" \
     "core-utils"
   _check_cmd \
-    "base64" \
-    "core-utils"
-  _check_cmd \
     "pic2ascii" \
     "media-tools"
 }
@@ -59,14 +56,14 @@ _chunk_split() {
     _content \
     _out
   _chunks="$(( \
-    "${#_in} / ${_length}"))"
+    "${#_in}" / "${_length}"))"
   _msg_info \
     "splitting onto ${_chunks} chunks"
   for _chunk \
     in $(seq \
            "${_chunks}"); do
     _head="$(( \
-      (_chunk + 1) * _length ))"
+      ("${_chunk}" + 1) * "${_length}" ))"
     _content="$( \
       echo \
         "${_in}" | \
@@ -84,7 +81,7 @@ _chunk_split() {
       "${_out}"
   done
   _msg_info \
-    "Writing chunk ${_chunk} '${_out}' out of ${_chunks}"
+    "finished"
 }
 
 # Converts picture to ascii format compotible with VTE terminals
@@ -98,9 +95,8 @@ _pic2txt() {
     _length="${4}" \ 
     _opts=() \
     _outs=() \
-    _pic_tmp
-  shift \
-    4
+    _pic_tmp \
+    _encoded
   if [[ "${_format}" == "ascii" ]]; then
     _outs+=(
       "${_out}"
@@ -109,14 +105,23 @@ _pic2txt() {
       "${_in}" \
       "${_outs[0]}"
   elif [[ "${_format}" == "base64" ]]; then
+    _msg_info \
+      "hijess"
+    _encoded="$( \
+      mktemp \
+        --suffix=".jpg")"
     _pic_temp="$( \
       mktemp \
         --suffix=".jpg")"
+    ffmpeg \
+      -i \
+        "${_in}" \
+      "${_encoded}"
     base64 \
-      "${_in}" > \
+      "${_encoded}" > \
       "${_pic_temp}"
     _chunk_split \
-      "${_in}" \
+      "${_pic_temp}" \
       "${_length}" \
       "${_out}"
   fi
@@ -133,6 +138,14 @@ _set_overrides() {
     "encoding" \
     "format" \
     "ascii"
+  _set_override \
+    "in" \
+    "pic" \
+    ""
+  _set_override \
+    "out" \
+    "txt" \
+    ""
   _set_override \
     "string" \
     "length" \
@@ -260,6 +273,5 @@ app_opts=(
        "string" \
        "length")"
 )
-
 _pic2txt \
   "${app_opts[@]}"
