@@ -52,15 +52,15 @@ _chunk_split() {
     _prefix="${3}" \
     _chunks \
     _chunk \
+    _total \
     _head \
     _content \
     _out
-  _msg_info \
-    "chunking"
+  _total="${#_in}"
   _chunks="$(( \
-    ${#_in} / ${_length} + 1))"
+    ${_total} / ${_length} + 1))"
   _msg_info \
-    "in ${_chunks} chunks"
+    "chunking ${_total} letters into '${_chunks}'"
   for _chunk \
     in $(seq \
            "$(( ${_chunks}))"); do
