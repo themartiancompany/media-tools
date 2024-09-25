@@ -17,8 +17,8 @@ source \
 # are available
 _requirements() {
   _check_cmd \
-    "base64" \
-    "coreutils"
+    "bin2txt" \
+    "encoding-tools"
   _check_cmd \
     "pic2ascii" \
     "media-tools"
@@ -45,80 +45,15 @@ _ffmpeg_options_load() {
   true
 }
 
-_chunk_split() {
-  local \
-    _in="${1}" \
-    _length="${2}" \
-    _prefix="${3}" \
-    _chunks \
-    _chunk \
-    _total \
-    _head \
-    _content \
-    _cut \
-    _out
-  _total="${#_in}"
-  _chunks="$(( \
-    ${_total} / ${_length} + 1))"
-  _msg_info \
-    "chunking ${_total} letters into '${_chunks}'"
-  for _chunk \
-    in $(seq \
-           "$(( ${_chunks}))"); do
-    _head_start="$(( \
-      _chunk * _length - _length ))"
-    _head="$(( \
-      _chunk * _length ))"
-    _msg_info \
-      "getting kirsh ${_head} lines from ${_total}"
-    _cut="${_in:${_head_start}:${_length}}"
-    # _cut="$( \
-    #   echo \
-    #     "${_in}" | \
-    #     head \
-    #       -n \
-    #       "${_head}")"
-    _msg_info \
-      "got ${#_cut} lines"
-    _msg_info \
-      "getting last ${_length} lines"
-    # _content="${_cut:-${_length}}"
-    # _content="$( \
-    #   echo \
-    #     "${_cut}" | \
-    #     tail \
-    #       -n \
-    #         "${_length}")"
-    _out="${_prefix}.${_chunk}"
-    _msg_info \
-      "Writing chunk ${_chunk} '${_out}' of length ${#_cut} out of ${_chunks}"
-    echo \
-      "${_cut}" > \
-      "${_out}"
-  done
-  _msg_info \
-    "finished"
-}
-
 _pic2txt() {
   local \
     _in="${1}" \
     _out="${2}" \
     _format="${3}" \
     _length="${4}" \
-    _pic_temp \
-    _encoded \
-    _txt
-  _outs=(
-    ${_out}
-  )
-  if [[ "${_format}" == "ascii" ]]; then
-    pic2ascii \
-      "${_in}" \
-      "${_outs[0]}"
-  elif [[ "${_format}" == "base64" ]]; then
-    _msg_info \
-      "hijess"
+    _encode="${5}" \
+    _encoded
+  if [[ "${_encode}" == "y" ]]; then
     _encoded="$( \
       mktemp \
         --suffix=".jpg")"
@@ -128,20 +63,22 @@ _pic2txt() {
       -i \
         "${_in}" \
       "${_encoded}"
-    _txt="$( \
-      base64 \
-        "${_encoded}")"
+    _in="${_encoded}"
+  fi
+  if [[ "${_format}" == "ascii" ]]; then
+    pic2ascii \
+      "${_in}" \
+      "${_out}"
+  elif [[ "${_format}" == "base64" ]]; then
+    bin2txt \
+      -L \
+        "${_length}" \
+      "${_in}" \
+      "${_out}"
     rm \
       "${_encoded}"
     _msg_info \
-      "encoded length: ${#_txt}"
-    # echo \
-    #   "${_txt}"> \
-    #   "${_pic_temp}"
-    _chunk_split \
-      "${_txt}" \
-      "${_length}" \
-      "${_out}"
+      "finished"
   fi
 }
 
