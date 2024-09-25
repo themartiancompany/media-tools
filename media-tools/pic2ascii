@@ -179,7 +179,6 @@ _set \
   "out" \
   "txt" \
   "${2}"
-in_video="${3}"
 _set_overrides
 _config_user_init \
   "media-tools"
