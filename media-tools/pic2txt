@@ -31,6 +31,7 @@ _global_variables() {
   in_pic=""
   encoding_format=""
   string_length=""
+  picture_encode=""
   color=""
   quiet=""
 }
@@ -75,11 +76,13 @@ _pic2txt() {
         "${_length}" \
       "${_in}" \
       "${_out}"
+  fi
+  if [[ "${_encode}" == "y" ]]; then
     rm \
       "${_encoded}"
-    _msg_info \
-      "finished"
   fi
+  _msg_info \
+    "finished"
 }
 
 # Set defaults and, if present, overrides
@@ -105,6 +108,10 @@ _set_overrides() {
     "string" \
     "length" \
     "10000"
+  _set_override \
+    "picture" \
+    "encode" \
+    "n"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -123,6 +130,7 @@ _show_config() {
   _msg_info "                Make date:   $(_get "make" "date")"
   _msg_info "          Encoding format:   $(_get "encoding" "format")"
   _msg_info "      Chunk string length:   $(_get "string" "length")"
+  _msg_info "               Pre-encode:   $(_get "picture" "encode")"
   _msg_info "               In picture:   $(_get "in" "pic")"
   _msg_info "            Out text file:   $(_get "out" "txt")"
 }
@@ -151,6 +159,9 @@ Usage:
                           Default: '$(_get "encoding" "format")'
      -L <string_length>   String chunk length.
                           Default: '$(_get "string" "length")'
+     -e                   Add to pre-encode the picture in a common
+                          lossy format.
+                          Default: '$(_get "picture" "encode")'
 
      -h                   This message.
      -v                   Enable verbose output
@@ -169,12 +180,13 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'f:L:cvh?' \
+    'f:L:e:cvh?' \
     arg; do
   case \
     "${arg}" in
     f) override_encoding_format="${OPTARG}" ;;
     L) override_string_length="${OPTARG}" ;;
+    e) override_picture_encode="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -225,6 +237,9 @@ app_opts=(
     "$(_get \
        "string" \
        "length")"
+  "$(_get \
+       "picture" \
+       "encode")"
 )
 _pic2txt \
   "${app_opts[@]}"
