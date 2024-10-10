@@ -32,6 +32,7 @@ _global_variables() {
   loop_length=""
   loops_amount=""
   external_audio=""
+  total_length=""
   out_file=""
   color=""
   quiet=""
