@@ -71,7 +71,7 @@ _fluidreverseloop() {
     _vidcat_opts=() \
     _loop_opts=() \
     _mkmedia_opts=() \
-    _opts=() \
+    _cut_opts=() \
     _clip \
     _reversed \
     _loop \
