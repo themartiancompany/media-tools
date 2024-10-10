@@ -243,18 +243,19 @@ shift \
   ))
 
 (( $# < 1 )) && \
+  _set_overrides && \
   _usage \
     1
 (( $# < 2 )) && \
   _msg_info \
     "no prefix given for output files, same as the input filename will be used"
 in_file="${1}"
-(( $# == 2 )) && \
+(( 1 < $# )) && \
   loop_start="${2}"
-(( $# == 3 )) && \
+(( 2 < $# )) && \
   loop_length="${3}"
-(( $# == 4 )) && \
-  out_file="${5}"
+(( 3 < $# )) && \
+  out_file="${4}"
 _set_overrides
 _config_user_init \
   "media-tools"
@@ -267,5 +268,5 @@ app_opts+=(
   "${loops_amount}"
   "${out_file}"
 )
-_fluidreverse_loop \
+_fluidreverseloop \
   "${app_opts[@]}"
