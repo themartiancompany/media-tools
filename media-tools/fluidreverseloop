@@ -17,20 +17,21 @@ source \
 # are available
 _requirements() {
   _check_cmd \
-    'bc'
+    'mediareverse' \
+    "media-tools"
   _check_cmd \
-    'ffmpeg'
-  _check_cmd \
-    'medialength' \
+    'vidcat' \
     "media-tools"
 }
 
 # shellcheck disable=SC2034
 _global_variables() {
-  reverse_date=""
+  loop_date=""
   in_file=""
+  loop_start=""
+  loop_length=""
+  loops_amount=""
   out_file=""
-  video_only=""
   color=""
   quiet=""
 }
@@ -45,20 +46,32 @@ _ffmpeg_options_load() {
   true
 }
 
-# Reverse media file
+# Produces a continuous loop by clippitg a media file
 # $1: input media file
-# $2: ouput media file
+# $2: loop start
+# $2: loop length
+# $3: loops amount
+# $4: ouput media file
 # $3: video only
-_mediareverse() {
+_fluidreverseloop() {
   local \
     _in="${1}" \
-    _out="${2}" \
-    _video_only="${3}" \
+    _loop_start="${2}" \
+    _loops_length="${3}" \
+    _loops_amount="${4}" \
+    _out="${5}" \
     _ext \
     _duration \
-    _opts=()
+    _mediaclip_opts=() \
+    _mediareverse_opts=() \
+    _vidcat_opts=() \
+    _loop_opts=() \
+    _opts=() \
+    _clip \
+    _reversed \
+    _loop
   shift \
-    3
+    5
   _opts=(
     "$@"
   )
@@ -73,29 +86,60 @@ _mediareverse() {
       "Broken media file" \
       1
   fi
-  _opts+=(
-    "${_ffmpeg_opts[@]}"
-    -i
-      "${_in}"
-    -vf
-      reverse
+  _clip="$( \
+    mktemp \
+      --suffix=".mp4")"
+  _reversed="$( \
+    mktemp \
+      --suffix=".mp4")"
+  _loop="$( \
+    mktemp \
+      --suffix=".mp4")"
+  _mediaclip_opts+=(
+    "${_in}"
+    "${_loop_start}"
+    "${_loop_length}"
+    "${_clip}"
   )
-  if [[ "${_video_only}" == "n" ]]; then
-    _opts+=(
-      -af
-        areverse
-    )
-  fi
-  ffmpeg \
-    "${_opts[@]}" \
+  _mediareverse_opts+=(
+    "${_clip}"
+    "${_reversed}"
+  )
+   _vidcat_opts+=(
+    "${_loop}"
+    "${_clip}"
+    "${_reversed}"
+  )
+  _loop_opts+=(
     "${_out}"
+  )
+  mediaclip \
+    "${_mediaclip_opts[@]}"
+  mediareverse \
+    "${_mediareverse_opts[@]}"
+  vidcat \
+    "${_mediaclip_opts[@]}"
+  if [[ "${loops_amount}" == "1" ]]; then
+    mv \
+      "${_loop}" \
+      "${_out}"
+    return \
+      0
+  fi
+  for _loop in $(seq "${loops_amount}"); do
+   _vidcat_opts+=(
+     "${_loop}"
+   )
+  done
+  vidcat \
+    "${_loop_opts[@]}"
 }
 
 # Set defaults and, if present, overrides
-# from arch-grub command line option parameters
+# from command line option parameters
 _set_overrides() {
   _set_override \
-    "reverse" \
+    "loop" \
     "date" \
     "$(_get_date_human)"
   _set_override \
@@ -106,9 +150,9 @@ _set_overrides() {
 	      "in" \
 	      "file")")"
   _set_override \
-    "video" \
-    "only" \
-    "n"
+    "loops" \
+    "amount" \
+    "1"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -124,7 +168,10 @@ _set_overrides() {
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "             Reverse date:   $(_get "reverse" "date")"
+  _msg_info "                Loop date:   $(_get "loop" "date")"
+  _msg_info "               Loop start:   $(_get "loop" "start")"
+  _msg_info "              Loop length:   $(_get "loop" "length")"
+  _msg_info "             Loops amount:   $(_get "loops" "amount")"
   _msg_info "                 Out file:   $(_get "out" "file")"
   _msg_info "                  In file:   ${in_file}"
 }
@@ -141,16 +188,18 @@ _usage() {
       _usage_text << \
         ENDUSAGETEXT || true
 
-Reverse media files
+Produces a continous reverse loop from a media file clip
 
 Usage:
   $(_get "app" "name")
     [options]
     <in_file>
-    (<out_file>)
+    <loop_start>
+    <loop_length>
+    <out_file>
   options:
-     -V                   Video only.
-                          Default: $(_get "video" "only")
+     -n <loops_amount>    Amount of loops
+                          Default: '$(_get "loops" "amount")'
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -168,11 +217,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'Vcvh?' \
+    'n:cvh?' \
     arg; do
   case \
     "${arg}" in
-    V) override_video_only="y" ;;
+    n) override_loop_amounts="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -201,13 +250,22 @@ shift \
     "no prefix given for output files, same as the input filename will be used"
 in_file="${1}"
 (( $# == 2 )) && \
-  out_file="${2}"
+  loop_start="${2}"
+(( $# == 3 )) && \
+  loop_length="${3}"
+(( $# == 4 )) && \
+  out_file="${5}"
 _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
 _show_config
-_mediareverse \
-  "${in_file}" \
-  "${out_file}" \
-  "${video_only}"
+app_opts+=(
+  "${in_file}"
+  "${loop_start}"
+  "${loop_length}"
+  "${loops_amount}"
+  "${out_file}"
+)
+_fluidreverse_loop \
+  "${app_opts[@]}"
