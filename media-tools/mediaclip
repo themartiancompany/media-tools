@@ -185,7 +185,7 @@ _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
-if [ ! -d "${in_file}" ]; then
+if [ ! -e "${in_file}" ]; then
   _msg_error \
     "${in_file} does not exist" \
     1
