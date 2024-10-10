@@ -126,10 +126,10 @@ _fluidreverseloop() {
     _loop_opts+=(
       -v
     )
-    _cut_opts+=(
+    _mkmedia_opts+=(
       -v
     )
-    _mkmedia_opts+=(
+    _cut_opts+=(
       -v
     )
   fi
@@ -186,9 +186,9 @@ _fluidreverseloop() {
       "${_target}"
   else
     for _i in $(seq "${loops_amount}"); do
-     _loop_opts+=(
+      _loop_opts+=(
        "${_loop}"
-     )
+      )
     done
     vidcat \
       "${_loop_opts[@]}"
@@ -197,7 +197,7 @@ _fluidreverseloop() {
     mkmedia \
       "${_mkmedia_opts[@]}"
     mediaclip \
-     "${_cut_opts[@]}" \
+     "${_cut_opts[@]}"
   fi
   rm \
     -rf \
@@ -221,6 +221,7 @@ _set_overrides() {
   _set_override \
     "total" \
     "length" \
+    ""
   _set_override \
     "loops" \
     "amount" \
