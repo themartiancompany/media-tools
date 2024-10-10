@@ -19,9 +19,9 @@ _requirements() {
   true
 }
 
-
 # shellcheck disable=SC2034
 _global_variables() {
+  clip_date=""
   out_stdout=""
   in_file=""
   cut_start=""
@@ -88,6 +88,10 @@ _mediaclip() {
 # from arch-grub command line option parameters
 _set_overrides() {
   _set_override \
+    "clip" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
     "out" \
     "stdout" \
     "n"
@@ -103,6 +107,15 @@ _set_overrides() {
   fi
 }
 
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "                Clip date:   $(_get "clip" "date")"
+  _msg_info "               Clip start:   $(_get "cut" "start")"
+  _msg_info "              Clip length:   $(_get "cut" "length")"
+  _msg_info "                 Out file:   $(_get "out" "file")"
+  _msg_info "                  In file:   ${in_file}"
+}
 
 # Show help usage, with an exit status.
 # $1: exit status number.
