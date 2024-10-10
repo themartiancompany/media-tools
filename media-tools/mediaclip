@@ -203,6 +203,7 @@ if [ ! -e "${in_file}" ]; then
     "${in_file} does not exist" \
     1
 fi
+_show_config
 _mediaclip \
   "${in_file}" \
   "${cut_start}" \

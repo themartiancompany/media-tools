@@ -74,7 +74,8 @@ _fluidreverseloop() {
     _clip \
     _reversed \
     _loop \
-    _no_sound
+    _no_sound \
+    _i
   shift \
     6
   _opts=(
@@ -164,26 +165,32 @@ _fluidreverseloop() {
     "${_clip}" \
     "${_reversed}"
   if [[ "${loops_amount}" == "1" ]]; then
+    if [[ "${_external_audio}" != "" ]]; then
+      _target="${_no_sound}"
+    else
+      _target="${_out}"
+    fi
     mv \
       "${_loop}" \
-      "${_out}"
-    return \
-      0
+      "${_target}"
+  else
+    for _i in $(seq "${loops_amount}"); do
+     _loop_opts+=(
+       "${_loop}"
+     )
+    done
+    vidcat \
+      "${_loop_opts[@]}"
   fi
-  for _loop in $(seq "${loops_amount}"); do
-   _loop_opts+=(
-     "${_loop}"
-   )
-  done
-  vidcat \
-    "${_loop_opts[@]}"
   if [[ "${_external_audio}" != "" ]]; then
     mkmedia \
-      "${_mkmedia[@]}"
+      "${_mkmedia_opts[@]}"
   fi
   rm \
     -rf \
-    "${_loop}"
+    "${_loop}" \
+    "${_no_sound}" || \
+    true
 }
 
 # Set defaults and, if present, overrides
@@ -313,14 +320,10 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-
 (( $# < 1 )) && \
   _set_overrides && \
   _usage \
     1
-(( $# < 2 )) && \
-  _msg_info \
-    "no prefix given for output files, same as the input filename will be used"
 in_file="${1}"
 (( 1 < $# )) && \
   loop_start="${2}"

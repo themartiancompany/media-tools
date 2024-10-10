@@ -112,6 +112,8 @@ _vidcat() {
         "running ffmpeg with concat method"
       _concat
   fi
+  return \
+    0
 }
 
 _protocol() {
