@@ -1,0 +1,278 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    'bc'
+  _check_cmd \
+    'mediaclip'
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  out_stdout=""
+  in_file=""
+  split_mode=""
+  chunks_amount=""
+  chunks_length=""
+  out_prefix=""
+  chunks_selected=()
+  split_date=""
+  color=""
+  quiet=""
+}
+
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+_uniform_split() {
+  _length="$( \
+    echo \
+      "${_duration} / ${_amount}" | \
+      bc)"
+}
+
+_fixed_split() {
+  _amount="$( \
+    echo \
+      "${_duration} / ${_length};" \
+      "scale 0" | \
+      bc)"
+}
+
+# Cut video by chunks amount
+# or length
+# $1: input media file
+# $2: filename prefix for media file
+# $3: split mode ('uniform' or 'fixed')
+# $4: chunks amount if 'uniform' mode is selected
+# $5: chunks length if 'fixed' mode is selected
+# $@: only render these chunks
+_mediasplit() {
+  local \
+    _in="${1}" \
+    _mode="${2}" \
+    _prefix="${3}" \
+    _amount="${4}" \
+    _length="${5}" \
+    _chunk \
+    _chunks=() \
+    _duration \
+    _start \
+    _out \
+    _ext
+  shift \
+    5
+  _chunks=(
+    "$@"
+  )
+  _ext="$( \
+    _get_ext \
+      "${_in}")"
+  _duration="$( \
+    medialength \
+      "${_in}")"
+  "_${_mode}_split"
+  if [[ "${_chunks[*]}" == "" ]]; then
+    _chunks+=(
+      $(seq \
+          "${_amount}")
+    )
+  fi
+  for _chunk \
+    in $(seq \
+           "${_amount}"); do
+    if [[ " ${_chunks[*]} " == *" ${_chunk} "* ]]; then
+      _msg_info \
+        "rendering chunk ${_chunk}"
+      _start="$( \
+        echo \
+	  "(${_chunk} - 1) * ${_length}" | \
+	  bc)"
+      _out="${_prefix}.${_chunk}.${_ext}"
+      mediaclip \
+        "${_in}" \
+	"${_start}" \
+	"${_length}" \
+	"${_out}"
+    fi
+  done
+}
+
+# Set defaults and, if present, overrides
+# from arch-grub command line option parameters
+_set_overrides() {
+  _set_override \
+    "split" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "out" \
+    "prefix" \
+    "$(_rm_ext \
+         "$(_get \
+	      "in" \
+	      "file")")"
+  _set_override \
+    "split" \
+    "mode" \
+    "uniform"
+  _set_override \
+    "chunks" \
+    "amount" \
+    "2"
+  _set_override \
+    "chunks" \
+    "length" \
+    "600"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "               Split date:   $(_get "split" "date")"
+  _msg_info "               Split mode:   $(_get "split" "mode")"
+  _msg_info "                  In file:   ${in_file}"
+  _msg_info "            Output prefix:   $(_get "out" "prefix")"
+  _msg_info "            Chunks amount:   $(_get "chunks" "amount")"
+  _msg_info "            Chunks length:   $(_get "chunks" "length")"
+  _msg_info "          Selected chunks:   ${chunks_selected[*]}"
+}
+
+
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Split media files
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <in_file>
+    (<out_prefix>)
+  modes:
+     uniform              to split the media in a given amount
+                          of uniformly sized chunks
+     fixed                to split the media in chunks of
+                          a given length
+  options:
+     -m                   Split mode;
+                          Default: $(_get "split" "mode")
+     -n                   Amount of uniform chunks in which
+                          the media has to be split when
+			  'uniform' split mode is selected.
+                          Default: $(_get "chunks" "amount")
+     -l                   Length of the chunks in seconds
+                          in which the media has to be split
+			  when 'fixed' split mode is selected.
+                          Default: $(_get "chunks" "length")
+     -r                   Returns only selected chunks.
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'm:n:l:r:scvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    m) override_split_mode="${OPTARG}" ;;
+    n) override_chunks_amount="${OPTARG}" ;;
+    l) override_chunks_length="${OPTARG}" ;;
+    r) chunks_selected+=(
+	"${OPTARG}"
+       ) ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+
+(( $# < 1 )) && \
+  _usage \
+    1
+(( $# < 2 )) && \
+  _msg_info \
+    "no prefix given for output files, same as the input filename will be used"
+in_file="${1}"
+(( $# == 2 )) && \
+  out_prefix="${2}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
+_show_config
+_mediasplit \
+  "${in_file}" \
+  "${split_mode}" \
+  "${out_prefix}" \
+  "${chunks_amount}" \
+  "${chunks_length}" \
+  "${chunks_selected[@]}"
