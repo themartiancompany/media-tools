@@ -57,8 +57,8 @@ _fluidreverseloop() {
   local \
     _in="${1}" \
     _loop_start="${2}" \
-    _loops_length="${3}" \
-    _loops_amount="${4}" \
+    _loop_length="${3}" \
+    _loos_amount="${4}" \
     _out="${5}" \
     _ext \
     _duration \
@@ -95,6 +95,20 @@ _fluidreverseloop() {
   _loop="$( \
     mktemp \
       --suffix=".mp4")"
+  if [[ "${quiet}" == "n" ]]; then
+  _mediaclip_opts+=(
+    -v
+  )
+  _mediareverse_opts+=(
+    -v
+  )
+ _vidcat_opts+=(
+    -v
+  )
+ _loop_opts+=(
+    -v
+  )
+  fi
   _mediaclip_opts+=(
     "${_in}"
     "${_loop_start}"
@@ -119,6 +133,10 @@ _fluidreverseloop() {
     "${_mediareverse_opts[@]}"
   vidcat \
     "${_mediaclip_opts[@]}"
+  rm \
+    -rf \
+    "${_clip}" \
+    "${_reeversed}"
   if [[ "${loops_amount}" == "1" ]]; then
     mv \
       "${_loop}" \
@@ -133,6 +151,9 @@ _fluidreverseloop() {
   done
   vidcat \
     "${_loop_opts[@]}"
+  rm \
+    -rf \
+    "${_loop}"
 }
 
 # Set defaults and, if present, overrides
@@ -221,7 +242,7 @@ while \
     arg; do
   case \
     "${arg}" in
-    n) override_loop_amounts="${OPTARG}" ;;
+    n) override_loops_amount="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
