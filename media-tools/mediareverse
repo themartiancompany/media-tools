@@ -124,7 +124,7 @@ _show_config() {
   _msg_info "             Reverse date:   $(_get "reverse" "date")"
   _msg_info "                 Out file:   $(_get "out" "file")"
   _msg_info "                  In file:   ${in_file}"
-
+}
 
 # Show help usage, with an exit status.
 # $1: exit status number.
