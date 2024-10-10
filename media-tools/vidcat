@@ -146,7 +146,6 @@ _protocol() {
   )
   ffmpeg \
     "${_opts[@]}" \
-    -y \
     "${_out}"
   rm \
     -rf \
