@@ -61,7 +61,8 @@ _fluidreverseloop() {
     _loop_length="${3}" \
     _loos_amount="${4}" \
     _external_audio="${5}" \
-    _out="${6}" \
+    _length="${6}" \
+    _out="${7}" \
     _ext \
     _duration \
     _mktemp_opts=() \
@@ -75,9 +76,10 @@ _fluidreverseloop() {
     _reversed \
     _loop \
     _no_sound \
-    _i
+    _i \
+    _sound
   shift \
-    6
+    7
   _opts=(
     "$@"
   )
@@ -108,6 +110,9 @@ _fluidreverseloop() {
   _no_sound="$( \
     mktemp \
       "${_mktemp_opts[@]}")"
+  _sound="$( \
+    mktemp \
+      "${_mktemp_opts[@]}")"
   if [[ "${quiet}" == "n" ]]; then
     _mediaclip_opts+=(
       -v
@@ -119,6 +124,9 @@ _fluidreverseloop() {
       -v
     )
     _loop_opts+=(
+      -v
+    )
+    _cut_opts+=(
       -v
     )
     _mkmedia_opts+=(
@@ -141,19 +149,27 @@ _fluidreverseloop() {
     "${_reversed}"
   )
   if [[ "${_external_audio}" != "" ]]; then
-    _loop_opts+=(
-      "${_no_sound}"
-    )
-    _mkmedia_opts+=(
-      "${_out}"
-      "${_external_audio}"
-      "${_no_sound}"
-    )
+    _target="${_no_sound}"
   else
+    _target="${_out}"
     _loop_opts+=(
-      "${_out}"
+      "${_target}"
     )
   fi
+  _loop_opts+=(
+    "${_target}"
+  )
+  _mkmedia_opts+=(
+    "${_sound}"
+    "${_external_audio}"
+    "${_target}"
+  )
+  _cut_opts+=(
+    "${_sound}"
+    0
+    "${_length}"
+    "${_out}"
+  )
   mediaclip \
     "${_mediaclip_opts[@]}"
   mediareverse \
@@ -165,11 +181,6 @@ _fluidreverseloop() {
     "${_clip}" \
     "${_reversed}"
   if [[ "${loops_amount}" == "1" ]]; then
-    if [[ "${_external_audio}" != "" ]]; then
-      _target="${_no_sound}"
-    else
-      _target="${_out}"
-    fi
     mv \
       "${_loop}" \
       "${_target}"
@@ -185,11 +196,14 @@ _fluidreverseloop() {
   if [[ "${_external_audio}" != "" ]]; then
     mkmedia \
       "${_mkmedia_opts[@]}"
+    mediaclip \
+     "${_cut_opts[@]}" \
   fi
   rm \
     -rf \
     "${_loop}" \
-    "${_no_sound}" || \
+    "${_no_sound}" \
+    "${_sound}" || \
     true
 }
 
@@ -205,25 +219,8 @@ _set_overrides() {
     "audio" \
     ""
   _set_override \
-    "loop" \
-    "date" \
-    "$(_get_date_human)"
-  _set_override \
-    "loop" \
-    "date" \
-    "$(_get_date_human)"
-  _set_override \
-    "loop" \
-    "date" \
-    "$(_get_date_human)"
-
-  _set_override \
-    "out" \
-    "file" \
-    "$(_rm_ext \
-         "$(_get \
-	      "in" \
-	      "file")")"
+    "total" \
+    "length" \
   _set_override \
     "loops" \
     "amount" \
@@ -248,6 +245,7 @@ _show_config() {
   _msg_info "              Loop length:   $(_get "loop" "length")"
   _msg_info "             Loops amount:   $(_get "loops" "amount")"
   _msg_info "           External audio:   $(_get "external" "audio")"
+  _msg_info "             Total length:   $(_get "total" "length")"
   _msg_info "                 Out file:   $(_get "out" "file")"
   _msg_info "                  In file:   ${in_file}"
 }
@@ -278,6 +276,9 @@ Usage:
                           Default: '$(_get "external" "audio")'
      -n <loops_amount>    Amount of loops
                           Default: '$(_get "loops" "amount")'
+     -L <total_length>    Output file length
+                          Default: '$(_get "total" "length")'
+
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -295,12 +296,13 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'a:n:cvh?' \
+    'a:n:L:cvh?' \
     arg; do
   case \
     "${arg}" in
     a) override_external_audio="${OPTARG}" ;;
     n) override_loops_amount="${OPTARG}" ;;
+    L) override_total_length="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -342,6 +344,7 @@ app_opts+=(
   "${loop_length}"
   "${loops_amount}"
   "${external_audio}"
+  "${total_length}"
   "${out_file}"
 )
 _fluidreverseloop \
