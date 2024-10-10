@@ -41,6 +41,7 @@ install-media:
 	install -vDm 755 $(_PROJECT)/mediaclip "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/medialength "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/mediasplit "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/mediareverse "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/mkmedia "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/mkaudioloop "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/mkgif "$(BIN_DIR)"
