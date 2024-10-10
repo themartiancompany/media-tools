@@ -55,7 +55,7 @@ _mediareverse() {
     _duration \
     _opts=()
   shift \
-    2
+    3
   _opts=(
     "$@"
   )
@@ -79,7 +79,7 @@ _mediareverse() {
   )
   if [[ "${_video_only}" == "n" ]]; then
     _opts+=(
-      -a
+      -af
         areverse
     )
   fi
