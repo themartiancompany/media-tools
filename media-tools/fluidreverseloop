@@ -62,6 +62,7 @@ _fluidreverseloop() {
     _out="${5}" \
     _ext \
     _duration \
+    _mktemp_opts=() \
     _mediaclip_opts=() \
     _mediareverse_opts=() \
     _vidcat_opts=() \
@@ -86,15 +87,19 @@ _fluidreverseloop() {
       "Broken media file" \
       1
   fi
+  _mktemp_opts+=(
+    --suffix=".mp4"
+    --dry-run
+  )
   _clip="$( \
     mktemp \
-      --suffix=".mp4")"
+      "${_mktemp_opts[@]}")"
   _reversed="$( \
     mktemp \
-      --suffix=".mp4")"
+      "${_mktemp_opts[@]}")"
   _loop="$( \
     mktemp \
-      --suffix=".mp4")"
+      "${_mktemp_opts[@]}")"
   if [[ "${quiet}" == "n" ]]; then
   _mediaclip_opts+=(
     -v
