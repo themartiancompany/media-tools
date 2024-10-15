@@ -30,10 +30,10 @@ _requirements() {
   _check_cmd \
     "ffmpeg"
   _check_cmd \
-    "mediaclip" \ 
+    "mediaclip" \
     "media-tools"
   _check_cmd \
-    "medialength" \ 
+    "medialength" \
     "media-tools"
 }
 
@@ -73,13 +73,17 @@ _vidstack() {
         --suffix=".mp4")"
     _length="$( \
       medialength \
-        "${_in[1]}")"
+        "${_in[1]}" |
+        awk \
+          -F \
+	    "." \
+	  '{print $1}')"
     mediaclip \
       "${_in[1]}" \
       "${_delay}" \
       "$(( \
         _length - \
-        delay + \
+        _delay + \
 	1))" \
       "${_delayed}"
     _in[1]="${_delayed}"
