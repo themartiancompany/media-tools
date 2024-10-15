@@ -29,6 +29,7 @@ install-media:
 	install -vDm 755 $(_PROJECT)/addsilence "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/audiocat "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/audiopic2vid "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/audioscale "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/audioverlap "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/blackintro "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/blackoutro "$(BIN_DIR)"
