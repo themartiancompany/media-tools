@@ -53,7 +53,7 @@ _vidstack() {
     _vf="" \
     _f="" \
     _vid \
-    _vids=() \
+    _vids=()
   shift \
     2 
   _in=(
@@ -72,15 +72,10 @@ _vidstack() {
     _f="hstack"
   fi
   _vf="${_f},format=yuv420p"
-  _msg_info \
-    "vids:"
-  _msg_info \
-    "$(cat \
-         "${_vids}")"
   _opts=(
-    "${_ffmpeg_opts[@]}"
-    -safe
-      0
+    # "${_ffmpeg_opts[@]}"
+    # -safe
+    #   0
     "${_vids[@]}"
     -filter_complex
       "${_vf}"
@@ -89,6 +84,7 @@ _vidstack() {
     -crf
       18
   )
+  _msg_info "${_opts[*]}"
   ffmpeg \
     "${_opts[@]}" \
     "${_out}"
