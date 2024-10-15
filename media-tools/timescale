@@ -15,11 +15,10 @@ source \
 
 # shellcheck disable=SC2034
 _global_variables() {
-  stack_date=""
   in_files=()
   out_file=""
-  stack_mode=""
-  time_delay=""
+  encode_mode=""
+  encode_date=""
   color=""
   quiet=""
 }
@@ -30,11 +29,7 @@ _requirements() {
   _check_cmd \
     "ffmpeg"
   _check_cmd \
-    "mediaclip" \ 
-    "media-tools"
-  _check_cmd \
-    "medialength" \ 
-    "media-tools"
+    "bc"
 }
 
 _ffmpeg_options_load() {
@@ -47,76 +42,92 @@ _ffmpeg_options_load() {
   true
 }
 
-# Stack video files
+# Scale audio file duration
 # $1: output video file
+# $2: scale
 # $@: input video files (sorted)
-_vidstack() {
+_audioscale() {
   local \
-    _mode="${1}" \
-    _delay="${2}" \
-    _out="${3}" \
+    _out="${1}" \
+    _scale="${2}" \
     _i=1 \
     _in=() \
     _opts=() \
     _vf="" \
-    _f="" \
     _vid \
-    _vids=() \
+    _vids=()
   shift \
-    3 
+    2 
   _in=(
     "$@"
   )
-  if (( 0 < "${_delay}" )); then
-    _delayed="$( \
-      mktemp \
-        --suffix=".mp4")"
-    _length="$( \
-      medialength \
-        "${_in[1]}")"
-    mediaclip \
-      "${_in[1]}" \
-      "${_delay}" \
-      "$(( \
-        _length - \
-        delay + \
-	1))" \
-      "${_delayed}"
-    _in[1]="${_delayed}"
+  _length="$( \
+    medialength \
+      "${_in[@]}")"
+  if (( "" < 1 )); then
+    if $(echo "${_scale} < 0.5" | bc -l);
   fi
+  _scale="$( \
+    echo \
+      "${_length}" | \
+      bc
+    )"
+  _vids="$( \
+    mktemp \
+      --suffix \
+        ".txt")"
   for _vid \
     in "${_in[@]}"; do
-    _vids+=(
-      -i
-        "${_vid}"
-    )
+    _vid="$( \
+      realpath \
+        "${_vid}")"
+    echo \
+      "file '${_vid}'" >> \
+      "${_vids}"
+   _vf="${_vf} [${_i}:v] [${_i}:a]"
+   _i=$((_i + 1))
   done
-  if [[ "${_mode}" == "vertical" ]]; then
-    _f="vstack"
-  elif [[ "${_mode}" == "horizonal" ]]; then
-    _f="hstack"
-  fi
-  _vf="${_f},format=yuv420p"
+  _vf="${_vf} concat=n=${_i}:v=1:a=1 [v] [a]"
   _msg_info \
-    "vids:"
-  _msg_info \
-    "$(cat \
+    "vids: $( \
+       cat \
          "${_vids}")"
   _opts=(
     "${_ffmpeg_opts[@]}"
     -safe
       0
-    "${_vids[@]}"
+    -i
+      ${_vids}
     -filter_complex
       "${_vf}"
-    -c:v
-      libx264
-    -crf
-      18
+    -map
+      "[v]"
+    -map
+      "[a]"
+    -f
+      mp4
+    -vcodec
+      libx265
   )
-  ffmpeg \
-    "${_opts[@]}" \
-    "${_out}"
+
+ffmpeg -i ~/storage/movies/ciaoneoneone.m4a  -filter_complex "[0:a]atempo=0.5[a]" -map "[a]" ~/storage/movies/cine.m4a
+  if [[ "${_mode}" == 'filter' ]]; then
+    ffmpeg \
+      "${_opts[@]}" \
+      "${_out}" || \
+      true
+  elif [[ "${_mode}" == 'protocol' ]]; then
+      _msg_info \
+        "running ffmpeg with concat protocol method"
+      _protocol
+  elif [[ "${_mode}" == 'concat' ]]; then
+    # echo \
+    #   "${_mm}"
+    # [[ ! $? -eq 0 ]] && \
+      _msg_info \
+        "running ffmpeg with concat method"
+      _concat
+  fi
   return \
     0
 }
@@ -125,17 +136,13 @@ _vidstack() {
 # from command line option parameters
 _set_overrides() {
   _set_override \
-    "stack" \
+    "scale" \
     "date" \
     "$(_get_date_human)"
   _set_override \
-    "stack" \
-    "mode" \
-    "vertical"
-  _set_override \
-    "time" \
-    "delay" \
-    "0"
+    "scale" \
+    "factor" \
+    "protocol"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -151,9 +158,8 @@ _set_overrides() {
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "               Stack date:   $(_get "stack" "date")"
-  _msg_info "               Stack mode:   $(_get "stack" "mode")"
-  _msg_info "               Time delay:   $(_get "time" "delay")"
+  _msg_info "               Scale date:   $(_get "scale" "date")"
+  _msg_info "             Scale factor:   $(_get "scale" "factor")"
   _msg_info "                 In files:   ${in_files[*]}"
   _msg_info "              Output file:   $(_get "out" "file")"
 }
@@ -162,7 +168,6 @@ _show_config() {
 # $1: exit status number.
 _usage() {
   local \
-    _exit="${1}" \
     _usage_text
   IFS='' \
     read \
@@ -170,19 +175,15 @@ _usage() {
       -d '' \
       _usage_text << \
         ENDUSAGETEXT || true
-Stack video files
+Scale audio duration
 
 Usage:
   $(_get "app" "name")
     [options]
     <output_file>
+    <scale_factor>
     [input_file]
   options:
-     -m <stack_mode>      Stack mode (horizontal, vertical)
-                          Default: $(_get "stack" "mode")'
-     -d <time_delay>      Delay, in seconds, of the latter video
-                          Default: $(_get "time" "delay")'
-
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -200,12 +201,10 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'm:d:cvh?' \
+    'cvh?' \
     arg; do
   case \
     "${arg}" in
-    m) override_stack_mode="${OPTARG}" ;;
-    d) override_time_delay="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -239,19 +238,16 @@ in_files=(
 _set_overrides
 app_opts=(
   "$(_get \
-       "stack" \
-       "mode")"
-  "$(_get \
-       "time" \
-       "delay")"
-  "$(_get \
        "out" \
        "file")"
+  "$(_get \
+       "scale" \
+       "factor")"
   "${in_files[@]}"
 )
 _config_user_init \
   "media-tools"
 _show_config
 _ffmpeg_options_load
-_vidstack \
+_audioscale \
   "${app_opts[@]}"
