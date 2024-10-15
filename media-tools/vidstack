@@ -1,0 +1,220 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+# shellcheck disable=SC2034
+_global_variables() {
+  stack_date=""
+  in_files=()
+  out_file=""
+  stack_mode=""
+  color=""
+  quiet=""
+}
+
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    "ffmpeg"
+}
+
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+# Stack video files
+# $1: output video file
+# $@: input video files (sorted)
+_vidstack() {
+  local \
+    _mode="${1}" \
+    _out="${2}" \
+    _i=1 \
+    _in=() \
+    _opts=() \
+    _vf="" \
+    _f="" \
+    _vid \
+    _vids=() \
+  shift \
+    2 
+  _in=(
+    "$@"
+  )
+  for _vid \
+    in "${_in[@]}"; do
+    _vids+=(
+      -i
+        "${_vid}"
+    )
+  done
+  if [[ "${_mode}" == "vertical" ]]; then
+    _f="vstack"
+  elif [[ "${_mode}" == "horizonal" ]]; then
+    _f="hstack"
+  fi
+  _vf="${_f},format=yuv420p"
+  _msg_info \
+    "vids:"
+  _msg_info \
+    "$(cat \
+         "${_vids}")"
+  _opts=(
+    "${_ffmpeg_opts[@]}"
+    -safe
+      0
+    "${_vids[@]}"
+    -filter_complex
+      "${_vf}"
+    -c:v
+      libx264
+    -crf
+      18
+  )
+  ffmpeg \
+    "${_opts[@]}" \
+    "${_out}"
+  return \
+    0
+}
+
+# Set defaults and, if present, overrides
+# from command line option parameters
+_set_overrides() {
+  _set_override \
+    "stack" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "stack" \
+    "mode" \
+    "vertical"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "               Stack date:   $(_get "stack" "date")"
+  _msg_info "               Stack mode:   $(_get "stack" "mode")"
+  _msg_info "                 In files:   ${in_files[*]}"
+  _msg_info "              Output file:   $(_get "out" "file")"
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _exit="${1}" \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+Stack video files
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <output_file>
+    [input_file]
+  options:
+     -m                   Stack mode (horizontal, vertical)
+                          Default: $(_get "stack" "mode")'
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'm:cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    m) override_stack_mode="${OPTARG}" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+         _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+(( ${#} < 2 )) && \
+  _usage \
+    1
+_set \
+  "out" \
+  "file" \
+  "${1}"
+shift \
+  1
+in_files=(
+  "$@"
+)
+_set_overrides
+app_opts=(
+  "$(_get \
+       "stack" \
+       "mode")"
+  "$(_get \
+       "out" \
+       "file")"
+  "${in_files[@]}"
+)
+_config_user_init \
+  "media-tools"
+_show_config
+_ffmpeg_options_load
+_vidstack \
+  "${app_opts[@]}"
