@@ -210,7 +210,7 @@ _zoompan() {
     "s=${_width_new}x${_height_new}"
   )
   # _scale="hd720"
-  _scale="'iw*2:ih*2'"
+  _scale="iw*2:ih*2"
   _opts+=(
     -i
       "${_in}"
