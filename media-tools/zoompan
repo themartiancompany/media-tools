@@ -171,10 +171,10 @@ _zoompan() {
       bc <<< \
         "${_zoom_duration} * ${_fps}")"
     _speed="$( \
-          bc <<< \
-            "$(echo \
-               "scale=4;" \
-               "( ${_zoom_max} - 1) / ${_Duration}")")"
+      bc <<< \
+        "$(echo \
+             "scale=4;" \
+             "( ${_zoom_max} - 1) / ${_Duration}")")"
     # _zoom="pzoom+${_speed}"
     # _zoom="pzoom+0.01"
     #
@@ -210,7 +210,7 @@ _zoompan() {
     "s=${_width_new}x${_height_new}"
   )
   # _scale="hd720"
-  _scale="iw*2:ih*2"
+  _scale="iw*2:-1"
   _opts+=(
     -i
       "${_in}"
