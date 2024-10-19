@@ -93,6 +93,8 @@ _zoompan() {
     "${_ffmpeg_opts[@]}"
     #  -loop 1
   )
+  echo \
+    hi
   if [[ "${_quality}" == "fhd" ]]; then
     _width_scale=1920
     _height_scale=1080
@@ -106,6 +108,8 @@ _zoompan() {
     _width_scale=640
     _height_scale=360
   fi
+  echo \
+    honi
   _width="$( \
     vidsize \
       -W \
@@ -227,6 +231,8 @@ _zoompan() {
       -
     )
   fi
+  echo \
+    "how"
   ffmpeg \
     "${_opts[@]}" \
     "${_out[*]}"
