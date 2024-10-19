@@ -92,7 +92,7 @@ _gridcrop() {
     _get_ext \
       "${_in}")"
   _resolution="$( \
-    vidsize \
+    mediasize \
       "${_in}")"
   "_${_mode}_split"
   if [[ "${_crops[*]}" == "" ]]; then

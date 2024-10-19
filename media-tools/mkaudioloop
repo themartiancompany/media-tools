@@ -118,7 +118,7 @@ Usage:
     <fade_duration>
     <loops_amount>
   options:
-     -m                   Video encode mode ('quolity', 'size').
+     -m                   Video encode mode ('quality', 'size').
                           Default: $(_get "encode" "mode")
      -h                   This message.
      -v                   Enable verbose output

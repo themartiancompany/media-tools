@@ -21,7 +21,7 @@ _requirements() {
   _check_cmd \
     "ffmpeg"
   _check_cmd \
-    "vidsize"
+    "mediasize"
 }
 
 # shellcheck disable=SC2034
@@ -111,11 +111,11 @@ _zoompan() {
   echo \
     honi
   _width="$( \
-    vidsize \
+    mediasize \
       -W \
       "${_in}")"
   _height="$( \
-    vidsize \
+    mediasize \
       -H \
       "${_in}")"
   if (( \

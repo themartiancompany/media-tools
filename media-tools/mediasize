@@ -31,7 +31,7 @@ _global_variables() {
 }
 
 
-_vidsize() {
+_mediasize() {
   local \
     _media="${1}" \
     _height_only="${2}" \
@@ -195,7 +195,7 @@ app_opts=(
        "width" \
        "only")"
 )
-_vidsize \
+_mediasize \
   "${app_opts[@]}"
 
 # vim: ft=sh syn=sh et
