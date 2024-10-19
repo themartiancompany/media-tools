@@ -344,13 +344,13 @@ Usage:
                           as a percentage
                           Default: $(_get "box" "y")
  options:
-     -d <direction>       Zoom diroction (in, out).
+     -d <direction>       Zoom direction (in, out).
 			  Default: $(_get "zoom" "direction")
      -r <resolution>      Output resolution (ld, sd, hd, fhd).
 			  Default: $(_get "out" "resolution")
      -f <fps>             Encoding frames per second.
 			  Default: $(_get "encoding" "fps")
-     -t <type>             Media type.
+     -t <type>            Media type.
 			  Default: $(_get "media" "type")
      -s                   Output to stdout.
 			  Default: $(_get "out" "stdout")
@@ -371,7 +371,7 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'd:r:f:svh?' \
+    'd:r:f:t:svh?' \
     arg; do
   case \
     "${arg}" in
