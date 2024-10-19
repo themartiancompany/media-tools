@@ -78,7 +78,6 @@ _zoompan() {
     _ext \
     _duration \
     _speed \
-    _size \
     _width \
     _width_new \
     _width_scale \
