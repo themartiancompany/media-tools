@@ -106,21 +106,14 @@ _zoompan() {
     _width_scale=640
     _height_scale=360
   fi
-  _size="$( \
-    vidsize \
-      "${_in}")"
   _width="$( \
-    echo \
-      "${_size}" | \
-      cut \
-	-d'x' \
-	-f1)"
+    vidsize \
+      -W \
+      "${_in}")"
   _height="$( \
-    echo \
-      "${_size}" | \
-      cut \
-	-d'x' \
-	-f2)"
+    vidsize \
+      -H \
+      "${_in}")"
   if (( \
     $( \
       bc \
