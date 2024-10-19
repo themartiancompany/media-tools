@@ -206,7 +206,7 @@ _zoompan() {
     "s=${_width_new}x${_height_new}"
   )
   # _scale="hd720"
-  _scale="iw*2:ih*2"
+  _scale="'iw*2:ih*2'"
   _opts+=(
     -i
       "${_in}"
@@ -396,10 +396,11 @@ shift \
     OPTIND - 1 \
   ))
 
-(( $# < 2 )) && \
-  _set_overrides && \
+if (( $# < 2 )); then
+  _set_overrides
   _usage \
     1
+fi
 _set \
   "in" \
   "video" \
@@ -408,31 +409,35 @@ _set \
   "out" \
   "video" \
   "${2}"
-(( $# >= 3 )) && \
+if (( $# >= 3 )); then
   _set \
     "zoom" \
     "max" \
     "${3}"
-(( $# >= 4 )) && \
+fi
+if (( $# >= 4 )); then
   _set \
     "zoom" \
     "duration" \
     "${4}"
-(( $# >= 5 )) && \
+fi
+if (( $# >= 5 )); then
   _set \
     "box" \
     "x" \
     "${5}"
-(( $# >= 6 )) && \
+fi
+if (( $# >= 6 )); then
   _set \
     "box" \
     "y" \
     "${6}"
+fi
 _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
-opts=(
+app_opts=(
   "$(_get \
        "in" \
        "video")"
@@ -466,4 +471,4 @@ opts=(
 )
 _show_config
 _zoompan \
-  "${opts[@]}"
+  "${app_opts[@]}"
