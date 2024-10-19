@@ -2,10 +2,42 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+_requirements() {
+  _check_cmd \
+    "ffprobe" \
+    "ffmpeg"
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  op_date=""
+  in_file=""
+  height_only=""
+  width_only=""
+  media_type=""
+  color=""
+  quiet=""
+}
+
+
 _vidsize() {
   local \
     _media="${1}" \
-    _ffprobe_opts=()
+    _height_only="${2}" \
+    _width_only="${3}" \
+    _ffprobe_opts=() \
+    _resolution
   _ffprobe_opts=(
     -select_streams
       v:0
@@ -16,25 +48,154 @@ _vidsize() {
     -of
      csv="s=x:p=0"
   )
-  ffprobe \
-    -i \
-      "${_media}" \
-    ${_ffprobe_opts[@]}
+  _resolution="$( \
+    ffprobe \
+      -i \
+        "${_media}" \
+      "${_ffprobe_opts[@]}")"
+  if [[ "${_width_only}" == "y" ]]; then
+    echo \
+      "${_resolution}" | \
+      awk \
+        -F \
+          "x" \
+        '{print $1}'
+  elif [[ "${_height_only}" == "y" ]]; then
+    echo \
+      "${_resolution}" | \
+      awk \
+        -F \
+          "x" \
+        '{print $2}'
+  else
+    echo \
+      "${_resolution}"
+  fi
 }
 
-_media="${1}"
+# Set defaults and, if present, overrides
+# from zoompan command line option parameters
+_set_overrides() {
+  _set_override \
+    "op" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "height" \
+    "only" \
+    "n"
+  _set_override \
+    "width" \
+    "only" \
+    "n"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  fi
+}
 
-(( $# < 1 )) && \
-  _usage=(
-    "Usage:"
-      "vidsize"
-        "<video_file>"
-  ) && \
-  echo \
-    "${_usage[*]}" && \
-    exit
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _exit="${1}" \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
 
+Get media file dimensions
+
+Usage:
+
+  $(_get "app" "name")
+    [options]
+    <input_file>
+
+ options:
+     -W                   Width only.
+			  Default: $(_get "width" "only")
+     -H                   Height only.
+			  Default: $(_get "height" "only")
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${_exit}"
+}
+
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "           Operation date:   $(_get "op" "date")"
+  _msg_info "               Input file:   $(_get "in" "file")"
+  _msg_info "              Height only:   $(_get "height" "only")"
+  _msg_info "               Width only:   $(_get "width" "only")"
+}
+
+_globals
+_global_variables
+_requirements
+while \
+  getopts \
+    'HWcvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    H) override_height_only="y" ;;
+    W) override_width_only="y" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+if (( $# < 1 )); then
+  _set_overrides
+  _usage \
+    1
+fi
+_set \
+  "in" \
+  "file" \
+  "${1}"
+_set_overrides
+_show_config
+app_opts=(
+  "$(_get \
+       "in" \
+       "file")"
+  "$(_get \
+       "height" \
+       "only")"
+  "$(_get \
+       "width" \
+       "only")"
+)
 _vidsize \
-  "${_media}" \
+  "${app_opts[@]}"
 
 # vim: ft=sh syn=sh et
