@@ -118,14 +118,12 @@ _zoompan() {
     mediasize \
       -H \
       "${_in}")"
-  if (( \
-    $( \
-      bc \
-        -l <<< \
-        "$(echo \
-             "scale=4;" \
-             "${_width}/${_height}" ">=" \
-	     "16/9")") )); then
+  if (( $(bc \
+            -l <<< \
+            "$(echo \
+                 "scale=4;" \
+                 "${_width}/${_height}" ">=" \
+	         "16/9")") )); then
     _ratio_new="$( \
       bc <<< \
         "scale=4; ${_height} / ${_height_scale}")"
@@ -210,13 +208,13 @@ _zoompan() {
     "s=${_width_new}x${_height_new}"
   )
   # _scale="hd720"
-  _scale="iw*2:-1"
+  _scale="'iw*2':'-1'"
   _opts+=(
     -i
       "${_in}"
     -vf
        "scale=${_scale},zoompan=$( \
-	 IFS=":"; \
+	 IFS=":" ; \
          printf \
 	   "${_vf[*]}")"
     -c:v
