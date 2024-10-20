@@ -1,0 +1,263 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    "blackvid" \
+    "media-tools"
+  _check_cmd \
+    "vidcat" \
+    "media-tools"
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  make_date=""
+  out_video=""
+  in_video=""
+  in_duration=""
+  out_duration=""
+  color=""
+  quiet=""
+}
+
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+# Add a black intro and a black outro
+# to a video file
+# $1: output file
+# $2: sound file
+# $@: videos
+_mktimepad() {
+  local \
+    _out="${1}" \
+    _in="${2}" \
+    _intro="${3}" \
+    _outro="${4}" \
+    _blackvid_opts=() \
+    _vidcat_opts=() \
+    _ext \
+    _tmp \
+    _bintro \
+    _boutro \
+    _bout
+  _tmp="$( \
+    mktemp \
+      -d)"
+  if [[ "${quiet}" == "y" ]]; then
+    _ffmpeg_opts+=(
+      -y
+    )
+  fi
+  if [[ "${quiet}" == "n" ]]; then
+    _blackvid_opts+=(
+      -v
+    )
+    _vidcat_opts+=(
+      -v
+    )
+  fi
+  if [[ "${_intro}" != "0" ]]; then
+    _bintro="${_tmp}/bintro.mp4"
+    blackvid \
+      "${_blackvid_opts[@]}" \
+      "${_in}" \
+      "${_bintro}" \
+      "${_intro}"
+    vidcat \
+      "${_vidcat_opts[@]}" \
+      "${_bout}" \
+      "${_bintro}" \
+      "${_in}"
+    _in="${_bout}"
+  fi
+  if [[ "${_outro}" == "0" ]]; then
+    mv \
+      "${_bout}" \
+      "${_out}"
+  elif [[ "${_outro}" != "0" ]]; then
+    _boutro="${_tmp}/boutro.mp4"
+    blackvid \
+      "${_blackvid_opts[@]}" \
+      "${_in}" \
+      "${_boutro}" \
+      "${_outro}"
+    vidcat \
+      "${_vidcat_opts[@]}" \
+      "${_out}" \
+      "${_in}" \
+      "${_boutro}"
+  fi
+}
+
+# Set defaults and, if present, overrides
+# from arch-grub command line option parameters
+_set_overrides() {
+  _set_override \
+    "make" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "out" \
+    "video" \
+    "$(_get \
+         "in" \
+         "video").pad.mp4"
+  _set_override \
+    "in" \
+    "duration" \
+    "3"
+  _set_override \
+    "out" \
+    "duration" \
+    "$(_get \
+         "in" \
+         "duration")"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "                Make date:   $(_get "make" "date")"
+  _msg_info "              Input video:   $(_get "in" "video")"
+  _msg_info "             Output video:   $(_get "out" "video")"
+  _msg_info "           Intro duration:   $(_get "intro" "duration")"
+  _msg_info "           Outro duration:   $(_get "outro" "duration")"
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Add a black time padding to a media file
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <out_video>
+    <in_video>
+  options:
+     -i                   Black intro duration
+                          Default: $(_get "intro" "duration")
+     -i                   Black outro duration
+                          Default: $(_get "outro" "duration")
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'i:o:cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    i) override_intro_duration="${OPTARG}" ;;
+    o) override_outro_duration="${OPTARG}" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+
+(( $# < 3 )) && \
+  _set_overrides && \
+  _usage \
+    1
+_set \
+  "out" \
+  "video" \
+  "${1}"
+_set \
+  "in" \
+  "video" \
+  "${2}"
+in_video="${3}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
+_show_config
+app_opts=(
+  "$(_get \
+       "audio" \
+       "mode")"
+  "$(_get \
+       "out" \
+       "video")"
+  "$(_get \
+       "in" \
+       "video")"
+  "$(_get \
+       "in" \
+       "duration")"
+  "$(_get \
+       "out" \
+       "duration")"
+)
+_mktimepad \
+  "${app_opts[@]}"

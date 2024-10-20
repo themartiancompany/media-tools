@@ -23,7 +23,6 @@ _requirements() {
 # shellcheck disable=SC2034
 _global_variables() {
   out_video=""
-  in_audio=""
   in_videos=()
   box_x=""
   box_y=""
@@ -137,7 +136,7 @@ Crop videos
 Usage:
   $(_get "app" "name")
     [options]
-    <input_audio>
+    <input_video>
     <output_video>
     <box_x>
     <box_y>
@@ -148,9 +147,9 @@ Usage:
                           Default: $(_get "box" "x")
      box_y                Box left upper vertex y position
                           Default: $(_get "box" "y")
-     box_width            Box width
+     box_width            Box width in pixel
                           Default: $(_get "box" "width")
-     box_height           Box height
+     box_height           Box height in pixel
                           Default: $(_get "box" "height")
   options:
      -s                   Output to stdout.
