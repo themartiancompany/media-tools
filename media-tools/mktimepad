@@ -179,7 +179,7 @@ Usage:
   options:
      -i                   Black intro duration
                           Default: $(_get "in" "duration")
-     -i                   Black outro duration
+     -o                   Black outro duration
                           Default: $(_get "out" "duration")
      -h                   This message.
      -v                   Enable verbose output
