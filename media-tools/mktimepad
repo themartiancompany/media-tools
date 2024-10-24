@@ -153,8 +153,8 @@ _show_config() {
   _msg_info "                Make date:   $(_get "make" "date")"
   _msg_info "              Input video:   $(_get "in" "video")"
   _msg_info "             Output video:   $(_get "out" "video")"
-  _msg_info "           Intro duration:   $(_get "intro" "duration")"
-  _msg_info "           Outro duration:   $(_get "outro" "duration")"
+  _msg_info "           Intro duration:   $(_get "in" "duration")"
+  _msg_info "           Outro duration:   $(_get "out" "duration")"
 }
 
 # Show help usage, with an exit status.
@@ -178,9 +178,9 @@ Usage:
     <in_video>
   options:
      -i                   Black intro duration
-                          Default: $(_get "intro" "duration")
+                          Default: $(_get "in" "duration")
      -i                   Black outro duration
-                          Default: $(_get "outro" "duration")
+                          Default: $(_get "out" "duration")
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -202,8 +202,8 @@ while \
     arg; do
   case \
     "${arg}" in
-    i) override_intro_duration="${OPTARG}" ;;
-    o) override_outro_duration="${OPTARG}" ;;
+    i) override_in_duration="${OPTARG}" ;;
+    o) override_out_duration="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
