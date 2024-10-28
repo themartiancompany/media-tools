@@ -15,8 +15,9 @@ source \
 
 # shellcheck disable=SC2034
 _global_variables() {
-  in_files=()
   out_file=""
+  in_file=""
+  scale_factor=""
   encode_mode=""
   encode_date=""
   color=""
@@ -49,85 +50,69 @@ _ffmpeg_options_load() {
 _audioscale() {
   local \
     _out="${1}" \
-    _scale="${2}" \
-    _i=1 \
+    _in="${2}"
+    _scale="${3}" \
+    _i \
     _in=() \
     _opts=() \
-    _vf="" \
-    _vid \
-    _vids=()
+    _af="" \
+    _map \
+    _iter=1 \
+    _tmp_dir \
+    _aud
   shift \
     2 
   _in=(
     "$@"
   )
+  _tmp_dir="$( \
+    mktemp \
+      -d)"
   _length="$( \
     medialength \
       "${_in[@]}")"
-  if (( "" < 1 )); then
-    if $(echo "${_scale} < 0.5" | bc -l);
+  if [[ "${_length}" == "" ]]; then
+    _msg_error \
+      "input file '${_in[@]}' seems corrupted."
   fi
-  _scale="$( \
-    echo \
-      "${_length}" | \
-      bc
-    )"
-  _vids="$( \
-    mktemp \
-      --suffix \
-        ".txt")"
-  for _vid \
-    in "${_in[@]}"; do
-    _vid="$( \
-      realpath \
-        "${_vid}")"
-    echo \
-      "file '${_vid}'" >> \
-      "${_vids}"
-   _vf="${_vf} [${_i}:v] [${_i}:a]"
-   _i=$((_i + 1))
-  done
-  _vf="${_vf} concat=n=${_i}:v=1:a=1 [v] [a]"
-  _msg_info \
-    "vids: $( \
-       cat \
-         "${_vids}")"
+  if (( "${_scale}" < 1 )); then
+    if $(echo "${_scale} < 0.5" | bc -l);
+      _iter="$( \
+        echo \
+	  "scale=0; 0.5 / ${_scale}" | \
+	  bc)"
+      _scale=0.5
+    _msg=(
+      "ffmpeg can at most double length of a file,"
+      "applying the filter '${_iter}' times"
+    )
+    _msg_info \
+      "${_msg[*]}"
+    fi
+  fi
+  _opts+=()
+  _af="[0:a]atempo=${_scale}[a]" 
+  _map="[a]"
   _opts=(
     "${_ffmpeg_opts[@]}"
-    -safe
-      0
     -i
-      ${_vids}
+      ${_in}
     -filter_complex
-      "${_vf}"
+      "${_af}"
     -map
-      "[v]"
-    -map
-      "[a]"
-    -f
-      mp4
-    -vcodec
-      libx265
+      "${_map}"
   )
-
-ffmpeg -i ~/storage/movies/ciaoneoneone.m4a  -filter_complex "[0:a]atempo=0.5[a]" -map "[a]" ~/storage/movies/cine.m4a
-  if [[ "${_mode}" == 'filter' ]]; then
+  for _i \
+    in $(seq \
+           "${_iter}"); do
+    _aud="${_tmp_dir}/aud${_i}.opus"
     ffmpeg \
       "${_opts[@]}" \
-      "${_out}" || \
-      true
-  elif [[ "${_mode}" == 'protocol' ]]; then
-      _msg_info \
-        "running ffmpeg with concat protocol method"
-      _protocol
-  elif [[ "${_mode}" == 'concat' ]]; then
-    # echo \
-    #   "${_mm}"
-    # [[ ! $? -eq 0 ]] && \
-      _msg_info \
-        "running ffmpeg with concat method"
-      _concat
-  fi
+      "${_aud}"
+  done
+  mv \
+    "${_aud}" \
+    "${_out}"
   return \
     0
 }
@@ -143,6 +128,12 @@ _set_overrides() {
     "scale" \
     "factor" \
     "protocol"
+  _set_override \
+    "out" \
+    "file" \
+    "$(_get \
+         "in" \
+	 "file").scaled.m4a"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -160,7 +151,7 @@ _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "               Scale date:   $(_get "scale" "date")"
   _msg_info "             Scale factor:   $(_get "scale" "factor")"
-  _msg_info "                 In files:   ${in_files[*]}"
+  _msg_info "              Input file:    $(_get "in" "file")"
   _msg_info "              Output file:   $(_get "out" "file")"
 }
 
@@ -175,14 +166,17 @@ _usage() {
       -d '' \
       _usage_text << \
         ENDUSAGETEXT || true
+
 Scale audio duration
 
 Usage:
+
   $(_get "app" "name")
     [options]
     <output_file>
+    <input_file>
     <scale_factor>
-    [input_file]
+
   options:
      -h                   This message.
      -v                   Enable verbose output
@@ -223,27 +217,32 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-(( ${#} < 2 )) && \
+(( ${#} < 3 )) && \
   _usage \
     1
 _set \
   "out" \
   "file" \
   "${1}"
-shift \
-  1
-in_files=(
-  "$@"
-)
+_set \
+  "in" \
+  "file" \
+  "${2}"
+_set \
+  "scale" \
+  "factor" \
+  "${3}"
 _set_overrides
 app_opts=(
   "$(_get \
        "out" \
        "file")"
   "$(_get \
+       "in" \
+       "file")"
+  "$(_get \
        "scale" \
        "factor")"
-  "${in_files[@]}"
 )
 _config_user_init \
   "media-tools"
