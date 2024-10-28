@@ -1,0 +1,214 @@
+#!/usr/bin/env bash
+#
+# SPDX-License-Identifier: AGPL-3.0
+
+_bin="$( \
+  dirname \
+    "$( \
+      command \
+        -v \
+	  "env")")"
+_lib="${_bin}/../lib"
+_share="${_bin}/../share"
+source \
+  "${_lib}/libcrash-bash/crash-bash"
+
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    'ffmpeg'
+}
+
+# shellcheck disable=SC2034
+_global_variables() {
+  out_stdout=""
+  in_file=""
+  brightness_value=""
+  contrast_value=""
+  saturation_value=""
+  out_file=""
+  color=""
+  quiet=""
+}
+
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+      "${ffmpeg_options}" || \
+  true
+}
+
+# Edit brightness, contrast and saturation
+# $1: input video file
+# $2: output video file
+# $3: target brightness
+# $4: target contrast
+# $5: target saturation
+_vidcolors() {
+  local \
+    _in="${1}" \
+    _out="${2}" \
+    _brightness="${3}" \
+    _contrast="${4}" \
+    _saturation="${5}" \
+    _opts=() \
+    _filter=() \
+    _vf
+  _msg_info \
+    "out: ${_out[*]}"
+  _filter=(
+    brightness="${_brightness}"
+    contrast="${_contrast}"
+    saturation="${_saturation}"
+  )
+  _vf="$( \
+    IFS=":"; \
+    echo \
+      "eq=${_filter[*]}")"
+  _msg_info \
+    "filter: '${_vf}'"
+  _opts+=(
+    "${_ffmpeg_opts[@]}"
+    -i 
+      "${_in}"
+    -vf 
+      "${_vf}"
+  )
+  ffmpeg \
+    "${_opts[@]}" \
+    "${_out[*]}"
+}
+
+# Set defaults and, if present, overrides
+# from arch-grub command line option parameters
+_set_overrides() {
+  _set_override \
+    "out" \
+    "file" \
+    "$( \
+      _get \
+        "in" \
+	"file").colors"
+  _set_override \
+    "brightness" \
+    "value" \
+    "0"
+  _set_override \
+    "contrast" \
+    "value" \
+    "1"
+  _set_override \
+    "saturation" \
+    "value" \
+    "1"
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+}
+
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Change brightness, contrast and saturation.
+
+Usage:
+  $(_get "app" "name")
+    [options]
+    <in_file>
+    <out_file>
+  options:
+     -B <brightness>      Target brightness; values are in
+                          [-1,1].
+                          Default: $(_get "brightness" "value")
+     -C <contrast>        Target contrast; values are in
+                          [-1000,1000].
+                          Default: $(_get "contrast" "value")
+     -S <saturation>      Target contrast; values are in
+                          [0,3].
+                          Default: $(_get "saturation" "value")
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'B:S:C:cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    B) override_brightness_value="${OPTARG}" ;;
+    S) override_saturation_value="${OPTARG}" ;;
+    C) override_contrast_value="${OPTARG}" ;;
+    c) override_color="y" ;;
+    v) override_quiet="n" ;;
+    h|?) _set_overrides && \
+	 _usage \
+           0 ;;
+    *)
+    _msg_error \
+      "Invalid argument '${arg}'" \
+      0 && \
+    _set_overrides && \
+    _usage \
+      1
+    ;;
+  esac
+done
+shift \
+  $(( \
+    OPTIND - 1 \
+  ))
+
+(( $# < 2 )) && \
+  _usage \
+    1
+_set \
+  "in" \
+  "file" \
+  "${1}"
+_set \
+  "out" \
+  "file" \
+  "${2}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
+_vidcolors \
+  "${in_file}" \
+  "${out_file}" \
+  "${brightness_value}" \
+  "${contrast_value}" \
+  "${saturation_value}"
