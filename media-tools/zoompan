@@ -118,11 +118,13 @@ _zoompan() {
     mediasize \
       -H \
       "${_in}")"
+  _msg_info \
+    "detected height '${_height}', width '${_width}'"
   if (( $(bc \
             -l <<< \
             "$(echo \
                  "scale=4;" \
-                 "${_width}/${_height}" ">=" \
+                 "${_width} / ${_height}" ">=" \
 	         "16/9")") )); then
     _ratio_new="$( \
       bc <<< \
@@ -207,7 +209,6 @@ _zoompan() {
     "fps=${_fps}"
     "s=${_width_new}x${_height_new}"
   )
-  # _scale="hd720"
   _scale="'iw*3':'-1'"
   _opts+=(
     -i

@@ -44,10 +44,31 @@ _mkpad () {
     "${_out}"
 }
 
+if (( $# < 5 )); then
+  _msg_info \
+    "Usage:" \
+    "  $(_get \
+           "app" \
+           "name")" \
+    "    <in>" \
+    "    <out>"
+    "    <width>"
+    "    <height>"
+    "    <color>"
+fi
+
 _in="${1}"
 _out="${2}"
 _w="${3}"
 _h="${4}"
 _color="${5}"
 
-_mkpad "${_in}" "${_out}" "${_w}" "${_h}" "${_color}"
+app_opts=(
+  "${_in}"
+  "${_out}"
+  "${_w}"
+  "${_h}"
+  "${_color}"
+)
+_mkpad \
+  "${app_opts[@]}"
