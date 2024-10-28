@@ -243,9 +243,6 @@ _ffmpeg_options_load
 _show_config
 app_opts=(
   "$(_get \
-       "audio" \
-       "mode")"
-  "$(_get \
        "out" \
        "video")"
   "$(_get \
