@@ -18,8 +18,7 @@ _global_variables() {
   out_file=""
   in_file=""
   scale_factor=""
-  encode_mode=""
-  encode_date=""
+  scale_date=""
   color=""
   quiet=""
 }
@@ -50,21 +49,15 @@ _ffmpeg_options_load() {
 _audioscale() {
   local \
     _out="${1}" \
-    _in="${2}"
+    _in="${2}" \
     _scale="${3}" \
     _i \
-    _in=() \
     _opts=() \
     _af="" \
     _map \
     _iter=1 \
     _tmp_dir \
     _aud
-  shift \
-    2 
-  _in=(
-    "$@"
-  )
   _tmp_dir="$( \
     mktemp \
       -d)"
@@ -76,7 +69,7 @@ _audioscale() {
       "input file '${_in[@]}' seems corrupted."
   fi
   if (( "${_scale}" < 1 )); then
-    if $(echo "${_scale} < 0.5" | bc -l);
+    if $(echo "${_scale} < 0.5" | bc -l); then
       _iter="$( \
         echo \
 	  "scale=0; 0.5 / ${_scale}" | \
