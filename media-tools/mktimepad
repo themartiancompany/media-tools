@@ -81,6 +81,7 @@ _mktimepad() {
   fi
   if [[ "${_intro}" != "0" ]]; then
     _bintro="${_tmp}/bintro.mp4"
+    _bout="${_tmp}/bout.mp4"
     blackvid \
       "${_blackvid_opts[@]}" \
       "${_in}" \
@@ -110,6 +111,11 @@ _mktimepad() {
       "${_in}" \
       "${_boutro}"
   fi
+  rm \
+    -rf \
+    "${_bout}" \
+    "${_bintro}" \
+    "${_boutro}"
 }
 
 # Set defaults and, if present, overrides
