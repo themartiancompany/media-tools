@@ -222,5 +222,5 @@ app_opts=(
   "${in_file}"
   "${out_file}"
 )
-_vidmute \
+_subadd \
   "${app_opts[@]}"
