@@ -68,6 +68,12 @@ _pic2txt() {
   fi
   if [[ "${_format}" == "ascii" ]]; then
     pic2ascii \
+      -p \
+        "asciiwrite" \
+      "${_in}" \
+      "${_out}"
+  elif [[ "${_format}" == "caca" ]]; then
+    pic2ascii \
       "${_in}" \
       "${_out}"
   elif [[ "${_format}" == "base64" ]]; then
@@ -95,7 +101,7 @@ _set_overrides() {
   _set_override \
     "encoding" \
     "format" \
-    "ascii"
+    "caca"
   _set_override \
     "in" \
     "pic" \
@@ -155,7 +161,7 @@ Usage:
     <in_pic>
     <out_txt>
   options:
-     -f <encoding_format> Encoding format ('ascii', 'base64').
+     -f <encoding_format> Encoding format ('ascii', 'caca', 'base64').
                           Default: '$(_get "encoding" "format")'
      -L <string_length>   String chunk length.
                           Default: '$(_get "string" "length")'
