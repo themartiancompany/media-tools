@@ -93,7 +93,7 @@ _set_overrides() {
   _set_override \
     "encoding" \
     "program" \
-    "cacaview"
+    "cacawrite"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -137,7 +137,7 @@ Usage:
     <out_txt>
   options:
      -p <program>         Encoding program. Can be
-                          'asciiview' or 'cacaview'.
+                          'asciiwrite' or 'cacawrite'.
 			  Default: $(_get "encoding" "program")
      -h                   This message.
      -v                   Enable verbose output
