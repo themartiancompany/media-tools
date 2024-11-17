@@ -17,10 +17,13 @@ source \
 # are available
 _requirements() {
   _check_cmd \
-    "ffmpeg"
+    "asciiwrite" \
+    "ascii-utils"
   _check_cmd \
     "cacawrite" \
     "caca-utils"
+  _check_cmd \
+    "ffmpeg"
 }
 
 # shellcheck disable=SC2034
@@ -28,6 +31,7 @@ _global_variables() {
   make_date=""
   out_txt=""
   in_pic=""
+  encoding_program=""
   out_stdout=""
   color=""
   quiet=""
@@ -50,6 +54,7 @@ _pic2ascii() {
   local \
     _in="${1}" \
     _out="${2}" \
+    _encoding_program="${3}" \
     _opts=() \
     _pic_tmp
   _pic_tmp="$( \
@@ -70,7 +75,7 @@ _pic2ascii() {
   ffmpeg \
     "${_opts[@]}" \
     "${_pic_tmp}"
-  cacawrite \
+  "${_encoding_program}" \
     "${_pic_tmp}" \
     "${_out}"
   rm \
@@ -85,6 +90,10 @@ _set_overrides() {
     "make" \
     "date" \
     "$(_get_date_human)"
+  _set_override \
+    "encoding" \
+    "program" \
+    "cacaview"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -101,6 +110,7 @@ _set_overrides() {
 _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "                Make date:   $(_get "make" "date")"
+  _msg_info "         Encoding program:   $(_get "encoding" "program")"
   _msg_info "               In picture:   $(_get "in" "pic")"
   _msg_info "            Out text file:   $(_get "out" "txt")"
 }
@@ -126,6 +136,9 @@ Usage:
     <in_pic>
     <out_txt>
   options:
+     -p <program>         Encoding program. Can be
+                          'asciiview' or 'cacaview'.
+			  Default: $(_get "encoding" "program")
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -143,10 +156,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'cvh?' \
+    'p:cvh?' \
     arg; do
   case \
     "${arg}" in
+    p) encoding_program="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -190,6 +204,9 @@ app_opts=(
   "$(_get \
        "out" \
        "txt")"
+  "$(_get \
+       "encoding" \
+       "program")"
 )
 _pic2ascii \
   "${app_opts[@]}"
