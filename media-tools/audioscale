@@ -68,8 +68,14 @@ _audioscale() {
     _msg_error \
       "input file '${_in[@]}' seems corrupted."
   fi
-  if (( "${_scale}" < 1 )); then
-    if $(echo "${_scale} < 0.5" | bc -l); then
+  if [ $(echo \
+	   "${_scale} < 1" | \
+	   bc \
+	     -l) -eq 1 ]; then
+    if [ $(echo \
+	     "${_scale} < 0.5" | \
+	     bc \
+	       -l) -eq 1 ]; then
       _iter="$( \
         echo \
 	  "scale=0; 0.5 / ${_scale}" | \
@@ -89,7 +95,7 @@ _audioscale() {
   _opts=(
     "${_ffmpeg_opts[@]}"
     -i
-      ${_in}
+      "${_in}"
     -filter_complex
       "${_af}"
     -map
