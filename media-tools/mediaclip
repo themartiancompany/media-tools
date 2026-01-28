@@ -2,10 +2,9 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
-_bin="$( \
+_bin="$(
   dirname \
-    "$( \
-      command \
+    "$(command \
         -v \
 	  "env")")"
 _lib="${_bin}/../lib"
@@ -132,16 +131,16 @@ _usage() {
 Cut media files
 
 Usage:
-  $(_get "app" "name")
+  ${app_name}
     [options]
-    <in_file>
-    <cut_start>
-    <cut_length>
-    <out_file>
+    <in-file>
+    <cut-start>
+    <cut-length>
+    <out-file>
   options:
-     -s                   Output to stdout.
-     -h                   This message.
-     -v                   Enable verbose output
+     -s          Output to stdout.
+     -h          This message.
+     -v          Enable verbose output.
 ENDUSAGETEXT
   _printf \
     '%s\n' \

@@ -76,6 +76,14 @@ _mediasize() {
 # Set defaults and, if present, overrides
 # from zoompan command line option parameters
 _set_overrides() {
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  fi
   _set_override \
     "op" \
     "date" \
@@ -88,14 +96,6 @@ _set_overrides() {
     "width" \
     "only" \
     "n"
-  if [[ -v override_color ]]; then
-    color="${override_color}"
-  elif [[ -z "${color}" ]]; then
-    color="n"
-  fi
-  if [[ -v override_quiet ]]; then
-    quiet="${override_quiet}"
-  fi
 }
 
 # Show help usage, with an exit status.
