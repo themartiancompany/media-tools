@@ -108,8 +108,8 @@ _vidscale() {
   )
   _opts=(
     "${ffmpeg_opts[@]}"
-    -i
-      "${_in}"
+    # -i
+    #   "${_in}"
     -vf
       "$(IFS=":"; \
          echo \
