@@ -1,16 +1,39 @@
 #!/usr/bin/env bash
-#
+
 # SPDX-License-Identifier: AGPL-3.0
-_bin="$( \
+
+#    ----------------------------------------------------------------------
+#    Copyright © 2024, 2025, 2026  Pellegrino Prevete
+#
+#    All rights reserved
+#    ----------------------------------------------------------------------
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+_bin="$(
   dirname \
-    "$( \
-      command \
-        -v \
-	  "env")")"
-_lib="${_bin}/../lib"
-_share="${_bin}/../share"
+    "$(command \
+         -v \
+         "env")")"
+_lib="$(
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" 2>"/dev/null" || \
 source \
-  "${_lib}/libcrash-bash/crash-bash"
+  "${_crash_bash}"
 
 # shellcheck disable=SC2034
 _global_variables() {
@@ -48,14 +71,17 @@ _vidscale() {
     _scale_opts=() \
     _opts=() \
     _crf \
-    _preset
+    _preset \
+    _msg=()
   _preset="fast"
   if [[ "${_mode}" == 'quality' ]]; then
     _crf=18
-  fi
-  if [[ "${_mode}" == 'size' ]]; then
+  elif [[ "${_mode}" == 'size' ]]; then
     _crf=30
     _preset="slow"
+  elif [[ "${_mode}" == 'speed' ]]; then
+    _preset="ultrafast"
+    _crf="15"
   fi
   source \
     "${HOME}/.config/media-tools/ffmpeg_options"
@@ -77,13 +103,17 @@ _vidscale() {
     -preset
       "${_preset}"
   )
-  [[ "${_mode}" != 'auto' ]] && \
+  if [[ "${_mode}" != 'auto' ]]; then
   _opts+=(
     -crf
       "${_crf}"
   )
+  fi
+  _msg=(
+    "Running ffmpeg with options"
+    "'${_opts[*]}'."
   _msg_info \
-    "ffmpeg opts: ${_opts[*]}"
+    "${_msg[*]}"
   ffmpeg \
     "${_opts[@]}" \
     "${_out}"
@@ -121,14 +151,15 @@ _usage() {
 Scale up or down a video by a factor
 
 Usage:
-  $(_get "app" "name")
+  ${app_name}
     [options]
     <input_video>
     <output_video>
     <scale>
   options:
-     -m                   Encode mode (quality, size, auto).
-                          Default: $(_get "encode" "mode")
+     -m                   Encode mode (quality, size,
+                          speed, auto).
+                          Default: ${encode_mode}
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -150,25 +181,29 @@ while \
     arg; do
   case \
     "${arg}" in
-    m) override_encode_mode="${OPTARG}" ;;
-    c) override_color="y" ;;
-    v) override_quiet="n" ;;
-    h|?) _set_overrides && \
-         _usage \
-           0 ;;
+    m)
+      override_encode_mode="${OPTARG}" ;;
+    c)
+      override_color="y" ;;
+    v)
+      override_quiet="n" ;;
+    h|?)
+      _set_overrides && \
+      _usage \
+        0 ;;
     *)
-    _msg_error \
-      "Invalid argument '${arg}'" \
-      0
-    _usage \
-      1
-    ;;
+      msg=(
+      "Invalid argument '${arg}'."
+      )
+      _msg_error \
+        "${msg[*]}" \
+        0
+      _usage \
+        1 ;;
   esac
 done
 shift \
-  $(( \
-    OPTIND - 1 \
-  ))
+  $(( OPTIND - 1 ))
 (( ${#} < 3 )) && \
   _usage \
     1
@@ -181,15 +216,7 @@ _ffmpeg_options_load
 _config_user_init \
   "media-tools"
 _vidscale \
-  "$(_get \
-      "in"  \
-      "file")" \
-  "$(_get \
-      "out"  \
-      "file")" \
-  "$(_get \
-      "scale"  \
-      "factor")" \
-  "$(_get \
-       "encode" \
-       "mode")"
+  "${in_file}" \
+  "${out_file}" \
+  "${scale_factor}" \
+  "${encode_mode}"

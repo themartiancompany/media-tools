@@ -69,8 +69,11 @@ _audioscale() {
       "input file '${_in[@]}' seems corrupted."
   fi
   if (( "${_scale}" < 1 )); then
-    if $(echo "${_scale} < 0.5" | bc -l); then
-      _iter="$( \
+    if $(echo \
+	   "${_scale} < 0.5" |
+	   bc \
+	     -l); then
+      _iter="$(
         echo \
 	  "scale=0; 0.5 / ${_scale}" | \
 	  bc)"
