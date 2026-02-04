@@ -98,7 +98,7 @@ _vidscale() {
     _crf=30
     _preset="slow"
   elif [[ "${_mode}" == 'speed' ]]; then
-    _crf="24"
+    _crf="25"
     _preset="ultrafast"
     _length_max="$((
       60 * 30 ))"
