@@ -62,6 +62,83 @@ _ffmpeg_options_load() {
   true
 }
 
+_encode_one() {
+  _run_opts=(
+    -i
+      "${_in}"
+    "${_opts[@]}"
+  )
+  _msg=(
+    "Running ffmpeg with arguments"
+    "'${_run_opts[@]} ${_chunk_compressed}'."
+  )
+  _msg_info \
+    "${_msg[*]}"
+  ffmpeg \
+    "${_run_opts[@]}" \
+    "${_out}"
+}
+
+_encode_many() {
+  local \
+    _chunk \
+    _chunk_compressed \
+    _chunks=() \
+    _chunks_amount \
+    _file_name \
+    _mediasplit_opts=() \
+    _videocat_opts=()
+  if [[ "${quiet}" == "n" ]]; then
+    _mediasplit_opts+=(
+      -v
+    )
+    _videocat_opts+=(
+      -v
+    ) 
+  fi
+  _file_name="${_in%.mp4}"
+  _chunks_amount="$((
+    "${_length}" / "${_length_max}"))"
+  _mediasplit_opts+=(
+    -l
+      "${_length_max}"
+  )
+  mediasplit \
+    "${_mediasplit_opts[@]}" \
+    "${_in}"
+  _chunks=()
+  for _index \
+    in $(seq \
+           "${_chunks_amount}"); do
+    _chunk="${_file_name}.${_index}.mp4"
+    _chunk_compressed="${_file_name}.compressed.${_index}.mp4"
+    _chunks+=(
+      "${_chunk_compressed}"
+    )
+    _run_opts=(
+      -i
+        "${_chunk}"
+      "${_opts[@]}"
+    )
+    _msg=(
+      "Running ffmpeg with arguments"
+      "'${_run_opts[@]} ${_chunk_compressed}'."
+    )
+    _msg_info \
+      "${_msg[*]}"
+    ffmpeg \
+      "${_run_opts[@]}" \
+      "${_chunk_compressed}"
+  done
+  vidcat \
+    "${_vidcat_opts[@]}" \
+    "${_out}" \
+    "${_chunks[@]}"
+  rm \
+    -rf \
+  "${_chunks[@]}"
+}
+
 _vidscale() {
   local \
     _in="${1}" \
@@ -71,27 +148,11 @@ _vidscale() {
     _scale_opts=() \
     _opts=() \
     _crf \
-    _chunk \
     _run_opts=() \
-    _chunk_compressed \
-    _chunks=() \
-    _chunks_amount \
-    _file_name \
     _length \
     _length_max \
-    _mediasplit_opts=() \
     _preset \
-    _vidcat_opts=() \
     _msg=()
-  echo "ciao"
-  if [[ "${quiet}" == "n" ]]; then
-    mediasplit_opts+=(
-      -v
-    )
-    vidcat_opts+=(
-      -v
-    )
-  fi
   _preset="fast"
   if [[ "${_mode}" == 'quality' ]]; then
     _crf=18
@@ -141,87 +202,17 @@ _vidscale() {
         "${_in}")"
     _length="${_length%.*}"
     if (( "${_length_max}" < "${_length}" )); then
-      _file_name="${_in%.mp4}"
-      _chunks_amount="$((
-        "${_length}" / "${_length_max}"))"
-      _mediasplit_opts+=(
-        -l
-          "${_length_max}"
-      )
-      mediasplit \
-        "${_mediasplit_opts[@]}" \
-        "${_in}"
-      _chunks=()
-      for _index \
-        in $(seq \
-	       "${_chunks_amount}"); do
-        _chunk="${_file_name}.${_index}.mp4"
-        _chunk_compressed="${_file_name}.compressed.${_index}.mp4"
-        _chunks+=(
-          "${_chunk_compressed}"
-        )
-        _run_opts=(
-          -i
-            "${_chunk}"
-          "${_opts[@]}"
-        )
-        _msg=(
-          "Running ffmpeg with arguments"
-          "'${_run_opts[@]} ${_chunk_compressed}'."
-        )
-        _msg_info \
-          "${_msg[*]}"
-        ffmpeg \
-          "${_run_opts[@]}" \
-          "${_chunk_compressed}"
-      done
-      vidcat \
-        "${_vidcat_opts[@]}" \
-        "${_out}" \
-        "${_chunks[@]}"
-      rm \
-        -rf \
-      "${_chunks[@]}"
+      _encode_many
     else
-      _run_opts=(
-        -i
-          "${_in}"
-        "${_opts[@]}"
-      )
-      _msg=(
-        "Running ffmpeg with arguments"
-        "'${_run_opts[@]} ${_chunk_compressed}'."
-      )
-      _msg_info \
-        "${_msg[*]}"
-      ffmpeg \
-        "${_run_opts[@]}" \
-        "${_out}"
+      _encode_one
     fi
   else
-    _run_opts=(
-      -i
-        "${_in}"
-      "${_opts[@]}"
-    )
-    _msg=(
-      "Running ffmpeg with arguments"
-      "'${_run_opts[@]} ${_chunk_compressed}'."
-    )
-    _msg_info \
-      "${_msg[*]}"
-    ffmpeg \
-      "${_run_opts[@]}" \
-      "${_out}"
+    _encode_one
   fi
 }
 
 # Set defaults
 _set_overrides() {
-  _set_override \
-    "encode" \
-    "mode" \
-    "quality"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -232,6 +223,10 @@ _set_overrides() {
   elif [[ -z "${quiet}" ]]; then
     quiet="y"
   fi
+  _set_override \
+    "encode" \
+    "mode" \
+    "quality"
 }
 
 # Show help usage, with an exit status.
