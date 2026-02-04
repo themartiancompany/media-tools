@@ -49,6 +49,7 @@ _global_variables() {
   out_stdout=""
   in_file=""
   split_mode=""
+  confirm_disabled=""
   chunks_amount=""
   chunks_length=""
   out_prefix=""
@@ -69,14 +70,14 @@ _ffmpeg_options_load() {
 }
 
 _uniform_split() {
-  _length="$( \
+  _length="$(
     echo \
       "${_duration} / ${_amount}" | \
       bc)"
 }
 
 _fixed_split() {
-  _amount="$( \
+  _amount="$(
     echo \
       "${_duration} / ${_length};" \
       "scale 0" | \
@@ -95,24 +96,27 @@ _mediasplit() {
   local \
     _in="${1}" \
     _mode="${2}" \
-    _prefix="${3}" \
-    _amount="${4}" \
-    _length="${5}" \
+    _confirm_disabled="${3}" \
+    _prefix="${4}" \
+    _amount="${5}" \
+    _length="${6}" \
     _chunk \
     _chunks=() \
     _duration \
     _start \
     _out \
-    _ext
+    _ext \
+    _mediaclip_ops=() \
+    _msg=()
   shift \
-    5
+    6
   _chunks=(
     "$@"
   )
-  _ext="$( \
+  _ext="$(
     _get_ext \
       "${_in}")"
-  _duration="$( \
+  _duration="$(
     medialength \
       "${_in}")"
   "_${_mode}_split"
@@ -126,18 +130,21 @@ _mediasplit() {
     in $(seq \
            "${_amount}"); do
     if [[ " ${_chunks[*]} " == *" ${_chunk} "* ]]; then
+      _msg=(
+        "Rendering chunk ${_chunk}."
+      )
       _msg_info \
-        "rendering chunk ${_chunk}"
-      _start="$( \
+        "${_msg[*]}"
+      _start="$(
         echo \
-	  "(${_chunk} - 1) * ${_length}" | \
-	  bc)"
+          "(${_chunk} - 1) * ${_length}" | \
+          bc)"
       _out="${_prefix}.${_chunk}.${_ext}"
       mediaclip \
         "${_in}" \
-	"${_start}" \
-	"${_length}" \
-	"${_out}"
+        "${_start}" \
+        "${_length}" \
+        "${_out}"
     fi
   done
 }
@@ -155,6 +162,10 @@ _set_overrides() {
   elif [[ -z "${quiet}" ]]; then
     quiet="y"
   fi
+  _set_override \
+    "confirm" \
+    "disabled" \
+    "n"
   _set_override \
     "split" \
     "date" \
@@ -187,6 +198,7 @@ _show_config() {
   _msg_info "               Split mode:   ${split_mode}"
   _msg_info "                  In file:   ${in_file}"
   _msg_info "            Output prefix:   ${out_prefix}"
+  _msg_info "No overwrite confirmation:   ${confirm_disabled}"
   _msg_info "            Chunks amount:   ${chunks_amount}"
   _msg_info "            Chunks length:   ${(chunks_length}"
   _msg_info "          Selected chunks:   ${chunks_selected[*]}"
@@ -308,6 +320,7 @@ _show_config
 _mediasplit \
   "${in_file}" \
   "${split_mode}" \
+  "${confirm_disabled}" \
   "${out_prefix}" \
   "${chunks_amount}" \
   "${chunks_length}" \

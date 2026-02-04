@@ -1,16 +1,39 @@
 #!/usr/bin/env bash
-#
+
 # SPDX-License-Identifier: AGPL-3.0
+
+#    ----------------------------------------------------------------------
+#    Copyright © 2024, 2025, 2026  Pellegrino Prevete
+#
+#    All rights reserved
+#    ----------------------------------------------------------------------
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 _bin="$(
   dirname \
     "$(command \
-        -v \
-	  "env")")"
-_lib="${_bin}/../lib"
-_share="${_bin}/../share"
+         -v \
+         "env")")"
+_lib="$(
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" 2>"/dev/null" || \
 source \
-  "${_lib}/libcrash-bash/crash-bash"
+  "${_crash_bash}"
 
 # Check all required programs
 # are available
@@ -56,9 +79,7 @@ _mediaclip() {
     _opts=()
   _msg_info "out: ${_out[*]}"
   if [[ "${_out[*]}" == "" ]] || \
-     [[ "$(_get \
-             "out" \
-	     "stdout")" == "y" ]]; then
+     [[ "${out_stdout}" == "y" ]]; then
     _out+=(
       -
     )
@@ -91,6 +112,10 @@ _set_overrides() {
     "date" \
     "$(_get_date_human)"
   _set_override \
+    "confirm" \
+    "disabled" \
+    "y"
+  _set_override \
     "out" \
     "stdout" \
     "n"
@@ -109,10 +134,10 @@ _set_overrides() {
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "                Clip date:   $(_get "clip" "date")"
-  _msg_info "               Clip start:   $(_get "cut" "start")"
-  _msg_info "              Clip length:   $(_get "cut" "length")"
-  _msg_info "                 Out file:   $(_get "out" "file")"
+  _msg_info "                Clip date:   ${clip_date}"
+  _msg_info "               Clip start:   ${cut_start}"
+  _msg_info "              Clip length:   ${cut_length}"
+  _msg_info "                 Out file:   ${out_file}"
   _msg_info "                  In file:   ${in_file}"
 }
 
@@ -137,10 +162,12 @@ Usage:
     <cut-start>
     <cut-length>
     <out-file>
+
   options:
      -s          Output to stdout.
      -h          This message.
      -v          Enable verbose output.
+
 ENDUSAGETEXT
   _printf \
     '%s\n' \
@@ -160,46 +187,59 @@ while \
     arg; do
   case \
     "${arg}" in
-    s) override_out_stdout="y" ;;
-    c) override_color="y" ;;
-    v) override_quiet="n" ;;
-    h|?) _set_overrides && \
-	 _usage \
-           0 ;;
+    s)
+      override_out_stdout="y" ;;
+    c)
+      override_color="y" ;;
+    v)
+      override_quiet="n" ;;
+    h|?)
+      _set_overrides
+      _usage \
+        0 ;;
     *)
-    _msg_error \
-      "Invalid argument '${arg}'" \
-      0 && \
-    _set_overrides && \
+      _msg=(
+        "Invalid argument '${arg}'."
+      )
+      _msg_error \
+        "${_msg[*]}" \
+        0
+    _set_overrides
     _usage \
-      1
-    ;;
+      1 ;;
   esac
 done
 shift \
   $(( \
-    OPTIND - 1 \
-  ))
+    OPTIND - 1 ))
 
 (( $# < 3 )) && \
   _usage \
     1
-(( $# < 3 )) && \
+if (( $# < 3 )); then
+  _msg=(
+    "No output file given,"
+    "will return to standard output."
+  )
   _msg_info \
-    "no output file givon, will return to stdout"
-    
+    "${_msg[*]}"
+fi
 in_file="${1}"
 cut_start="${2}"
 cut_length="${3}"
-(( $# == 4 )) && \
+if (( "${#}" == 4 )); then
   out_file="${4}"
+fi
 _set_overrides
 _config_user_init \
   "media-tools"
 _ffmpeg_options_load
 if [ ! -e "${in_file}" ]; then
+  _msg=(
+    "File '${in_file}' does not exist."
+  )
   _msg_error \
-    "${in_file} does not exist" \
+   "${_msg[*]}" \
     1
 fi
 _show_config
