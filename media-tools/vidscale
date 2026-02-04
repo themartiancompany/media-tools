@@ -190,7 +190,7 @@ _vidscale() {
     )
     _msg=(
       "Running ffmpeg with arguments"
-      "'${_run_opts[@]} ${_chunks_compressed}'."
+      "'${_run_opts[@]} ${_chunk_compressed}'."
     )
     _msg_info \
       "${_msg[*]}"
