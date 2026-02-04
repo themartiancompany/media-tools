@@ -154,9 +154,9 @@ _vidscale() {
         _msg_info \
           "${_msg[*]}"
         ffmpeg \
-          "${_opts[@]}" \
           -i \
             "${_chunk}" \
+          "${_opts[@]}" \
           "${_chunk_compressed}"
       done
       vidcat \
