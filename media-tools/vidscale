@@ -181,7 +181,22 @@ _vidscale() {
         "${_chunks[@]}"
       rm \
         -rf \
-	"${_chunks[@]}"
+      "${_chunks[@]}"
+    else
+      _run_opts=(
+        -i
+          "${_in}"
+        "${_opts[@]}"
+      )
+      _msg=(
+        "Running ffmpeg with arguments"
+        "'${_run_opts[@]} ${_chunk_compressed}'."
+      )
+      _msg_info \
+        "${_msg[*]}"
+      ffmpeg \
+        "${_run_opts[@]}" \
+        "${_out}"
     fi
   else
     _run_opts=(
