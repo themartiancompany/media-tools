@@ -145,6 +145,16 @@ _mediasplit() {
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
   _set_override \
     "split" \
     "date" \
@@ -168,36 +178,25 @@ _set_overrides() {
     "chunks" \
     "length" \
     "600"
-  if [[ -v override_color ]]; then
-    color="${override_color}"
-  elif [[ -z "${color}" ]]; then
-    color="n"
-  fi
-  if [[ -v override_quiet ]]; then
-    quiet="${override_quiet}"
-  elif [[ -z "${quiet}" ]]; then
-    quiet="y"
-  fi
 }
 
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "               Split date:   $(_get "split" "date")"
-  _msg_info "               Split mode:   $(_get "split" "mode")"
+  _msg_info "               Split date:   ${split_date}"
+  _msg_info "               Split mode:   ${split_mode}"
   _msg_info "                  In file:   ${in_file}"
-  _msg_info "            Output prefix:   $(_get "out" "prefix")"
-  _msg_info "            Chunks amount:   $(_get "chunks" "amount")"
-  _msg_info "            Chunks length:   $(_get "chunks" "length")"
+  _msg_info "            Output prefix:   ${out_prefix}"
+  _msg_info "            Chunks amount:   ${chunks_amount}"
+  _msg_info "            Chunks length:   ${(chunks_length}"
   _msg_info "          Selected chunks:   ${chunks_selected[*]}"
 }
-
-
 
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
   local \
+    _exit \
     _usage_text
   IFS='' \
     read \
@@ -209,26 +208,31 @@ _usage() {
 Split media files
 
 Usage:
-  $(_get "app" "name")
+  ${app_name}
     [options]
     <in_file>
     (<out_prefix>)
+
   modes:
      uniform              to split the media in a given amount
                           of uniformly sized chunks
      fixed                to split the media in chunks of
                           a given length
+
   options:
+     -y                   Do not ask if to overwrite
+                          output.
+                          Default: "${quiet}"
      -m                   Split mode;
-                          Default: $(_get "split" "mode")
+                          Default: ${split_mode}
      -n                   Amount of uniform chunks in which
                           the media has to be split when
-			  'uniform' split mode is selected.
-                          Default: $(_get "chunks" "amount")
+                          'uniform' split mode is selected.
+                          Default: ${chunks_amount}
      -l                   Length of the chunks in seconds
                           in which the media has to be split
-			  when 'fixed' split mode is selected.
-                          Default: $(_get "chunks" "length")
+                          when 'fixed' split mode is selected.
+                          Default: ${chunks_length}
      -r                   Returns only selected chunks.
      -h                   This message.
      -v                   Enable verbose output
@@ -247,10 +251,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'm:n:l:r:scvh?' \
+    'ym:n:l:r:scvh?' \
     arg; do
   case \
     "${arg}" in
+    y) override_confirm_disabled="y" ;;
     m) override_split_mode="${OPTARG}" ;;
     n) override_chunks_amount="${OPTARG}" ;;
     l) override_chunks_length="${OPTARG}" ;;
@@ -259,30 +264,39 @@ while \
        ) ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
-    h|?) _set_overrides && \
-	 _usage \
-           0 ;;
+    h|?)
+      _set_overrides
+      _usage \
+        0 ;;
     *)
+      _msg=(
+        "Invalid argument '${arg}'"
+      )
     _msg_error \
-      "Invalid argument '${arg}'" \
-      0 && \
-    _set_overrides && \
+      "${_msg[*]}" \
+      0
+    _set_overrides
     _usage \
-      1
-    ;;
+      1 ;;
   esac
 done
 shift \
-  $(( \
-    OPTIND - 1 \
-  ))
+  $((
+    OPTIND - 1 ))
 
-(( $# < 1 )) && \
+if (( "${#}" < 1 )); then
   _usage \
     1
-(( $# < 2 )) && \
+fi
+if (( "${#}" < 2 )); then
+  _msg=(
+    "No prefix given for output"
+    "files, same as the input"
+    "filename will be used."
+  )
   _msg_info \
-    "no prefix given for output files, same as the input filename will be used"
+    "${_msg[*]}"
+fi
 in_file="${1}"
 (( $# == 2 )) && \
   out_prefix="${2}"
