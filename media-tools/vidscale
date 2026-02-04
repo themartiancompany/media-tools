@@ -72,14 +72,25 @@ _vidscale() {
     _opts=() \
     _crf \
     _chunk \
+    _run_opts=() \
     _chunk_compressed \
     _chunks=() \
     _chunks_amount \
     _file_name \
     _length \
     _length_max \
+    _mediasplit_opts=() \
     _preset \
+    _vidcat_opts=() \
     _msg=()
+  if [[ "${quiet}" == "n" ]]; then
+    mediasplit_opts+=(
+      -v
+    )
+    vidcat_opts+=(
+      -v
+    )
+  fi
   _preset="fast"
   if [[ "${_mode}" == 'quality' ]]; then
     _crf=18
@@ -108,14 +119,12 @@ _vidscale() {
   )
   _opts=(
     "${ffmpeg_opts[@]}"
-    # -i
-    #   "${_in}"
     -vf
       "$(IFS=":"; \
          echo \
            "${_scale_opts[*]}")"
     -c:v
-      'libx265'
+      'libx264'
     -preset
       "${_preset}"
   )
@@ -142,34 +151,44 @@ _vidscale() {
       for _index \
         in $(seq \
 	       "${_chunks_amount}"); do
-	_chunk="${_file_name}.${_index}.mp4"
+        _chunk="${_file_name}.${_index}.mp4"
         _chunk_compressed="${_file_name}.compressed.${_index}.mp4"
-	_chunks+=(
+        _chunks+=(
           "${_chunk_compressed}"
-	)
+        )
+        _run_opts=(
+          -i
+            "${_chunk}"
+          "${_opts[@]}"
+        )
         _msg=(
-          "Running ffmpeg with options"
-          "'-i ${_chunk} ${_opts[*]}'."
+          "Running ffmpeg with arguments"
+          "'${_run_opts[@]} ${_chunks_compressed}'."
         )
         _msg_info \
           "${_msg[*]}"
         ffmpeg \
-          -i \
-            "${_chunk}" \
-          "${_opts[@]}" \
+          "${_run_opts[@]}" \
           "${_chunk_compressed}"
       done
       vidcat \
         "${_out}" \
-	"${_chunks[@]}"
+        "${_chunks[@]}"
     fi
   else
-    _opts+=(
+    _run_opts=(
       -i
         "${_in}"
+      "${_opts[@]}"
     )
+    _msg=(
+      "Running ffmpeg with arguments"
+      "'${_run_opts[@]} ${_chunks_compressed}'."
+    )
+    _msg_info \
+      "${_msg[*]}"
     ffmpeg \
-      "${_opts[@]}" \
+      "${_run_opts[@]}" \
       "${_out}"
   fi
 }
