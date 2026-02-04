@@ -125,12 +125,6 @@ _vidscale() {
         "${_crf}"
     )
   fi
-  _msg=(
-    "Running ffmpeg with options"
-    "'${_opts[*]}'."
-  )
-  _msg_info \
-    "${_msg[*]}"
   if [[ "${_mode}" == "speed" ]]; then
     _length="$(
       medialength \
@@ -152,6 +146,12 @@ _vidscale() {
 	_chunks+=(
           "${_chunk_compressed}"
 	)
+        _msg=(
+          "Running ffmpeg with options"
+          "'-i ${_chunk} ${_opts[*]}'."
+        )
+        _msg_info \
+          "${_msg[*]}"
         ffmpeg \
           "${_opts[@]}" \
           -i \
