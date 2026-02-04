@@ -80,8 +80,8 @@ _vidscale() {
     _crf=30
     _preset="slow"
   elif [[ "${_mode}" == 'speed' ]]; then
-    _preset="ultrafast"
     _crf="15"
+    _preset="ultrafast"
   else
     _msg=(
       "Unknown encoding mode '${_mode}'."
@@ -104,21 +104,22 @@ _vidscale() {
     -vf
       "$(IFS=":"; \
          echo \
-	   "${_scale_opts[*]}")"
+           "${_scale_opts[*]}")"
     -c:v
       'libx265'
     -preset
       "${_preset}"
   )
   if [[ "${_mode}" != 'auto' ]]; then
-  _opts+=(
-    -crf
-      "${_crf}"
-  )
+    _opts+=(
+      -crf
+        "${_crf}"
+    )
   fi
   _msg=(
     "Running ffmpeg with options"
     "'${_opts[*]}'."
+  )
   _msg_info \
     "${_msg[*]}"
   ffmpeg \
