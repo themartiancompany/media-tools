@@ -82,6 +82,13 @@ _vidscale() {
   elif [[ "${_mode}" == 'speed' ]]; then
     _preset="ultrafast"
     _crf="15"
+  else
+    _msg=(
+      "Unknown encoding mode '${_mode}'."
+    )
+    _msg_error \
+      "${_msg[*]}" \
+      1
   fi
   source \
     "${HOME}/.config/media-tools/ffmpeg_options"
