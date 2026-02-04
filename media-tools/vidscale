@@ -143,9 +143,12 @@ _vidscale() {
       _file_name="${_in%.mp4}"
       _chunks_amount="$((
         "${_length}" / "${_length_max}"))"
+      _mediasplit_opts+=(
+        -l
+          "${_length_max}"
+      )
       mediasplit \
-        -l \
-          "${_length_max}" \
+        "${_mediasplit_opts[@]}" \
         "${_in}"
       _chunks=()
       for _index \
@@ -172,6 +175,7 @@ _vidscale() {
           "${_chunk_compressed}"
       done
       vidcat \
+        "${_vidcat_opts[@]}" \
         "${_out}" \
         "${_chunks[@]}"
     fi
