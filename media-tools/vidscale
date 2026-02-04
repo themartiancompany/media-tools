@@ -70,7 +70,7 @@ _encode_one() {
   )
   _msg=(
     "Running ffmpeg with arguments"
-    "'${_run_opts[@]} ${_chunk_compressed}'."
+    "'${_run_opts[@]} ${_out}'."
   )
   _msg_info \
     "${_msg[*]}"
