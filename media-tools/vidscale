@@ -71,6 +71,13 @@ _vidscale() {
     _scale_opts=() \
     _opts=() \
     _crf \
+    _chunk \
+    _chunk_compressed \
+    _chunks=() \
+    _chunks_amount \
+    _file_name \
+    _length \
+    _length_max \
     _preset \
     _msg=()
   _preset="fast"
@@ -80,8 +87,10 @@ _vidscale() {
     _crf=30
     _preset="slow"
   elif [[ "${_mode}" == 'speed' ]]; then
-    _crf="15"
+    _crf="24"
     _preset="ultrafast"
+    _length_max="$((
+      60 * 30 ))"
   else
     _msg=(
       "Unknown encoding mode '${_mode}'."
@@ -122,9 +131,46 @@ _vidscale() {
   )
   _msg_info \
     "${_msg[*]}"
-  ffmpeg \
-    "${_opts[@]}" \
-    "${_out}"
+  if [[ "${_mode}" == "speed" ]]; then
+    _length="$(
+      medialength \
+        "${_in}")"
+    if (( "${_length_max}" < "${_length}" )); then
+      _file_name="${_in%.mp4}"
+      _chunks_amount="$((
+        "${_length}" / "${_length_max}"))"
+      mediasplit \
+        -l \
+          "${_length_max}" \
+        "${_in}"
+      _chunks=()
+      for _index \
+        in $(seq \
+	       "${_chunks_amount}"); do
+	_chunk="${_file_name}.${_index}.mp4"
+        _chunk_compressed="${_file_name}.compressed.${_index}.mp4"
+	_chunks+=(
+          "${_chunk_compressed}"
+	)
+        ffmpeg \
+          "${_opts[@]}" \
+          -i \
+            "${_chunk}" \
+          "${_chunk_compressed}"
+      done
+      vidcat \
+        "${_out}" \
+	"${_chunks[@]}"
+    fi
+  else
+    _opts+=(
+      -i
+        "${_in}"
+    )
+    ffmpeg \
+      "${_opts[@]}" \
+      "${_out}"
+  fi
 }
 
 # Set defaults
