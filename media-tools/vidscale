@@ -129,6 +129,7 @@ _vidscale() {
     _length="$(
       medialength \
         "${_in}")"
+    _length="${_length%.*}"
     if (( "${_length_max}" < "${_length}" )); then
       _file_name="${_in%.mp4}"
       _chunks_amount="$((
