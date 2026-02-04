@@ -178,6 +178,9 @@ _vidscale() {
         "${_vidcat_opts[@]}" \
         "${_out}" \
         "${_chunks[@]}"
+      rm \
+        -rf \
+	"${_chunks[@]}"
     fi
   else
     _run_opts=(
