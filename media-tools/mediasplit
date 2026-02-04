@@ -267,7 +267,7 @@ while \
     arg; do
   case \
     "${arg}" in
-    y) override_confirm_disabled="y" ;;
+    y) override_confirm_disabled="n" ;;
     m) override_split_mode="${OPTARG}" ;;
     n) override_chunks_amount="${OPTARG}" ;;
     l) override_chunks_length="${OPTARG}" ;;
