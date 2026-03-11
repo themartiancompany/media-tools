@@ -94,11 +94,16 @@ _mix() {
   source \
     "${HOME}/.config/media-tools/ffmpeg_options"
   if [[ "${_mix_mode}" == "random" ]]; then
-  _in_files_shuf=(
-    shuf \
-      -i \
-        "1-${#_in_files[@]}"
-  )
+    _in_files_shuf=(
+      shuf \
+        -i \
+          "1-${#_in_files[@]}"
+    )
+  else
+    _in_files_shuf=(
+      "${_in_files[@]}"
+	    )
+  fi
   _out_files=()
   for _index in "${_in_files_shuf[@]}"; do
     _tmp_name="$(
