@@ -1,0 +1,241 @@
+#!/usr/bin/env bash
+
+# SPDX-License-Identifier: AGPL-3.0
+
+#    ----------------------------------------------------------------------
+#    Copyright © 2024, 2025, 2026  Pellegrino Prevete
+#
+#    All rights reserved
+#    ----------------------------------------------------------------------
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+_bin="$(
+  dirname \
+    "$(command \
+         -v \
+         "env")")"
+_lib="$(
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" \
+  2>"/dev/null" || \
+source \
+  "${_crash_bash}"
+
+# shellcheck disable=SC2034
+_global_variables() {
+  in_dir=""
+  out_dir=""
+  file_format=""
+  color=""
+  quiet=""
+}
+
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    "find" \
+    "findutils"
+}
+
+_in_files_get() {
+  local \
+    _dir="${1}" \
+    _extension="${2}" \
+    _find_opts=() \
+    _find_global_opts=()
+  _find_global_opts+=(
+    -mindepth
+      1
+    -maxdepth
+      1
+    -type
+      "f"
+  )
+  _find_opts+=(
+    -print0
+  )
+  mapfile \
+    -d \
+    $'\0' \
+    "_in_files" < \
+    <(find \
+        "${_dir}" \
+        "${_find_global_opts[@]}" \
+        \( \
+          -iwholename \
+            "*.${_extension}" \
+        \) \
+        "${_find_opts[@]}" || \
+      true)
+}
+
+_mediasize_dir_split() {
+  local \
+    _in_dir="${1}" \
+    _out_dir="${2}" \
+    _file_format="${3}" \
+    _file \
+    _in_files=() \
+    _run_opts=() \
+    _size \
+    _msg=()
+  _in_files_get \
+    "${_in_dir}" \
+    "${_file_format}"
+  for _file in "${_in_files[@]}"; do
+    _size="$(
+      mediasize \
+        "${_file}")"
+    if [[ "${_size}" == "" ]]; then
+      _msg=(
+        "File ${_file} seems corrupted."
+      )
+      _msg_warning \
+        "${_msg[*]}"
+    else
+      mkdir \
+        -p \
+        "${_out_dir}/${_size}"
+      mv \
+        "${_file}" \
+        "${_out_dir}/${_length}"
+    fi
+  done 
+}
+
+# Set defaults
+_set_overrides() {
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+  _set_override \
+    "file" \
+    "format" \
+    "mp4"
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+Split video files in subdirectories according to their canvas size.
+
+Usage:
+  ${app_name}
+    [options]
+    <in-dir>
+    <out-dir>
+
+  options:
+     -f                   File format (i.e. 'mp4',
+                          'webm', etc.).
+                          Default: ${file_format}
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'f:cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    f)
+      override_file_format="${OPTARG}" ;;
+    c)
+      override_color="y" ;;
+    v)
+      override_quiet="n" ;;
+    h|?)
+      _set_overrides && \
+      _usage \
+        0 ;;
+    *)
+      msg=(
+        "Invalid argument '${arg}'."
+      )
+      _msg_error \
+        "${msg[*]}" \
+        0
+      _usage \
+        1 ;;
+  esac
+done
+shift \
+  $(( OPTIND - 1 ))
+if (( ${#} < 1 )); then
+  in_dir="${PWD}"
+else
+  in_dir="${1}"
+fi
+if (( ${#} < 2 )); then
+  out_dir="${PWD}"
+else
+  out_dir="${2}"
+fi
+if [[ ! -e "${in_dir}" ]]; then
+  _msg=(
+    "Input directory '${in_dir}'"
+    "does not exist."
+  )
+  _msg_error \
+    "${_msg[*]}" \
+    1
+fi
+if [[ ! -e "${out_dir}" ]]; then
+  _msg=(
+    "Output directory '${out_dir}'"
+    "does not exist."
+  )
+  _msg_error \
+    "${_msg[*]}" \
+    1
+fi
+_set_overrides
+_ffmpeg_options_load
+_config_user_init \
+  "media-tools"
+_mediasize_dir_split \
+  "${in_dir}" \
+  "${out_dir}"
