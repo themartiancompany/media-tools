@@ -114,8 +114,8 @@ _vidcat() {
       "[a]"
     -f
       mp4
-    -vcodec
-      libx265
+    # -vcodec
+    #   libx265
   )
   if [[ "${_mode}" == 'filter' ]]; then
     ffmpeg \
@@ -124,14 +124,14 @@ _vidcat() {
       true
   elif [[ "${_mode}" == 'protocol' ]]; then
       _msg_info \
-        "running ffmpeg with concat protocol method"
+        "Running ffmpeg with concat protocol method"
       _protocol
   elif [[ "${_mode}" == 'concat' ]]; then
     # echo \
     #   "${_mm}"
     # [[ ! $? -eq 0 ]] && \
       _msg_info \
-        "running ffmpeg with concat method"
+        "Running ffmpeg with concat method"
       _concat
   fi
   return \
