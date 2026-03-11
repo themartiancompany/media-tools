@@ -95,7 +95,10 @@ _clip_random() {
   _clip_start="$(
     shuf \
       -i \
-        "0-${_clip_start_upper}")"
+        "0-${_clip_start_upper}" |
+      head \
+        -n \
+          1)"
   mediaclip \
     "${_mediaclip_opts[@]}" \
     "${_in_file}" \
