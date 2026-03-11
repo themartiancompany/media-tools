@@ -85,7 +85,7 @@ _mix() {
     _in_files_shuf=( $(
       shuf \
         -i \
-	  "1-${#_in_files[@]}")
+	  "0-$(( ${#_in_files[@]} -1 ))")
     )
   else
     _in_files_shuf=(
@@ -99,6 +99,7 @@ _mix() {
         -u \
         --tmpdir="${PWD}" \
 	--suffix=".mp4")"
+    echo "${_index}"
     echo "${_in_files[@]}"
     clip-random \
       "${_clip_random_opts[@]}" \
