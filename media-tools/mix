@@ -108,14 +108,23 @@ _mix() {
         "${_tmp_name}.mp4"
     )
   done
+  printf \
+    "file '%s'\n" \
+    "${_vid_files[@]}" > \
+    "list.txt"
   ffmpeg \
-    "${_ffmpeg_opts[@]}" \
+    -f \
+      "concat" \
+    -safe \
+      0 \
+    -i "list.txt"
     -c \
       "copy" \
     "${_out_file}"
   rm \
     -rf \
-    "${_vid_files[@]}"
+    "${_vid_files[@]}" \
+    "list.txt"
 }
 
 # Set defaults
