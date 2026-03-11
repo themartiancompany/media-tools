@@ -237,4 +237,5 @@ _config_user_init \
   "media-tools"
 _mediasize_dir_split \
   "${in_dir}" \
-  "${out_dir}"
+  "${out_dir}" \
+  "${file_format}"
