@@ -99,13 +99,33 @@ _mix() {
       mktemp \
         -u \
         --tmpdir="${PWD}")"
-    clip-random \
-      "${_clip_random_opts[@]}" \
-      "${_in_files["${_index}"]}" \
-      "${_tmp_name}.mp4"
-    _vid_files+=(
-      "${_tmp_name}.mp4"
-    )
+    _length="$(
+      medialength \
+        "${_in_files["${_index}"]}")"
+    if (( "${_length}" < 2 * "${_clip_length}" )); then
+      cp \
+        "${_in_files["${_index}"]}" \
+        "${_tmp_name}.mp4"
+      _vid_files+=(
+        "${_tmp_name}.mp4"
+      )
+    elif (( "${_length}" > 2 * "${_clip_length}" )); then
+      clip-random \
+        "${_clip_random_opts[@]}" \
+        "${_in_files["${_index}"]}" \
+        "${_tmp_name}.mp4"
+      _vid_files+=(
+        "${_tmp_name}.mp4"
+      )
+    elif [[ "${_length}" == "" ]]; then
+      _msg=(
+        "File '${_in_files["${_index}"]}' corrupted,"
+	"skipping."
+      )
+      _msg_error \
+        "${_msg[*]}" \
+	1
+    fi
   done
   printf \
     "file '%s'\n" \
