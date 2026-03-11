@@ -99,7 +99,7 @@ _mix() {
         -u \
         --tmpdir="${PWD}" \
 	--suffix=".mp4")"
-    echo "${_in_files["${_index}"]}"
+    echo "${_in_files[@]}"
     clip-random \
       "${_clip_random_opts[@]}" \
       "${_in_files["${_index}"]}" \
