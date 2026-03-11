@@ -233,7 +233,6 @@ if [[ ! -e "${out_dir}" ]]; then
     1
 fi
 _set_overrides
-_ffmpeg_options_load
 _config_user_init \
   "media-tools"
 _mediasize_dir_split \
