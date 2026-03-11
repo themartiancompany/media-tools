@@ -60,7 +60,7 @@ _clip_random() {
   local \
     _in_file="${1}" \
     _out_file="${2}" \
-    _clip_length="${3}"
+    _clip_length="${3}" \
     _clip_start_upper \
     _clip_start \
     _length \
