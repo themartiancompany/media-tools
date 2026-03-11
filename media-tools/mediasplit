@@ -200,7 +200,7 @@ _show_config() {
   _msg_info "            Output prefix:   ${out_prefix}"
   _msg_info "No overwrite confirmation:   ${confirm_disabled}"
   _msg_info "            Chunks amount:   ${chunks_amount}"
-  _msg_info "            Chunks length:   ${(chunks_length}"
+  _msg_info "            Chunks length:   ${chunks_length}"
   _msg_info "          Selected chunks:   ${chunks_selected[*]}"
 }
 
