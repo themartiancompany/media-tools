@@ -66,6 +66,7 @@ _mix() {
     _in_files_shuf=() \
     _vid_files=() \
     _clip_random_opts=() \
+    _length \
     _tmp_name \
     _msg=()
   shift \
@@ -102,6 +103,7 @@ _mix() {
     _length="$(
       medialength \
         "${_in_files["${_index}"]}")"
+    _length="${_length%.*}"
     if (( "${_length}" < 2 * "${_clip_length}" )); then
       cp \
         "${_in_files["${_index}"]}" \
