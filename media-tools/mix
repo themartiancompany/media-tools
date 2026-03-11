@@ -111,7 +111,7 @@ _mix() {
       -vn \
       -i \
         "${_in_files["${_index}"]}" \
-      -c:a \
+      -c \
         "copy" \
       "${_tmp_name}.m4a"
     _prefixes+=(
@@ -126,7 +126,7 @@ _mix() {
   done
   vidcat \
     "${_vidcat_opts[@]}" \
-    "${_out_file}.hurr.mp4" \
+    "${_out_file}.mute.mp4" \
     "${_vid_files[@]}"
   vidcat \
     "${_vidcat_opts[@]}" \
