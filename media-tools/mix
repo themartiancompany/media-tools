@@ -66,7 +66,6 @@ _mix() {
     _in_files_shuf=() \
     _vid_files=() \
     _clip_random_opts=() \
-    _ffmpeg_opts=() \
     _tmp_name \
     _msg=()
   shift \
@@ -103,10 +102,6 @@ _mix() {
     _vid_files+=(
       "${_tmp_name}.mp4"
     )
-    _ffmpeg_opts+=(
-      -i
-        "${_tmp_name}.mp4"
-    )
   done
   printf \
     "file '%s'\n" \
@@ -117,7 +112,8 @@ _mix() {
       "concat" \
     -safe \
       0 \
-    -i "list.txt"
+    -i \
+      "list.txt" \
     -c \
       "copy" \
     "${_out_file}"
