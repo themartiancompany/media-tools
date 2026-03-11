@@ -71,8 +71,6 @@ _clip_random() {
       -v
     )
   fi
-  source \
-    "${HOME}/.config/media-tools/ffmpeg_options"
   _length="$(
     medialength \
       "${_in_file}")"
