@@ -1,0 +1,233 @@
+#!/usr/bin/env bash
+
+# SPDX-License-Identifier: AGPL-3.0
+
+#    ----------------------------------------------------------------------
+#    Copyright © 2024, 2025, 2026  Pellegrino Prevete
+#
+#    All rights reserved
+#    ----------------------------------------------------------------------
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+_bin="$(
+  dirname \
+    "$(command \
+         -v \
+         "env")")"
+_lib="$(
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" \
+  2>"/dev/null" || \
+source \
+  "${_crash_bash}"
+
+# shellcheck disable=SC2034
+_global_variables() {
+  out_file=""
+  in_files=()
+  clip_length=""
+  mix_mode=""
+  color=""
+  quiet=""
+}
+
+# Check all required programs
+# are available
+_requirements() {
+  _check_cmd \
+    "clip-random" \
+    "media-tools"
+  _check_cmd \
+    "vidcat" \
+    "media-tools"
+}
+
+_ffmpeg_options_load() {
+  local \
+    ffmpeg_options
+  ffmpeg_options="${HOME}/.config/media-tools/ffmpeg_options"
+  [ -e "${ffmpeg_options}" ] && \
+    source \
+    "${ffmpeg_options}" || \
+    true
+}
+
+_mix() {
+  local \
+    _mix_mode="${1}" \
+    _clip_length="${2}"
+    _out_file="${3}" \
+    _in_files=() \
+    _in_files_shuf=() \
+    _out_files=() \
+    _clip_random_opts=() \
+    _vidcat_opts=() \
+    _msg=()
+  shift \
+    3
+  _in_files=(
+    "$@"
+  )
+  if [[ "${quiet}" == "n" ]]; then
+    _clip_random_opts+=(
+      -v
+    )
+    _vidcat_opts+=(
+      -v
+    )
+  fi
+  source \
+    "${HOME}/.config/media-tools/ffmpeg_options"
+  if [[ "${_mix_mode}" == "random" ]]; then
+  _in_files_shuf=(
+    shuf \
+      -i \
+        "1-${#_in_files[@]}"
+  )
+  _out_files=()
+  for _index in "${_in_files_shuf[@]}"; do
+    _tmp_name="$(
+      mktemp \
+        -u \
+        --tmpdir="${PWD}" \
+	--suffix=".mp4")"
+    clip-random \
+      "${_clip_random_opts[@]}" \
+      "${_in_files["${_index}"]}" \
+      "${_tmp_name}"
+    _out_files+=(
+      "${_tmp_name}"
+    )
+  done
+  vidcat \
+    "${_vidcat_opts[@]}" \
+    "${_out_file}" \
+    "${_out_files[@]}"
+}
+
+# Set defaults
+_set_overrides() {
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+  _set_override \
+    "mix" \
+    "mode" \
+    "random"
+  _set_override \
+    "clip" \
+    "length" \
+    "3"
+}
+
+# Show help usage, with an exit status.
+# $1: exit status number.
+_usage() {
+  local \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+Creates a random clip sequence from a set of files.
+
+Usage:
+  ${app_name}
+    [options]
+    <out-video>
+    [input-video]
+
+  options:
+     -m                   Mix mode ('random').
+                          Default: ${mix_mode}
+     -l                   Clip length.
+                          Default: ${clip_length}
+     -h                   This message.
+     -v                   Enable verbose output
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${1}"
+}
+
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'l:m:cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    l)
+      override_clip_length="${OPTARG}" ;;
+    m)
+      override_mix_mode="${OPTARG}" ;;
+    c)
+      override_color="y" ;;
+    v)
+      override_quiet="n" ;;
+    h|?)
+      _set_overrides && \
+      _usage \
+        0 ;;
+    *)
+      msg=(
+        "Invalid argument '${arg}'."
+      )
+      _msg_error \
+        "${msg[*]}" \
+        0
+      _usage \
+        1 ;;
+  esac
+done
+shift \
+  $(( OPTIND - 1 ))
+if (( ${#} < 2 )); then
+  _usage \
+    1
+fi
+out_file="${1}"
+shift \
+  1
+in_files=(
+  "$@"
+)
+_set_overrides
+_ffmpeg_options_load
+_config_user_init \
+  "media-tools"
+_mix \
+  "${mix_mode}" \
+  "${clip_length}" \
+  "${out_file}" \
+  "${in_files[@]}"
