@@ -112,6 +112,9 @@ _mix() {
     -c \
       "copy" \
     "${_out_file}"
+  chmod \
+    600 \
+    "${_vid_files[@]}"
   rm \
     -rf \
     "${_vid_files[@]}"
