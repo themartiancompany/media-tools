@@ -78,6 +78,10 @@ _mix() {
       -v
     )
   fi
+  _clip_random_opts+=(
+    -l
+      "${_clip_length}"
+  )
   if [[ "${_mix_mode}" == "random" ]]; then
     _in_files_shuf=( $(
       shuf \
