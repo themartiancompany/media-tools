@@ -74,7 +74,7 @@ _clip_random() {
   _length="$(
     medialength \
       "${_in_file}")"
-  _length="${_length%.}"
+  _length="${_length%.*}"
   if [[ "${_length}" == "" ]]; then
     _msg=(
       "File '${_in_file}'"
