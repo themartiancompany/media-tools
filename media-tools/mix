@@ -64,9 +64,10 @@ _mix() {
     _out_file="${3}" \
     _in_files=() \
     _in_files_shuf=() \
-    _out_files=() \
+    _vid_files=() \
     _clip_random_opts=() \
-    _vidcat_opts=() \
+    _ffmpeg_opts=() \
+    _tmp_name \
     _msg=()
   shift \
     3
@@ -75,9 +76,6 @@ _mix() {
   )
   if [[ "${quiet}" == "n" ]]; then
     _clip_random_opts+=(
-      -v
-    )
-    _vidcat_opts+=(
       -v
     )
   fi
@@ -103,18 +101,18 @@ _mix() {
       "${_in_files["${_index}"]}" \
       "${_tmp_name}.mp4"
     _vid_files+=(
+      "${_tmp_name}.mp4"
+    )
+    _ffmpeg_opts+=(
       -i
         "${_tmp_name}.mp4"
     )
   done
   ffmpeg \
-    "${_vid_files[@]}" \
+    "${_ffmpeg_opts[@]}" \
     -c \
       "copy" \
     "${_out_file}"
-  chmod \
-    600 \
-    "${_vid_files[@]}"
   rm \
     -rf \
     "${_vid_files[@]}"
