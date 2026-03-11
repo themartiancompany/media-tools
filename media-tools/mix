@@ -108,7 +108,7 @@ _mix() {
       "${_tmp_name}.mp4" \
       "${_tmp_name}.mute.mp4"
     ffmpeg \
-      -vn
+      -vn \
       -i \
         "${_in_files["${_index}"]}" \
       -c:a \
