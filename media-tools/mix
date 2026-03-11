@@ -60,7 +60,7 @@ _requirements() {
 _mix() {
   local \
     _mix_mode="${1}" \
-    _clip_length="${2}"
+    _clip_length="${2}" \
     _out_file="${3}" \
     _in_files=() \
     _in_files_shuf=() \
