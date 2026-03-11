@@ -114,7 +114,7 @@ _audioscale() {
   _opts=(
     "${_ffmpeg_opts[@]}"
     -i
-      ${_in}
+      "${_in}"
     -filter_complex
       "${_af}"
     -map
