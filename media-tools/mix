@@ -98,8 +98,6 @@ _mix() {
       mktemp \
         -u \
         --tmpdir="${PWD}")"
-    echo "${_index}"
-    echo "${_in_files[@]}"
     clip-random \
       "${_clip_random_opts[@]}" \
       "${_in_files["${_index}"]}" \
@@ -108,40 +106,15 @@ _mix() {
       -i
         "${_tmp_name}.mp4"
     )
-    # _prefixes+=(
-    #   "${_tmp_name}"
-    # )
-    # _aud_files+=(
-    #   "${_tmp_name}.m4a"
-    # )
-    # _vid_files+=(
-    #   "${_tmp_name}.mute.mp4"
-    # )
   done
   ffmpeg \
     "${_vid_files[@]}" \
     -c \
       "copy" \
     "${_out_file}"
-  # vidcat \
-  #   "${_vidcat_opts[@]}" \
-  #   "${_out_file}.mute.mp4" \
-  #   "${_vid_files[@]}"
-  # vidcat \
-  #   "${_vidcat_opts[@]}" \
-  #   "${_out_file}.m4a" \
-  #   "${_aud_files[@]}"
-  # mkmedia \
-  #   "${_out_file}.mp4" \
-  #   "${_out_file}.m4a" \
-  #   "${_out_file}.mute.mp4"
   rm \
+    -rf \
     "${_vid_files[@]}"
-  # rm \
-  #   "${_aud_files[@]}"
-  # rm \
-  #   "${_file}.mute.mp4" \
-  #   "${_file}"*"m4a"
 }
 
 # Set defaults
