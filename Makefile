@@ -34,6 +34,7 @@ install-media:
 	install -vDm 755 $(_PROJECT)/blackintro "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/blackoutro "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/blackvid "$(BIN_DIR)"
+	install -vDm 755 $(_PROJECT)/clip-random "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/crop "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/fluidreverseloop "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/gridcrop "$(BIN_DIR)"
