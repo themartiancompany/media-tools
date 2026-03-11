@@ -49,6 +49,7 @@ _global_variables() {
   cut_start=""
   cut_length=""
   out_file=""
+  confirm_disabled=""
   color=""
   quiet=""
 }
