@@ -113,6 +113,8 @@ _mix() {
     "${_vidcat_opts[@]}" \
     "${_out_file}" \
     "${_out_files[@]}"
+  rm \
+    "${_out_files[@]}"
 }
 
 # Set defaults
