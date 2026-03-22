@@ -70,7 +70,7 @@ install-media:
 	install -vDm 755 $(_PROJECT)/vidrotate "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/vidscale "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/vidstack "$(BIN_DIR)"
-	ln -s "$(PREFIX)/bin/mediasize" "$(BIN_DIR)/vidsize"
+	ln -s "$(PREFIX)/bin/mediasize" "$(BIN_DIR)/vidsize" || true
 	install -vDm 755 $(_PROJECT)/volumechange "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/ytxclip "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/ytencode "$(BIN_DIR)"
