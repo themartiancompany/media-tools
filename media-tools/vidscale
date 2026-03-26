@@ -41,6 +41,7 @@ _global_variables() {
   out_file=""
   scale_factor=""
   encode_mode=""
+  gpu_type=""
   color=""
   quiet=""
 }
@@ -145,8 +146,10 @@ _vidscale() {
     _out="${2}" \
     _scale="${3}" \
     _mode="${4}" \
+    _gpu_type="${5}" \
     _scale_opts=() \
     _opts=() \
+    _vcodec \
     _crf \
     _run_opts=() \
     _length \
@@ -154,6 +157,7 @@ _vidscale() {
     _preset \
     _msg=()
   _preset="fast"
+  _vcodec="libx264"
   if [[ "${_mode}" == 'quality' ]]; then
     _crf=18
   elif [[ "${_mode}" == 'size' ]]; then
@@ -162,6 +166,31 @@ _vidscale() {
   elif [[ "${_mode}" == 'speed' ]]; then
     _crf="25"
     _preset="ultrafast"
+    _length_max="$((
+      60 * 30 ))"
+  elif [[ "${_mode}" == 'gpu' ]]; then
+    if [[ "${_type}" == "" ]]; then
+      _msg=(
+        "To use 'gpu' encode"
+	"mode you need a discrete"
+	"video card."
+      )
+      _msg_error \
+        "${_msg[*]}"
+    fi
+    if [[ "${_type}" == "nvidia" ]]; then
+      _vcodec="h264_nvenc"
+      _opts+=(
+        -hwaccel
+          "cuvid"
+        -hwaccell_output_format
+          "cuda"
+        -c:v
+          "h264_cuvid"
+      )
+    fi
+    _crf="25"
+    _preset="slow"
     _length_max="$((
       60 * 30 ))"
   else
@@ -179,14 +208,14 @@ _vidscale() {
     "ih*${_scale}"
     "flags=neighbor"
   )
-  _opts=(
+  _opts+=(
     "${ffmpeg_opts[@]}"
     -vf
       "$(IFS=":"; \
          echo \
            "${_scale_opts[*]}")"
     -c:v
-      'libx264'
+      "${_vcodec}"
     -preset
       "${_preset}"
   )
@@ -211,6 +240,46 @@ _vidscale() {
   fi
 }
 
+_gpu_type_auto_detect() {
+  local \
+    _amd \
+    _intel \
+    _nvidia \
+    _type \
+    _vgas
+  _type=""
+  _vgas="$(
+    lspci |
+      grep \
+        "VGA")"
+  _amd="$(
+    echo \
+      "${_vgas}" |
+    grep \
+      "AMD")"
+  _nvidia="$(
+    echo \
+      "${_vgas}" |
+    grep \
+      "NVidia")"
+  _intel="$(
+    echo \
+      "${_vgas}" |
+    grep \
+      "Intel")"
+  if [[ "${_amd}" != "" ]]; then 
+    _type="amd"
+  elif [[ "${_nvidia}" != "" ]]; then 
+    _type="nvidia"
+  elif [[ "${_amd}" != "" ]]; then 
+    _type="intel"
+  fi
+  _set_override \
+    "gpu" \
+    "type" \
+	    "${_type}"
+}
+
 # Set defaults
 _set_overrides() {
   if [[ -v override_color ]]; then
@@ -223,6 +292,7 @@ _set_overrides() {
   elif [[ -z "${quiet}" ]]; then
     quiet="y"
   fi
+  _gpu_type_auto_detect
   _set_override \
     "encode" \
     "mode" \
@@ -243,15 +313,21 @@ _usage() {
 Scale up or down a video by a factor
 
 Usage:
+
   ${app_name}
     [options]
     <input_video>
     <output_video>
     <scale>
+
   options:
      -m                   Encode mode (quality, size,
-                          speed, auto).
+                          speed, gpu, auto).
                           Default: ${encode_mode}
+     -g                   GPU type for 'gpu' encode
+			  mode ('amd', 'intel',
+                          'nvidia')
+                          Default: ${gpu_type}
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -269,12 +345,14 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'm:cvh?' \
+    'm:g:cvh?' \
     arg; do
   case \
     "${arg}" in
     m)
       override_encode_mode="${OPTARG}" ;;
+    g)
+      override_gpu_type="${OPTARG}" ;;
     c)
       override_color="y" ;;
     v)
@@ -308,8 +386,12 @@ _x265="true"
 _ffmpeg_options_load
 _config_user_init \
   "media-tools"
-_vidscale \
-  "${in_file}" \
-  "${out_file}" \
-  "${scale_factor}" \
+app_opts=(
+  "${in_file}"
+  "${out_file}"
+  "${scale_factor}"
   "${encode_mode}"
+  "${gpu_type}"
+)
+_vidscale \
+  "${app_opts[@]}"
