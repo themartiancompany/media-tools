@@ -2,51 +2,103 @@
 
 # SPDX-License-Identifier: AGPL-3.0
 
-#    ----------------------------------------------------------------------
+#    -----------------------------------------------------
 #    Copyright © 2024, 2025, 2026  Pellegrino Prevete
 #
 #    All rights reserved
-#    ----------------------------------------------------------------------
+#    -----------------------------------------------------
 #
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
+#    This program is free software: you can redistribute
+#    it and/or modify it under the terms of the
+#    GNU Affero General Public License as published by
+#    the Free Software Foundation, either version 3 of
+#    the License, or (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
+#    This program is distributed in the hope that it
+#    will be useful, but WITHOUT ANY WARRANTY;
+#    without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#    See the GNU Affero General Public License for
+#    more details.
 #
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#    You should have received a copy of the
+#    GNU Affero General Public License
+#    along with this program.
+#    If not, see <https://www.gnu.org/licenses/>.
 
-# Stitches pics together
-_audiopic2vid() {
-  local \
-    _out="${1}"
-    _aud="${2}"
-  shift 2
-  local \
-    _pics=("${@}") \
-    _tmp
-  _tmp="$(mktemp -d)"
-
-  ffmpeg \
-    -loop 1 \
-    -i "${_pics[@]}" \
-    -i "${_aud}" \
-    -c:v libx264 \
-    -tune stillimage \
-    -c:a aac \
-    -b:a 48k \
-    -pix_fmt yuv420p \
-    -shortest "${_out}"
+_global_variables() {
+  input_sound=""
+  input_pictures=()
+  output_video=""
 }
 
-_out="${1}"
-_aud="${2}"
-shift 2
-_pics=("${@}")
+_audiopic2vid() {
+  local \
+    _output_video="${1}"
+    _input_sound="${2}"
+    _input_pictures=() \
+    _mktemp_opts=()
+    _ffmpeg_opts=()
+  shift \
+    2
+  _input_pictures+=(
+    "$@"
+  )
+  ffmpeg_opts+=(
+    -loop
+      1
+    -i
+      "${_input_pictures[@]}"
+    -i
+      "${_input_sound}"
+    -c:v
+      "libx264"
+    -tune
+      "stillimage"
+    -c:a
+      "aac"
+    -b:a
+      "48k"
+    -pix_fmt
+      "yuv420p"
+    -shortest
+  )
+  ffmpeg \
+    "${_ffmpeg_opts[@]}" \
+    "${_output_video}"
+}
 
-_audiopic2vid "${_out}" "${_aud}" "${_pics[@]}"
+_usage() {
+  local \
+    _line \
+    _text
+  _text=(
+    "Create slideshow with sound."
+    ""
+    "  usage:"
+    "    audiopic2vid"
+    "      <output-video>"
+    "      <input-sound>"
+    "      [input-picture]"
+    ""
+    "  options:"
+    "    -h          This help."
+  )
+}
+
+_global_variables
+output_video="${1}"
+input_sound="${2}"
+shift \
+  2
+input_pictures=(
+  "$@"
+)
+app_opts=(
+  "${output_video}"
+  "${input_sound}"
+  "${input_pictures[@]}"
+)
+
+_audiopic2vid \
+  "${app_opts[@]}"
