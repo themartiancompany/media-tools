@@ -70,6 +70,7 @@ _audiopic2vid() {
 
 _usage() {
   local \
+    _exit="${1}" \
     _line \
     _text
   _text=(
@@ -83,10 +84,42 @@ _usage() {
     ""
     "  options:"
     "    -h          This help."
+    ""
   )
+  printf \
+    "%s\n" \
+    "${_text[@]}"
+  exit \
+    "${_exit}"
+}
+
+_cmdline_parse() {
+  local \
+    _args=() \
+    _msg=()
+  _args+=(
+    "$@"
+  )
+  if [[ " ${_args[*]} " == *" -h "* ||
+        " ${_args[*]} " == *" --help "* ]]; then
+    _usage \
+      0
+  fi
+  if (( "${#_args[@]}" < 3 )); then
+    _msg=(
+      "Missing argument."
+    )
+    echo \
+      "${_msg[*]}" \
+      1>&2
+    _usage \
+      1
+  fi
 }
 
 _global_variables
+_cmdline_parse \
+  "$@"
 output_video="${1}"
 input_sound="${2}"
 shift \
