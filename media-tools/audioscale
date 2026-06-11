@@ -167,10 +167,10 @@ _set_overrides() {
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "               Scale date:   $(_get "scale" "date")"
-  _msg_info "             Scale factor:   $(_get "scale" "factor")"
-  _msg_info "              Input file:    $(_get "in" "file")"
-  _msg_info "              Output file:   $(_get "out" "file")"
+  _msg_info "               Scale date:   ${scale_date}"
+  _msg_info "             Scale factor:   ${scale_factor}"
+  _msg_info "               Input file:   ${in_file}"
+  _msg_info "              Output file:   ${out_file}"
 }
 
 # Show help usage, with an exit status.

@@ -49,6 +49,10 @@ _audiopic2vid() {
   _length="$(
     medialength \
       "${_input_sound}")"
+  echo \
+    "${_length}"
+  echo \
+    "${#_input_pictures[@]}"
   _pic_length="$((
     "${_length}" /
       "${#_input_pictures[@]}" ))"
@@ -131,21 +135,51 @@ _cmdline_parse() {
   fi
 }
 
+_input_sound_check() {
+  local \
+    _msg=()
+  if [[ ! -e "${input_sound}" ]]; then
+    _msg=(
+      "Input sound file"
+      "'${input_sound}' does not exist."
+    )
+    echo \
+      "${_msg[*]}" \
+      1>&2
+    exit \
+      1
+  else
+    input_sound="$(
+      realpath \
+        "${input_sound}")"
+  fi
+}
+
+# Shows configuration options.
+_show_config() {
+  _msg_info "audiopic2vid configuration"
+  _msg_info "                Make date:   ${scale_date}"
+  _msg_info "              Output file:   ${out_file}"
+  _msg_info "         Input sound file:   ${input_sound}"
+  _msg_info "           Input pictures:   ${input_pictures[*]}"
+}
+
 _global_variables
 _cmdline_parse \
   "$@"
 output_video="${1}"
 input_sound="${2}"
+_input_sound_check
 shift \
   2
 input_pictures=(
   "$@"
 )
+_show_config
 app_opts=(
   "${output_video}"
   "${input_sound}"
   "${input_pictures[@]}"
 )
-
 _audiopic2vid \
   "${app_opts[@]}"
