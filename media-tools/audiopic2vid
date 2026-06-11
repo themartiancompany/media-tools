@@ -37,8 +37,9 @@ _audiopic2vid() {
     _output_video="${1}"
     _input_sound="${2}"
     _input_pictures=() \
-    _mktemp_opts=()
-    _ffmpeg_opts=()
+    _mktemp_opts=() \
+    _ffmpeg_opts=() \
+    _pic
   shift \
     2
   _input_pictures+=(
@@ -47,8 +48,14 @@ _audiopic2vid() {
   ffmpeg_opts+=(
     -loop
       1
-    -i
-      "${_input_pictures[@]}"
+  )
+  for _pic in "${_input_pictures[@]}"; do
+    ffmpeg_opts+=(
+      -i
+        "${_pic}"
+    )
+  done
+  ffmpeg_opts+=(
     -i
       "${_input_sound}"
     -c:v
