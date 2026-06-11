@@ -26,36 +26,70 @@
 #    along with this program.
 #    If not, see <https://www.gnu.org/licenses/>.
 
+_bin="$(
+  dirname \
+    "$(command \
+         -v \
+         "env")")"
+_lib="$(
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" \
+  2>"/dev/null" || \
+source \
+  "${_crash_bash}"
+
 _global_variables() {
-	input_sound=""
-	input_pictures=()
+  make_date=""
+  input_sound=""
+  input_pictures=()
+  sound_encode=""
   output_video=""
+  span_type=""
+  color=""
+  quiet=""
+}
+
+_requirements() {
+  _check_cmd \
+    "bc"
 }
 
 _audiopic2vid() {
   local \
-    _output_video="${1}" \
-    _input_sound="${2}" \
+    _span_type="${1}" \
+    _output_video="${2}" \
+    _input_sound="${3}" \
     _input_pictures=() \
     _mktemp_opts=() \
     _ffmpeg_opts=() \
     _pic \
-    _length
+    _pic_length \
+    _pics_amount \
+    _length \
+    _filter_complex
   shift \
-    2
+    3
   _input_pictures+=(
     "$@"
   )
   _length="$(
     medialength \
       "${_input_sound}")"
-  echo \
-    "${_length}"
-  echo \
-    "${#_input_pictures[@]}"
-  _pic_length="$((
-    "${_length}" /
-      "${#_input_pictures[@]}" ))"
+  _pics_amount="${#_input_pictures[@]}"
+  if [[ "${_span_type}" == "uniform" ]]; then
+    _bc_args=(
+      "scale=2;"
+      "${_length}" "/"
+        "${#_input_pictures[@]}"
+    )
+    _pic_length="$(
+      echo \
+        "${_bc_args[*]}" |
+        bc)"
+  fi
   for _pic in "${_input_pictures[@]}"; do
     ffmpeg_opts+=(
       -loop
@@ -71,12 +105,43 @@ _audiopic2vid() {
       "${_input_sound}"
     -c:v
       "libx264"
-    -tune
-      "stillimage"
-    -c:a
-      "aac"
-    -b:a
-      "48k"
+  )
+  if (( "${_pic_amounts}" < 2 )); then
+    ffmpeg_opts+=(
+      -tune
+        "stillimage"
+    )
+  else
+    for _index \
+      in seq \
+           0 \
+           "$(( ${_pic_amounts} - 1 ))"; do
+      _filter_complex+="[${_index}:0]"
+    done
+    _filter_complex+="concat=n=${_pic_amounts}:v=1:a=1[v][a]; [v]format=yuv420p[v]"
+    ffmpeg_opts+=(
+      -filter_complex
+        "${_filter_complex}"
+      -map
+        "[v]"
+      -map
+        "[a]"
+    )
+  fi
+  if [[ "${_sound_encode}" == "y" ]]; then
+    ffmpeg_opts+=(
+      -c:a
+        "aac"
+      -b:a
+        "48k"
+    )
+  else
+    ffmpeg_opts+=(
+      -c:a
+        "copy"
+    )
+  fi
+  ffmpeg_opts+=(
     -pix_fmt
       "yuv420p"
     -shortest
@@ -101,6 +166,8 @@ _usage() {
     "      [input-picture]"
     ""
     "  options:"
+    "    -t          Span type. Can be 'uniform'."
+    "                Default: ${span_type}."
     "    -h          This help."
     ""
   )
@@ -133,6 +200,35 @@ _cmdline_parse() {
     _usage \
       1
   fi
+  while \
+    getopts \
+      't:ecvh?' \
+      arg; do
+    case \
+      "${arg}" in
+      t)
+        override_span_type="${OPTARG}" ;;
+      e)
+        override_sound_encode="y" ;;
+      c)
+        override_color="y" ;;
+      v)
+        override_quiet="n" ;;
+      h|?)
+        _set_overrides
+        _usage \
+          0 ;;
+      *)
+        _msg=(
+          "Invalid argument '${arg}'"
+        )
+        _msg_error \
+          "${_msg[*]}" \
+          0
+        _usage \
+          1 ;;
+    esac
+  done
 }
 
 _input_sound_check() {
@@ -155,18 +251,61 @@ _input_sound_check() {
   fi
 }
 
+# Set defaults and, if present, overrides
+# from command line option parameters
+_set_overrides() {
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+  _set_override \
+    "make" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "span" \
+    "type" \
+    "uniform"
+  _set_override \
+    "sound" \
+    "encode" \
+    "n"
+}
+
 # Shows configuration options.
 _show_config() {
   _msg_info "audiopic2vid configuration"
-  _msg_info "                Make date:   ${scale_date}"
-  _msg_info "              Output file:   ${out_file}"
+  _msg_info "                Make date:   ${make_date}"
+  _msg_info "                Span type:   ${span_type}"
+  _msg_info "             Sound encode:   ${sound_encode}"
+  _msg_info "              Output file:   ${output_video}"
   _msg_info "         Input sound file:   ${input_sound}"
-  _msg_info "           Input pictures:   ${input_pictures[*]}"
+  _msg_info "           Input pictures:"
+  _show_config_input_pictures
 }
 
+_show_config_input_pictures() {
+  local \
+    _pic
+  for _pic in "${input_pictures[@]}"; do
+    _msg_info "                             ${_pic}"
+  done
+}
+
+_globals
 _global_variables
+
 _cmdline_parse \
   "$@"
+shift \
+  $((
+    OPTIND - 1 ))
 output_video="${1}"
 input_sound="${2}"
 _input_sound_check
@@ -175,8 +314,11 @@ shift \
 input_pictures=(
   "$@"
 )
+_set_overrides
 _show_config
 app_opts=(
+  "${span_type}"
+  "${sound_encode}"
   "${output_video}"
   "${input_sound}"
   "${input_pictures[@]}"

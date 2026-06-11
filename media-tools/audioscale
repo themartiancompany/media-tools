@@ -138,6 +138,16 @@ _audioscale() {
 # Set defaults and, if present, overrides
 # from command line option parameters
 _set_overrides() {
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
   _set_override \
     "scale" \
     "date" \
@@ -149,19 +159,7 @@ _set_overrides() {
   _set_override \
     "out" \
     "file" \
-    "$(_get \
-         "in" \
-	 "file").scaled.m4a"
-  if [[ -v override_color ]]; then
-    color="${override_color}"
-  elif [[ -z "${color}" ]]; then
-    color="n"
-  fi
-  if [[ -v override_quiet ]]; then
-    quiet="${override_quiet}"
-  elif [[ -z "${quiet}" ]]; then
-    quiet="y"
-  fi
+    "${in_file}.scaled.m4a"
 }
 
 # Shows configuration options.
@@ -217,22 +215,27 @@ while \
     arg; do
   case \
     "${arg}" in
-    c) override_color="y" ;;
-    v) override_quiet="n" ;;
-    h|?) _set_overrides && \
-         _usage \
-           0 ;;
+    c)
+      override_color="y" ;;
+    v)
+      override_quiet="n" ;;
+    h|?)
+      _set_overrides
+      _usage \
+        0 ;;
     *)
-    _msg_error \
-      "Invalid argument '${arg}'" \
-      0
-    _usage \
-      1
-    ;;
+      _msg=(
+        "Invalid argument '${arg}'"
+      )
+      _msg_error \
+        "${_msg[*]}" \
+        0
+      _usage \
+        1 ;;
   esac
 done
 shift \
-  $(( \
+  $((
     OPTIND - 1 \
   ))
 (( ${#} < 3 )) && \
