@@ -273,10 +273,31 @@ _sound_encode_auto_detect() {
 }
 
 _width_auto_detect() {
+  local \
+    _pic \
+    _pic_scale \
+    _size \
+    _size_compare
+  _pic_scale="n"
+  _size_compare="$(
+    mediasize \
+      -W \
+      "${input_pictures[0]}")"
   for _pic \
     in "${input_pictures[@]}"; do
-    _
+    _size="$(
+      mediasize \
+        "${_pic}")"
+    if [[ "${_size}" != "${_size_compare}" ]]; then
+      _pic_scale="y"
+    fi
   done
+  if [[ "${_pic_scale}" == "y" ]]; then
+  fi
+  _set_override \
+    "target" \
+    "width" \
+    ""
 }
 
 # Set defaults and, if present, overrides
