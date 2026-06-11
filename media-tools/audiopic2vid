@@ -27,15 +27,15 @@
 #    If not, see <https://www.gnu.org/licenses/>.
 
 _global_variables() {
-  input_sound=""
-  input_pictures=()
+	input_sound=""
+	input_pictures=()
   output_video=""
 }
 
 _audiopic2vid() {
   local \
-    _output_video="${1}"
-    _input_sound="${2}"
+    _output_video="${1}" \
+    _input_sound="${2}" \
     _input_pictures=() \
     _mktemp_opts=() \
     _ffmpeg_opts=() \
