@@ -76,6 +76,10 @@ _audiopic2vid() {
   _input_pictures+=(
     "$@"
   )
+  _ffmpeg_opts+=(
+    -i
+      "${_input_sound}"
+  )
   _length="$(
     medialength \
       "${_input_sound}")"
@@ -102,8 +106,6 @@ _audiopic2vid() {
     )
   done
   _ffmpeg_opts+=(
-    -i
-      "${_input_sound}"
     -c:v
       "libx264"
   )
@@ -117,19 +119,19 @@ _audiopic2vid() {
     )
   else
     for _index \
-      in seq \
-           0 \
-           "$(( ${_pics_amount} - 1 ))"; do
-      _filter_complex+="[${_index}:0]"
+      in $(seq \
+           1 \
+	   "$(( ${_pics_amount}  ))"); do
+      _filter_complex+="[${_index}:v:0][0:a:0]"
     done
-    _filter_complex+="concat=n=${_pics_amount}:v=1:a=1[v][a]; [v]format=yuv420p[v]"
+    _filter_complex+="concat=n=${_pics_amount}:a=1:v=1[outv][outa]"
     _ffmpeg_opts+=(
       -filter_complex
         "${_filter_complex}"
       -map
-        "[v]"
+        "[outv]"
       -map
-        "[a]"
+        "[outa]"
     )
   fi
   if [[ "${_sound_encode}" == "y" ]]; then
@@ -255,6 +257,28 @@ _input_sound_check() {
   fi
 }
 
+_sound_encode_auto_detect() {
+  local \
+    _pics_amount
+  _pics_amount="${#input_pictures[@]}"
+  if (( 1 < "${_pics_amount}" )); then
+    _sound_encode="y"
+  else
+    _sound_encode="n"
+  fi
+  _set_override \
+    "sound" \
+    "encode" \
+    "${_sound_encode}"
+}
+
+_width_auto_detect() {
+  for _pic \
+    in "${input_pictures[@]}"; do
+    _
+  done
+}
+
 # Set defaults and, if present, overrides
 # from command line option parameters
 _set_overrides() {
@@ -276,10 +300,8 @@ _set_overrides() {
     "span" \
     "type" \
     "uniform"
-  _set_override \
-    "sound" \
-    "encode" \
-    "n"
+  _sound_encode_auto_detect
+  _width_auto_detect
 }
 
 # Shows configuration options.
