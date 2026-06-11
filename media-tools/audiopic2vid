@@ -92,7 +92,7 @@ _audiopic2vid() {
         bc)"
   fi
   for _pic in "${_input_pictures[@]}"; do
-    ffmpeg_opts+=(
+    _ffmpeg_opts+=(
       -loop
         "1"
       -t
@@ -101,26 +101,29 @@ _audiopic2vid() {
         "${_pic}"
     )
   done
-  ffmpeg_opts+=(
+  _ffmpeg_opts+=(
     -i
       "${_input_sound}"
     -c:v
       "libx264"
   )
   if (( "${_pics_amount}" < 2 )); then
-    ffmpeg_opts+=(
+    _ffmpeg_opts+=(
       -tune
         "stillimage"
+      -pix_fmt
+        "yuv420p"
+      -shortest
     )
   else
     for _index \
       in seq \
            0 \
-           "$(( ${_pic_amounts} - 1 ))"; do
+           "$(( ${_pics_amount} - 1 ))"; do
       _filter_complex+="[${_index}:0]"
     done
     _filter_complex+="concat=n=${_pics_amount}:v=1:a=1[v][a]; [v]format=yuv420p[v]"
-    ffmpeg_opts+=(
+    _ffmpeg_opts+=(
       -filter_complex
         "${_filter_complex}"
       -map
@@ -130,23 +133,23 @@ _audiopic2vid() {
     )
   fi
   if [[ "${_sound_encode}" == "y" ]]; then
-    ffmpeg_opts+=(
+    _ffmpeg_opts+=(
       -c:a
         "aac"
       -b:a
         "48k"
     )
   else
-    ffmpeg_opts+=(
+    _ffmpeg_opts+=(
       -c:a
         "copy"
     )
   fi
-  ffmpeg_opts+=(
-    -pix_fmt
-      "yuv420p"
-    -shortest
+  _msg=(
+    "Running ffmpeg with options '${_ffmpeg_opts[@]}'."
   )
+  _msg_info \
+    "${_msg[*]}"
   ffmpeg \
     "${_ffmpeg_opts[@]}" \
     "${_output_video}"
