@@ -39,18 +39,25 @@ _audiopic2vid() {
     _input_pictures=() \
     _mktemp_opts=() \
     _ffmpeg_opts=() \
-    _pic
+    _pic \
+    _length
   shift \
     2
   _input_pictures+=(
     "$@"
   )
-  ffmpeg_opts+=(
-    -loop
-      1
-  )
+  _length="$(
+    medialength \
+      "${_input_sound}")"
+  _pic_length="$((
+    "${_length}" /
+      "${#_input_pictures[@]}" ))"
   for _pic in "${_input_pictures[@]}"; do
     ffmpeg_opts+=(
+      -loop
+        "1"
+      -t
+        "${_pic_length}"
       -i
         "${_pic}"
     )
