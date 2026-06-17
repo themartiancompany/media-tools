@@ -246,38 +246,46 @@ _gpu_type_auto_detect() {
     _intel \
     _nvidia \
     _type \
-    _vgas
+    _vgas \
+    _os
+  _os="$(
+    uname \
+      -o)"
   _type=""
-  _vgas="$(
-    lspci |
+  if [[ "${_os}" == "GNU/Linux" ]]; then
+    _vgas="$(
+      lspci |
+        grep \
+          "VGA")"
+    _amd="$(
+      echo \
+        "${_vgas}" |
       grep \
-        "VGA")"
-  _amd="$(
-    echo \
-      "${_vgas}" |
-    grep \
-      "AMD")"
-  _nvidia="$(
-    echo \
-      "${_vgas}" |
-    grep \
-      "NVidia")"
-  _intel="$(
-    echo \
-      "${_vgas}" |
-    grep \
-      "Intel")"
-  if [[ "${_amd}" != "" ]]; then 
-    _type="amd"
-  elif [[ "${_nvidia}" != "" ]]; then 
-    _type="nvidia"
-  elif [[ "${_amd}" != "" ]]; then 
-    _type="intel"
+        "AMD")"
+    _nvidia="$(
+      echo \
+        "${_vgas}" |
+      grep \
+        "NVidia")"
+    _intel="$(
+      echo \
+        "${_vgas}" |
+      grep \
+        "Intel")"
+    if [[ "${_amd}" != "" ]]; then 
+      _type="amd"
+    elif [[ "${_nvidia}" != "" ]]; then 
+      _type="nvidia"
+    elif [[ "${_amd}" != "" ]]; then 
+      _type="intel"
+    fi
+  elif [[ "${_os}" == "Android" ]]; then
+    _type="adreno"
   fi
   _set_override \
     "gpu" \
     "type" \
-	    "${_type}"
+    "${_type}"
 }
 
 # Set defaults
