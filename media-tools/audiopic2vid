@@ -57,14 +57,11 @@ _requirements() {
     "bc"
 }
 
-_normalize() {
+_min_max_get() {
   local \
     _input_pictures=() \
-    _pic \
     _height \
-    _height_max \
-    _width \
-    _width_max
+    _width
   _input_pictures+=(
     "$@"
   )
@@ -80,26 +77,70 @@ _normalize() {
     if (( "${_height_max}" < "${_height}" )); then
       _height_max="${_eight}"
     fi
+    if (( "${_height}" < "${_height_min}" )); then
+      _height_min="${_eight}"
+    fi
     if (( "${_width_max}" < "${_width}" )); then
       _width_max="${_width}"
     fi
+    if (( "${_width}" < "${_width_min}" )); then
+      _width_min="${_width}"
+    fi
   done
+}
+
+_normalize() {
+  local \
+    _input_pictures=() \
+    _pic \
+    _height_max \
+    _width_max \
+    _scale_opt \
+    _msg=()
+  _input_pictures+=(
+    "$@"
+  )
+  _min_max_get \
+    "${_input_pictures[@]}"
+  if [[ "${_normalization_type}" == "max" ]]; then
+    _scale_opt="scale=${_width_max}:-1"
+  elif [[ "${_normalization_type}" == "min" ]]; then
+    _scale_opt="scale=${_width_min}:-1"
+  else
+    _msg=(
+      "Invalid value '${_normalization_type}'"
+      "for normalization type parameter, allowed"
+      "types are 'min' and 'max'."
+    )
+    _msg_error \
+      "${_msg[*]}" \
+      1
+  fi
+  if [[ "${_normalization_type}" != "" ]]; then
+    _msg=(
+      "Pictures' size is not uniform,"
+      "rescaling up to '${_normalization_type}'."
+    )
+    _msg_info \
+      "${_msg[*]}"
+  fi
   for _pic in "${_input_pictures[@]}"; do
     ffmpeg \
       -i \
         "${_pic}" \
       -vf \
-        "scale=${_width_max}:-1" \
+        "${_scale_opt}" \
       "${_pic}.scaled.jpg"
   done
 }
 
 _audiopic2vid() {
   local \
-    _span_type="${1}" \
-    _sound_encode="${2}" \
-    _output_video="${3}" \
-    _input_sound="${4}" \
+    _normalization_type="${1}" \
+    _span_type="${2}" \
+    _sound_encode="${3}" \
+    _output_video="${4}" \
+    _input_sound="${5}" \
     _input_pictures=() \
     _mktemp_opts=() \
     _ffmpeg_opts=() \
@@ -109,7 +150,7 @@ _audiopic2vid() {
     _length \
     _filter_complex
   shift \
-    4
+    5
   _input_pictures+=(
     "$@"
   )
@@ -214,6 +255,9 @@ _usage() {
     "      [input-picture]"
     ""
     "  options:"
+    "    -n          Normalization type. Can be 'max' and"
+    "                'min'."
+    "                Default: ${normalization_type}."
     "    -t          Span type. Can be 'uniform'."
     "                Default: ${span_type}."
     "    -h          This help."
@@ -250,10 +294,12 @@ _cmdline_parse() {
   fi
   while \
     getopts \
-      't:ecvh?' \
+      'n:t:ecvh?' \
       arg; do
     case \
       "${arg}" in
+      n)
+        override_normalize_type="${OPTARG}" ;;
       t)
         override_span_type="${OPTARG}" ;;
       e)
@@ -320,6 +366,7 @@ _width_auto_detect() {
     _pic_scale \
     _size \
     _size_compare
+  _normalization_type=""
   _pic_scale="n"
   _size_compare="$(
     mediasize \
@@ -333,13 +380,15 @@ _width_auto_detect() {
     if [[ "${_size}" != "${_size_compare}" ]]; then
       _pic_scale="y"
     fi
+    break
   done
   if [[ "${_pic_scale}" == "y" ]]; then
+    _normalization_type="max"
   fi
   _set_override \
-    "target" \
-    "width" \
-    ""
+    "normalization" \
+    "type" \
+    "${_normalization_type}"
 }
 
 # Set defaults and, if present, overrides
@@ -364,7 +413,7 @@ _set_overrides() {
     "type" \
     "uniform"
   _sound_encode_auto_detect
-  _width_auto_detect
+  _normalization_type_auto_detect
 }
 
 # Shows configuration options.
@@ -406,6 +455,7 @@ input_pictures=(
 _set_overrides
 _show_config
 app_opts=(
+  "${normalization_type}"
   "${span_type}"
   "${sound_encode}"
   "${output_video}"
