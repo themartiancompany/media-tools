@@ -43,6 +43,7 @@ source \
 
 _global_variables() {
   make_date=""
+  normalization_type=""
   input_sound=""
   input_pictures=()
   sound_encode=""
@@ -93,6 +94,7 @@ _normalize() {
   local \
     _input_pictures=() \
     _pic \
+    _pic_scaled \
     _height_max \
     _width_max \
     _scale_opt \
@@ -125,12 +127,19 @@ _normalize() {
       "${_msg[*]}"
   fi
   for _pic in "${_input_pictures[@]}"; do
+    _pic_scaled="${_pic}.scaled.jpg"
+    _msg=(
+      "Rescaling '${_pic}' onto ''."
+    )
+    _msg_info \
+      "${_msg[*]}"
     ffmpeg \
+      -v \
       -i \
         "${_pic}" \
       -vf \
         "${_scale_opt}" \
-      "${_pic}.scaled.jpg"
+      "${_pic_scaled}"
   done
 }
 
@@ -154,7 +163,8 @@ _audiopic2vid() {
   _input_pictures+=(
     "$@"
   )
-  _normalize
+  _normalize \
+    "${_input_pictures[@]}"
   _ffmpeg_opts+=(
     -i
       "${_input_sound}"
@@ -360,7 +370,7 @@ _sound_encode_auto_detect() {
     "${_sound_encode}"
 }
 
-_width_auto_detect() {
+_normalization_type_auto_detect() {
   local \
     _pic \
     _pic_scale \
