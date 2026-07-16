@@ -74,11 +74,11 @@ _min_max_get() {
     _height="$(
       mediasize \
         -H \
-	"${_pic}")"
+        "${_pic}")"
     _width="$(
       mediasize \
         -W \
-	"${_pic}")"
+        "${_pic}")"
     _msg=(
       "Picture '${_pic}' has size"
       "${_width}x${_height}".
@@ -106,9 +106,14 @@ _normalize() {
     _ffmpeg_opts=() \
     _pic \
     _pic_scaled \
+    _height \
     _height_max \
+    _pan_height \
+    _pan_width \
+    _width \
     _width_max \
     _scale_opt \
+    _vf \
     _msg=()
   _input_pictures+=(
     "$@"
@@ -116,9 +121,9 @@ _normalize() {
   _min_max_get \
     "${_input_pictures[@]}"
   if [[ "${_normalization_type}" == "max" ]]; then
-    _scale_opt="scale=${_width_max}:-1"
+    _scale_opt="scale=${_width_max}:${_height_max}"
   elif [[ "${_normalization_type}" == "min" ]]; then
-    _scale_opt="scale=${_width_min}:-1"
+    _scale_opt="scale=${_width_min}:${_height_min}"
   else
     _msg=(
       "Invalid value '${_normalization_type}'"
@@ -148,6 +153,32 @@ _normalize() {
     _msg=(
       "Rescaling '${_pic}' onto '${_pic_scaled}'."
     )
+    _vf="${_scale_opt}"
+    _pad_width="0"
+    _pad_height="0"
+    _height="$(
+      mediasize \
+        -H \
+        "${_pic}")"
+    _width="$(
+      mediasize \
+        -W \
+        "${_pic}")"
+    if (( "${_height}" < "${_height_max}" )); then
+      _pad_height="$((
+        ( "${_height_max}" - "${_height}" ) /
+          2 ))"
+    fi
+    if (( "${_height}" < "${_height_max}" )); then
+      _pad_width="$((
+        ( "${_width_max}" - "${_width}" ) /
+          2 ))"
+    fi
+    if (( 0 < "${_pad_height}" || \
+          0 < "${_pad_width}" )); then
+      _pad_opt="pad=${_width}:${_height}:${_pad_width}:${_pad_height}"
+      _vf="${_vf},${_pad_opt}"
+    fi
     _msg_info \
       "${_msg[*]}"
     ffmpeg \
@@ -155,7 +186,7 @@ _normalize() {
       -i \
         "${_pic}" \
       -vf \
-        "${_scale_opt}" \
+        "${_vf}" \
       "${_pic_scaled}"
   done
 }
