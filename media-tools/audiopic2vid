@@ -67,7 +67,9 @@ _min_max_get() {
     "$@"
   )
   _height_max=0
+  _height_min=0
   _width_max=0
+  _width_min=0
   for _pic in "${_input_pictures[@]}"; do
     _height="$(
       mediasize \
@@ -96,12 +98,12 @@ _min_max_get() {
       _width_min="${_width}"
     fi
   done
-  echo "hello"
 }
 
 _normalize() {
   local \
     _input_pictures=() \
+    _ffmpeg_opts=() \
     _pic \
     _pic_scaled \
     _height_max \
@@ -135,15 +137,21 @@ _normalize() {
     _msg_info \
       "${_msg[*]}"
   fi
+  if [[ "${quiet}" == "n" ]]; then
+    _ffmpeg_opts+=(
+      -v
+        1
+    )
+  fi
   for _pic in "${_input_pictures[@]}"; do
     _pic_scaled="${_pic}.scaled.jpg"
     _msg=(
-      "Rescaling '${_pic}' onto ''."
+      "Rescaling '${_pic}' onto '${_pic_scaled}'."
     )
     _msg_info \
       "${_msg[*]}"
     ffmpeg \
-      -v \
+      "${_ffmpeg_opts[@]}" \
       -i \
         "${_pic}" \
       -vf \
