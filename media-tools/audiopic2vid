@@ -57,6 +57,43 @@ _requirements() {
     "bc"
 }
 
+_normalize() {
+  local \
+    _input_pictures=() \
+    _pic \
+    _height \
+    _height_max \
+    _width \
+    _width_max
+  _input_pictures+=(
+    "$@"
+  )
+  _height_max=0
+  _width_max=0
+  for _pic in "${_input_pictures[@]}"; do
+    _height="$(
+      mediasize \
+        -H)"
+    _width="$(
+      mediasize \
+        -W)"
+    if (( "${_height_max}" < "${_height}" )); then
+      _height_max="${_eight}"
+    fi
+    if (( "${_width_max}" < "${_width}" )); then
+      _width_max="${_width}"
+    fi
+  done
+  for _pic in "${_input_pictures[@]}"; do
+    ffmpeg \
+      -i \
+        "${_pic}" \
+      -vf \
+        "scale=${_width_max}:-1" \
+      "${_pic}.scaled.jpg"
+  done
+}
+
 _audiopic2vid() {
   local \
     _span_type="${1}" \
@@ -76,6 +113,7 @@ _audiopic2vid() {
   _input_pictures+=(
     "$@"
   )
+  _normalize
   _ffmpeg_opts+=(
     -i
       "${_input_sound}"
@@ -102,7 +140,7 @@ _audiopic2vid() {
       -t
         "${_pic_length}"
       -i
-        "${_pic}"
+        "${_pic}.scaled.jpg"
     )
   done
   _ffmpeg_opts+=(
@@ -155,6 +193,10 @@ _audiopic2vid() {
   ffmpeg \
     "${_ffmpeg_opts[@]}" \
     "${_output_video}"
+  for _pic in "${_input_pictures[@]}"; do
+    rm \
+      "${_pic}.scaled.jpg"
+  done
 }
 
 _usage() {
