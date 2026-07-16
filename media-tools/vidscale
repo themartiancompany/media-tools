@@ -256,46 +256,26 @@ _gpu_type_auto_detect() {
     _vgas="$(
       lspci |
         grep \
-          "VGA")"
+          "VGA" || \
+      true)"
     _amd="$(
       echo \
         "${_vgas}" |
-      grep \
-<<<<<<< HEAD
-        "VGA" || true)"
-  _amd="$(
-    echo \
-      "${_vgas}" |
-    grep \
-      "AMD" || true)"
-  _nvidia="$(
-    echo \
-      "${_vgas}" |
-    grep \
-      "NVidia" || true )"
-  _intel="$(
-    echo \
-      "${_vgas}" |
-    grep \
-      "Intel" || true)"
-  if [[ "${_amd}" != "" ]]; then 
-    _type="amd"
-  elif [[ "${_nvidia}" != "" ]]; then 
-    _type="nvidia"
-  elif [[ "${_amd}" != "" ]]; then 
-    _type="intel"
-=======
-        "AMD")"
+        grep \
+          "AMD" || \
+      true)"
     _nvidia="$(
       echo \
         "${_vgas}" |
       grep \
-        "NVidia")"
+        "NVidia" || \
+      true)"
     _intel="$(
       echo \
         "${_vgas}" |
       grep \
-        "Intel")"
+        "Intel" || \
+      true)"
     if [[ "${_amd}" != "" ]]; then 
       _type="amd"
     elif [[ "${_nvidia}" != "" ]]; then 
@@ -305,7 +285,6 @@ _gpu_type_auto_detect() {
     fi
   elif [[ "${_os}" == "Android" ]]; then
     _type="adreno"
->>>>>>> c6eb3b81e12372df6abf2d3791a214eb93e70ffc
   fi
   _set_override \
     "gpu" \
