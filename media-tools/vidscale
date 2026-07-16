@@ -251,22 +251,22 @@ _gpu_type_auto_detect() {
   _vgas="$(
     lspci |
       grep \
-        "VGA")"
+        "VGA" || true)"
   _amd="$(
     echo \
       "${_vgas}" |
     grep \
-      "AMD")"
+      "AMD" || true)"
   _nvidia="$(
     echo \
       "${_vgas}" |
     grep \
-      "NVidia")"
+      "NVidia" || true )"
   _intel="$(
     echo \
       "${_vgas}" |
     grep \
-      "Intel")"
+      "Intel" || true)"
   if [[ "${_amd}" != "" ]]; then 
     _type="amd"
   elif [[ "${_nvidia}" != "" ]]; then 
