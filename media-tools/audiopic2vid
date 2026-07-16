@@ -72,7 +72,7 @@ _min_max_get() {
     _height="$(
       mediasize \
         -H \
-	"${_pic})"
+	"${_pic}")"
     _width="$(
       mediasize \
         -W \
@@ -84,10 +84,10 @@ _min_max_get() {
     _msg_info \
       "${_msg[*]}"
     if (( "${_height_max}" < "${_height}" )); then
-      _height_max="${_eight}"
+      _height_max="${_height}"
     fi
     if (( "${_height}" < "${_height_min}" )); then
-      _height_min="${_eight}"
+      _height_min="${_height}"
     fi
     if (( "${_width_max}" < "${_width}" )); then
       _width_max="${_width}"
