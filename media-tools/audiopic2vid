@@ -71,10 +71,18 @@ _min_max_get() {
   for _pic in "${_input_pictures[@]}"; do
     _height="$(
       mediasize \
-        -H)"
+        -H \
+	"${_pic})"
     _width="$(
       mediasize \
-        -W)"
+        -W \
+	"${_pic}")"
+    _msg=(
+      "Picture '${_pic}' has size"
+      "${_width}x${_height}".
+    )
+    _msg_info \
+      "${_msg[*]}"
     if (( "${_height_max}" < "${_height}" )); then
       _height_max="${_eight}"
     fi
@@ -88,6 +96,7 @@ _min_max_get() {
       _width_min="${_width}"
     fi
   done
+  echo "hello"
 }
 
 _normalize() {
