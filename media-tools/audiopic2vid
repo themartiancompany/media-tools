@@ -104,12 +104,14 @@ _normalize() {
   local \
     _input_pictures=() \
     _ffmpeg_opts=() \
+    _scale_opts=() \
     _pic \
     _pic_scaled \
     _height \
     _height_max \
-    _pan_height \
-    _pan_width \
+    _pad_height \
+    _pad_opt \
+    _pad_width \
     _width \
     _width_max \
     _scale_opt \
@@ -153,6 +155,8 @@ _normalize() {
     _msg=(
       "Rescaling '${_pic}' onto '${_pic_scaled}'."
     )
+    _msg_info \
+      "${_msg[*]}"
     _vf="${_scale_opt}"
     _pad_width="0"
     _pad_height="0"
@@ -176,9 +180,19 @@ _normalize() {
     fi
     if (( 0 < "${_pad_height}" || \
           0 < "${_pad_width}" )); then
-      _pad_opt="pad=${_width}:${_height}:${_pad_width}:${_pad_height}"
+      _pad_opt="pad=${_width_max}:${_height_max}:${_pad_width}:${_pad_height}:black"
       _vf="${_vf},${_pad_opt}"
     fi
+    _scale_opts=(
+      "${_ffmpeg_opts[@]}"
+      -i
+        "${_pic}"
+      -vf
+        "${_vf}"
+    )
+    _msg=(
+      "Running ffmpeg with options '${_scale_opts[*]}'."
+    )
     _msg_info \
       "${_msg[*]}"
     ffmpeg \
@@ -361,7 +375,7 @@ _cmdline_parse() {
       t)
         override_span_type="${OPTARG}" ;;
       e)
-        override_sound_encode="y" ;;
+        override_sound_encode="n" ;;
       c)
         override_color="y" ;;
       v)
