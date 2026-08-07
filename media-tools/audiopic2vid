@@ -137,9 +137,17 @@ _normalize() {
       1
   fi
   if [[ "${_normalization_type}" != "" ]]; then
+    if [[ "${_normalization_type}" == "min" ]]; then
+      _height_target="${_height_min}"
+      _width_target="${_width_min}"
+    elif [[ "${_normalization_type}" == "max" ]]; then
+      _height_target="${_height_max}"
+      _width_target="${_width_max}"
+    fi
     _msg=(
       "Pictures' size is not uniform,"
-      "rescaling up to '${_normalization_type}'."
+      "rescaling up to '${_normalization_type}'"
+      "to ."
     )
     _msg_info \
       "${_msg[*]}"
@@ -168,19 +176,19 @@ _normalize() {
       mediasize \
         -W \
         "${_pic}")"
-    if (( "${_height}" < "${_height_max}" )); then
+    if (( "${_height}" < "${_height_target}" )); then
       _pad_height="$((
-        ( "${_height_max}" - "${_height}" ) /
+        ( "${_height_target}" - "${_height}" ) /
           2 ))"
     fi
-    if (( "${_height}" < "${_height_max}" )); then
+    if (( "${_height}" < "${_height_target}" )); then
       _pad_width="$((
-        ( "${_width_max}" - "${_width}" ) /
+        ( "${_width_target}" - "${_width}" ) /
           2 ))"
     fi
     if (( 0 < "${_pad_height}" || \
           0 < "${_pad_width}" )); then
-      _pad_opt="pad=${_width_max}:${_height_max}:${_pad_width}:${_pad_height}:black"
+      _pad_opt="pad=${_width_target}:${_height_target}:${_pad_width}:${_pad_height}:black"
       _vf="${_vf},${_pad_opt}"
     fi
     _scale_opts=(
@@ -371,7 +379,7 @@ _cmdline_parse() {
     case \
       "${arg}" in
       n)
-        override_normalize_type="${OPTARG}" ;;
+        override_normalization_type="${OPTARG}" ;;
       t)
         override_span_type="${OPTARG}" ;;
       e)
@@ -455,7 +463,7 @@ _normalization_type_auto_detect() {
     break
   done
   if [[ "${_pic_scale}" == "y" ]]; then
-    _normalization_type="max"
+    _normalization_type="min"
   fi
   _set_override \
     "normalization" \
@@ -492,6 +500,7 @@ _set_overrides() {
 _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "                Make date:   ${make_date}"
+  _msg_info "       Normalization type:   ${normalization_type}"
   _msg_info "                Span type:   ${span_type}"
   _msg_info "             Sound encode:   ${sound_encode}"
   _msg_info "              Output file:   ${output_video}"
