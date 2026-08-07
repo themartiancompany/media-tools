@@ -314,7 +314,7 @@ _audiopic2vid() {
   _length_new="$(
     medialength \
       "out.long.mp4")"
-  if (( "${_length}" + 1 < "${_length_new}" )); then
+  if (( "${_length%*.*}" + 1 < "${_length_new%*.*}" )); then
     _pts="$(
       echo \
         "scale=8;${_length} / ${_length_new}" |
@@ -365,6 +365,7 @@ _usage() {
     "    -t          Span type. Can be 'uniform'."
     "                Default: ${span_type}."
     "    -h          This help."
+    "    -v          Enable verbose output."
     ""
   )
   printf \

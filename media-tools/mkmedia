@@ -118,9 +118,7 @@ _audiovid2vid() {
        -i "${_mute}"
      )
   fi
-  if [[ "$(_get \
-	  "video" \
-	  "encode")" == "y" ]]; then
+  if [[ "${video_encode}" == "y" ]]; then
     _x265="true"
     _opts+=(
       -c:v
@@ -133,9 +131,7 @@ _audiovid2vid() {
         48k
       -shortest
   )
-  elif [[ "$(_get \
-               "video" \
-	       "encode")" == "n" ]]; then
+  elif [[ "${video_encode}" == "n" ]]; then
     _opts+=(
       -c:v
         copy
@@ -182,18 +178,19 @@ _set_overrides() {
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "                Make date:   $(_get "make" "date")"
-  _msg_info "               Audio mode:   $(_get "audio" "mode")"
-  _msg_info "                   Encode:   $(_get "video" "encode")"
-  _msg_info "             Output video:   $(_get "out" "video")"
-  _msg_info "              Input audio:   $(_get "in" "audio")"
-  _msg_info "              Input video:   $(_get "in" "video")"
+  _msg_info "                Make date:   ${make_date}"
+  _msg_info "               Audio mode:   ${audio_mode}"
+  _msg_info "                   Encode:   ${video_encode}"
+  _msg_info "             Output video:   ${out_video}"
+  _msg_info "              Input audio:   ${in_audio}"
+  _msg_info "              Input video:   ${in_video}"
 }
 
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
   local \
+    _code="${1}" \
     _usage_text
   IFS='' \
     read \
@@ -202,20 +199,20 @@ _usage() {
       _usage_text << \
         ENDUSAGETEXT || true
 
-Cut media files
+Combines an audio and video file
 
 Usage:
-  $(_get "app" "name")
+  ${app_name}
     [options]
-    <out_video>
-    <in_audio>
-    <in_video>
+    <out-video>
+    <in-audio>
+    <in-video>
   options:
      -m                   Audio mode (replace, overlap)
-                          Default: $(_get "audio" "mode")
+                          Default: ${audio_mode}
      -e                   Whether to encode the resulting video
                           or use encoder from input media.
-			  Default: $(_get "video" "encode")
+                          Default: ${video_encode}
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -223,7 +220,7 @@ ENDUSAGETEXT
     '%s\n' \
     "${_usage_text}"
   exit \
-    "${1}"
+    "${_code}"
 }
 
 _globals
@@ -237,40 +234,42 @@ while \
     arg; do
   case \
     "${arg}" in
-    m) override_audio_mode="${OPTARG}" ;;
-    e) override_video_encode="y" ;;
-    c) override_color="y" ;;
-    v) override_quiet="n" ;;
-    h|?) _set_overrides && \
-	 _usage \
-           0 ;;
+    m)
+      override_audio_mode="${OPTARG}" ;;
+    e)
+      override_video_encode="y" ;;
+    c)
+      override_color="y" ;;
+    v)
+      override_quiet="n" ;;
+    h|?)
+      _set_overrides
+      _usage \
+        0 ;;
     *)
-    _msg_error \
-      "Invalid argument '${arg}'" \
-      0 && \
-    _set_overrides && \
-    _usage \
-      1
-    ;;
+      _msg=(
+        "Invalid argument '${arg}'."
+      )
+      _msg_error \
+        "${_msg[*]}" \
+        0
+      _set_overrides
+      _usage \
+        1 ;;
   esac
 done
 shift \
-  $(( \
+  $((
     OPTIND - 1 \
   ))
 
-(( $# < 3 )) && \
-  _set_overrides && \
+if (( $# < 3 )); then
+  _set_overrides
   _usage \
     1
-_set \
-  "out" \
-  "video" \
-  "${1}"
-_set \
-  "in" \
-  "audio" \
-  "${2}"
+fi
+out_video="${1}"
+in_audio="${2}"
 in_video="${3}"
 _set_overrides
 _config_user_init \
@@ -278,15 +277,9 @@ _config_user_init \
 _ffmpeg_options_load
 _show_config
 app_opts=(
-  "$(_get \
-       "audio" \
-       "mode")"
-  "$(_get \
-       "out" \
-       "video")"
-  "$(_get \
-       "in" \
-       "audio")"
+  "${audio_mode}"
+  "${out_video}"
+  "${in_audio}"
   "${in_video}"
 )
 _audiovid2vid \
