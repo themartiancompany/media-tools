@@ -52,6 +52,7 @@ install-media:
 	install -vDm 755 $(_PROJECT)/mkaudioloop "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/mkgif "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/mkpad "$(BIN_DIR)"
+	ln -s "$(PREFIX)/bin/audiopic2vid" "$(BIN_DIR)/mkslideshow" || true
 	install -vDm 755 $(_PROJECT)/mktimepad "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/mkvs2webm "$(BIN_DIR)"
 	install -vDm 755 $(_PROJECT)/opus2ogg "$(BIN_DIR)"
