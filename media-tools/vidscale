@@ -315,6 +315,7 @@ _set_overrides() {
 # $1: exit status number.
 _usage() {
   local \
+    _exit_code="${1}" \
     _usage_text
   IFS='' \
     read \
@@ -328,9 +329,12 @@ Usage:
 
   ${app_name}
     [options]
-    <input_video>
-    <output_video>
-    <scale>
+    <input-video>
+    <output-video>
+  ( <scale> )
+
+  arguments:
+    scale                 Defaults to 1 (just encodes).
 
   options:
      -m                   Encode mode (quality, size,
@@ -347,7 +351,7 @@ ENDUSAGETEXT
     '%s\n' \
     "${_usage_text}"
   exit \
-    "${1}"
+    "${_exit_code}"
 }
 
 _globals
@@ -392,7 +396,10 @@ if (( ${#} < 3 )); then
 fi
 in_file="${1}"
 out_file="${2}"
-scale_factor="${3}"
+scale_factor="1"
+if (( 2 < "$#" )); then
+  scale_factor="${3}"
+fi
 _set_overrides
 _x265="true"
 _ffmpeg_options_load
