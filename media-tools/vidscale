@@ -168,7 +168,7 @@ _vidscale() {
     _crf="25"
     _preset="ultrafast"
     _length_max="$((
-      60 * 60 ))"
+      60 * 2 * 60 ))"
   elif [[ "${_mode}" == 'gpu' ]]; then
     if [[ "${_type}" == "" ]]; then
       _msg=(
