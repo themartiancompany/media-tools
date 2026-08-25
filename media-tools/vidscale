@@ -37,6 +37,7 @@ source \
 
 # shellcheck disable=SC2034
 _global_variables() {
+  make_date=""
   in_file=""
   out_file=""
   scale_factor=""
@@ -304,6 +305,10 @@ _set_overrides() {
   elif [[ -z "${quiet}" ]]; then
     quiet="y"
   fi
+  _set_override \
+    "make" \
+    "date" \
+    "$(_get_date_human)"
   _gpu_type_auto_detect
   _set_override \
     "encode" \
@@ -352,6 +357,16 @@ ENDUSAGETEXT
     "${_usage_text}"
   exit \
     "${_exit_code}"
+}
+
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "                Make date:   ${make_date}"
+  _msg_info "                   Encode:   ${encode_mode}"
+  _msg_info "             Output video:   ${out_video}"
+  _msg_info "              Input video:   ${in_file}"
+  _msg_info "              Input video:   ${out_file}"
 }
 
 _globals
