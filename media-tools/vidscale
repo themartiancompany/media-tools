@@ -168,7 +168,7 @@ _vidscale() {
     _crf="25"
     _preset="ultrafast"
     _length_max="$((
-      60 * 30 ))"
+      60 * 60 ))"
   elif [[ "${_mode}" == 'gpu' ]]; then
     if [[ "${_type}" == "" ]]; then
       _msg=(
@@ -364,9 +364,9 @@ _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "                Make date:   ${make_date}"
   _msg_info "                   Encode:   ${encode_mode}"
-  _msg_info "             Output video:   ${out_file}"
   _msg_info "              Input video:   ${in_file}"
-  _msg_info "              Input video:   ${out_file}"
+  _msg_info "             Output video:   ${out_file}"
+  _msg_info "             Scale factor:   ${scale_factor}"
 }
 
 _globals
