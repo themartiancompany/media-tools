@@ -232,6 +232,13 @@ _vidscale() {
         "${_in}")"
     _length="${_length%.*}"
     if (( "${_length_max}" < "${_length}" )); then
+      _msg=(
+        "Media length '${_length}' seconds"
+        "($(("${_length}" / 60 )) minutes),"
+        "max length per chunk '${_length_max}'."
+      )
+      _msg_info \
+        "${_msg[*]}"
       _encode_many
     else
       _encode_one
