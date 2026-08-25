@@ -420,6 +420,7 @@ _x265="true"
 _ffmpeg_options_load
 _config_user_init \
   "media-tools"
+_show_config
 app_opts=(
   "${in_file}"
   "${out_file}"
