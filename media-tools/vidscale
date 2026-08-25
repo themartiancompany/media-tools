@@ -168,7 +168,7 @@ _vidscale() {
     _crf="25"
     _preset="ultrafast"
     _length_max="$((
-      60 * 2 * 60 ))"
+      3 * 60 * 60 ))"
   elif [[ "${_mode}" == 'gpu' ]]; then
     if [[ "${_type}" == "" ]]; then
       _msg=(
@@ -193,7 +193,7 @@ _vidscale() {
     _crf="25"
     _preset="slow"
     _length_max="$((
-      60 * 30 ))"
+      3 * 60 * 30 ))"
   else
     _msg=(
       "Unknown encoding mode '${_mode}'."
