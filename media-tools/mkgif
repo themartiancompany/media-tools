@@ -46,6 +46,31 @@ _global_variables() {
   quiet=""
 }
 
+_requirements() {
+  local \
+    _ffmpeg \
+    _imagemagick
+  _ffmpeg="$(
+    command \
+      -v \
+      "ffmpeg" || \
+    true)"
+  _imagemagick="$(
+    command \
+      -v \
+      "convert" || \
+    true)"
+  if [[ "${_ffmpeg}" == "" && \
+	"${_imagemagick}" == "" ]]; then
+    _msg=(
+      "You need to install either"
+      "'ffmpeg' or 'imagemagick'."
+    )
+    _msg_info \
+      "${_msg[*]}"
+  fi
+}
+
 _mkgif_ffmpeg() {
   local \
     _output_gif="${1}" \
@@ -239,6 +264,11 @@ _target_program_auto_detect() {
     "target" \
     "program" \
     "${_target_program}"
+}
+
+_target_program_check() {
+  if [[ "" == "" ]]; then
+  fi
 }
 
 _set_overrides() {
