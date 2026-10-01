@@ -21,7 +21,65 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# Merges together pictures to maje a gif
+_bin="$(
+  dirname \
+    "$(command \
+         -v \
+         "env")")"
+_lib="$(
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" \
+  2>"/dev/null" || \
+source \
+  "${_crash_bash}"
+
+_mkgif_ffmpeg() {
+  _input_mp4="alt-tab.mp4"; \
+  _output_gif="alt-tab.gif"; \
+  _fps=5; \
+  _scale_width="216"; \
+  _scale_flags="lanczos"; \
+  _palettegen_max_colors="32"; \
+  _paletteuse_dither="bayer"; \
+  
+  _filter_complex_cmds=(
+    "fps=${_fps}"
+    "scale=${_scale_width}:480:flags=${_scale_flags}"
+    "split[s0][s1]"
+  )
+  _filter_complex_cmds_string="$(
+    IFS=","; \
+    echo \
+      "${_filter_complex_cmds[*]}")"
+  
+  _filter_complex=(
+    "${_filter_complex_cmds_string}"
+    "[s0]palettegen=max_colors=${_palettegen_max_colors}[p]"
+    "[s1][p]paletteuse=dither=${_paletteuse_dither}"
+  )
+  
+  _filter_complex_string="$(
+    IFS=";"; \
+    echo \
+      "${_filter_complex[*]}")"
+  
+  _ffmpeg_opts=(
+    -y
+    -i
+      "${_input_mp4}"
+    -filter_complex
+      "${_filter_complex_string}"
+  )
+  echo "${_ffmpeg_opts[*]}"
+  ffmpeg \
+    "${_ffmpeg_opts[@]}" \
+    "${_output_gif}"
+}
+
+# Merges together pictures to make a gif
 _mkgif() {
   local \
     _out="${1}" \
@@ -29,7 +87,6 @@ _mkgif() {
     _pics=()
   shift 2
   _pics=("${@}")
-
   convert \
     -delay "${_len}" \
     -loop 0 \
@@ -37,9 +94,66 @@ _mkgif() {
     "${_out}"
 }
 
+_usage() {
+  local \
+    _exit_code="${1}" \
+    _usage_text
+  IFS='' \
+    read \
+      -r \
+      -d '' \
+      _usage_text << \
+        ENDUSAGETEXT || true
+
+Merges pictures into a GIF or convert a video into a GIF.
+
+Usage:
+  ${app_name}
+    [options]
+    <out-gif>
+    [in-file]
+
+  options:
+
+     -i                   Explicitly set input type
+                          for conversion.
+                          It can be 'picture' or
+                          'video'.
+                          Default: ${in_duration}
+
+     -p                   Explicitly set program
+                          to use. It can be
+                          'ffmpeg' or 'imagemagick'.
+                          Default: ${target_program}
+
+     -h                   This message.
+     -v                   Enable verbose output
+
+ENDUSAGETEXT
+  _printf \
+    '%s\n' \
+    "${_usage_text}"
+  exit \
+    "${_exit_code}"
+}
+
+if (( "$#" < 1 )); then
+  _msg=(
+    "Output gif argument"
+    "is required."
+  )
+  _msg_error \
+    "${_msg[*]}" \
+    1
+  _usage \
+    1
+fi
 _out="${1}"
 _len="${2}"
 shift 2
 _pics="${@}"
 
-_mkgif "${_out}" "${_len}" "${_pics[@]}"
+_mkgif \
+  "${_out}" \
+  "${_len}" \
+  "${_pics[@]}"

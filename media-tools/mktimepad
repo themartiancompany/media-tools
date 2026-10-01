@@ -31,7 +31,8 @@ _lib="$(
     "${_bin}/../lib")"
 _crash_bash="${_lib}/libcrash-bash/crash-bash"
 _sourced \
-  "${_crash_bash}" 2>"/dev/null" || \
+  "${_crash_bash}" \
+  2>"/dev/null" || \
 source \
   "${_crash_bash}"
 
@@ -143,26 +144,6 @@ _mktimepad() {
 # Set defaults and, if present, overrides
 # from arch-grub command line option parameters
 _set_overrides() {
-  _set_override \
-    "make" \
-    "date" \
-    "$(_get_date_human)"
-  _set_override \
-    "out" \
-    "video" \
-    "$(_get \
-         "in" \
-         "video").pad.mp4"
-  _set_override \
-    "in" \
-    "duration" \
-    "3"
-  _set_override \
-    "out" \
-    "duration" \
-    "$(_get \
-         "in" \
-         "duration")"
   if [[ -v override_color ]]; then
     color="${override_color}"
   elif [[ -z "${color}" ]]; then
@@ -173,22 +154,39 @@ _set_overrides() {
   elif [[ -z "${quiet}" ]]; then
     quiet="y"
   fi
+  _set_override \
+    "make" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "out" \
+    "video" \
+    "${in_video}.pad.mp4"
+  _set_override \
+    "in" \
+    "duration" \
+    "3"
+  _set_override \
+    "out" \
+    "duration" \
+    "${in_duration}"
 }
 
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "                Make date:   $(_get "make" "date")"
-  _msg_info "              Input video:   $(_get "in" "video")"
-  _msg_info "             Output video:   $(_get "out" "video")"
-  _msg_info "           Intro duration:   $(_get "in" "duration")"
-  _msg_info "           Outro duration:   $(_get "out" "duration")"
+  _msg_info "                Make date:   ${make_date}"
+  _msg_info "              Input video:   ${in_video}"
+  _msg_info "             Output video:   ${out_video}"
+  _msg_info "           Intro duration:   ${in_duration}"
+  _msg_info "           Outro duration:   ${out_duration}"
 }
 
 # Show help usage, with an exit status.
 # $1: exit status number.
 _usage() {
   local \
+    _exit_code="${1}" \
     _usage_text
   IFS='' \
     read \
@@ -200,15 +198,19 @@ _usage() {
 Add a black time padding to a media file
 
 Usage:
-  $(_get "app" "name")
+  ${app_name}
     [options]
-    <out_video>
-    <in_video>
+    <out-video>
+    <in-video>
+
   options:
+
      -i                   Black intro duration
-                          Default: $(_get "in" "duration")
+                          Default: ${in_duration}
+
      -o                   Black outro duration
-                          Default: $(_get "out" "duration")
+                          Default: ${out_duration}
+
      -h                   This message.
      -v                   Enable verbose output
 ENDUSAGETEXT
@@ -216,7 +218,7 @@ ENDUSAGETEXT
     '%s\n' \
     "${_usage_text}"
   exit \
-    "${1}"
+    "${_exit_code}"
 }
 
 _globals
