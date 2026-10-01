@@ -266,11 +266,6 @@ _target_program_auto_detect() {
     "${_target_program}"
 }
 
-_target_program_check() {
-  if [[ "" == "" ]]; then
-  fi
-}
-
 _set_overrides() {
   if [[ -v override_color ]]; then
     color="${override_color}"
