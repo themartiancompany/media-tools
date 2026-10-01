@@ -268,21 +268,25 @@ _target_program_auto_detect() {
 
 _input_type_auto_detect() {
   local \
+    _in_media_files_amount \
     _input_file \
     _input_type
   _input_type="video"
-  _input_file="${in_media[0]}"
-  if [[ "${_input_file}" == *".mp4" || \
-	"${_input_file}" == *".webm" || \
-	"${_input_file}" == *".wmv" || \
-	"${_input_file}" == *".avi" || \
-	"${_input_file}" == *".mkv" ]]; then
-    _input_type="video"
-  elif [[ "${_input_file}" == *".jpg" || \
-	  "${_input_file}" == *".png" || \
-	  "${_input_file}" == *".webp" || \
-	  "${_input_file}" == *".bmp" ]]; then
-    _input_type="image"
+  _in_media_files_amount="${#in_media[@]}"
+  if (( 0 < "${_in_media_files_amount}" )); then
+    _input_file="${in_media[0]}"
+    if [[ "${_input_file}" == *".mp4" || \
+          "${_input_file}" == *".webm" || \
+          "${_input_file}" == *".wmv" || \
+          "${_input_file}" == *".avi" || \
+          "${_input_file}" == *".mkv" ]]; then
+      _input_type="video"
+    elif [[ "${_input_file}" == *".jpg" || \
+            "${_input_file}" == *".png" || \
+            "${_input_file}" == *".webp" || \
+            "${_input_file}" == *".bmp" ]]; then
+      _input_type="image"
+    fi
   fi
   _set_override \
     "input" \
