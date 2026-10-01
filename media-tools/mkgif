@@ -243,10 +243,9 @@ _target_program_auto_detect() {
   _in_media_files_amount="${#in_media[@]}"
   if (( 0 < "${_in_media_files_amount}" )); then
     _input_file="${in_media[0]}"
-    if [[ "${_input_file}" == *".jpg" || \
-          "${_input}" ]]; then
+    if [[ "${_input_type}" == "image" ]]; then
       _target_program="imagemagick"
-    elif [[ "${_input_file}" == *".mp4" ]]; then
+    elif [[ "${_input_type}" == "video"  ]]; then
       _target_program="ffmpeg"
     else
       _ext="${_input_file##*.}"
@@ -280,9 +279,9 @@ _input_type_auto_detect() {
 	"${_input_file}" == *".mkv" ]]; then
     _input_type="video"
   elif [[ "${_input_file}" == *".jpg" || \
-	"${_input_file}" == *".png" || \
-	"${_input_file}" == *".webp" || \
-	"${_input_file}" == *".bmp" ]]; then
+	  "${_input_file}" == *".png" || \
+	  "${_input_file}" == *".webp" || \
+	  "${_input_file}" == *".bmp" ]]; then
     _input_type="image"
   fi
   _set_override \
@@ -316,6 +315,7 @@ _set_overrides() {
     "target" \
     "length" \
     "10"
+  _input_type_auto_detect
   _target_program_auto_detect
 }
 
