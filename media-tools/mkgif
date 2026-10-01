@@ -363,7 +363,7 @@ Usage:
      -l <length>          Output GIF target length
                           (when creating animated GIFs
                           from pictures.)
-                          Default: ${_target_length}
+                          Default: ${target_length}
 
      -p <program>         Explicitly set program
                           to use. It can be
