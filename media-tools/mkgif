@@ -288,13 +288,10 @@ _set_overrides() {
     "gif" \
     "${in_media[@]}.gif"
   _set_override \
-    "in" \
-    "duration" \
-    "3"
-  _set_override \
-    "out" \
-    "duration" \
-    "${in_duration}"
+    "target" \
+    "length" \
+    "10"
+  _target_program_auto_detect
 }
 
 # Shows configuration options.
@@ -304,7 +301,7 @@ _show_config() {
   _msg_info "              Input media:   ${in_media[*]}"
   _msg_info "               Output GIF:   ${out_gif}"
   _msg_info "            Target length:   ${target_length}"
-  _msg_info "           Output program:   ${target_program}"
+  _msg_info "           Target program:   ${target_program}"
 }
 
 _usage() {
