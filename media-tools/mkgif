@@ -243,9 +243,9 @@ _target_program_auto_detect() {
   _in_media_files_amount="${#in_media[@]}"
   if (( 0 < "${_in_media_files_amount}" )); then
     _input_file="${in_media[0]}"
-    if [[ "${_input_type}" == "image" ]]; then
+    if [[ "${input_type}" == "image" ]]; then
       _target_program="imagemagick"
-    elif [[ "${_input_type}" == "video"  ]]; then
+    elif [[ "${input_type}" == "video"  ]]; then
       _target_program="ffmpeg"
     else
       _ext="${_input_file##*.}"
