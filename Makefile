@@ -81,9 +81,12 @@ install-media:
 	  "$(BIN_DIR)"
 	for _file \
 	  in $(SCRIPT_FILES); do \
+	  _file_name="$$( \
+            basename \
+	      "$${_file}")"; \
 	  $(_INSTALL_EXE) \
-	    "$(_PROJECT)/$${_file}" \
-	    "$(BIN_DIR)/$${_file}"; \
+	    "$${_file}" \
+	    "$(BIN_DIR)/$${_file_name}"; \
 	done
 	$(_MAKE_LINK) \
 	  "$(PREFIX)/bin/audiopic2vid" \
