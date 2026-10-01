@@ -46,17 +46,39 @@ _global_variables() {
   quiet=""
 }
 
-
-
 _mkgif_ffmpeg() {
-  _input_mp4="alt-tab.mp4"; \
-  _output_gif="alt-tab.gif"; \
-  _fps=5; \
-  _scale_width="216"; \
-  _scale_flags="lanczos"; \
-  _palettegen_max_colors="32"; \
-  _paletteuse_dither="bayer"; \
-  
+  local \
+    _output_gif="${1}" \
+    _input_mp4="${2}" \
+    _filter_complex=() \
+    _filter_complex_string \
+    _filter_complex_cmds=() \
+    _filter_complex_cmds_string \
+    _fps \
+    _scale_width \
+    _scale_flags \
+    _palettegen_max_colors \
+    _paletteuse_dither
+  _fps=5
+  if (( 2 < $# )); then
+    _fps="${3}"
+  fi
+  _scale_width="216"
+  if (( 3 < $# )); then
+    _scale_width="${4}"
+  fi
+  _scale_flags="lanczos"
+  if (( 4 < $# )); then
+    _scale_flags="${5}"
+  fi
+  _palettegen_max_colors="32"
+  if (( 5 < $# )); then
+    _palettegen_max_colors="${6}"
+  fi
+  _paletteuse_dither="bayer"
+  if (( 6 < $# )); then
+    _palettegen_dither="${7}"
+  fi
   _filter_complex_cmds=(
     "fps=${_fps}"
     "scale=${_scale_width}:480:flags=${_scale_flags}"
@@ -66,7 +88,6 @@ _mkgif_ffmpeg() {
     IFS=","; \
     echo \
       "${_filter_complex_cmds[*]}")"
-  
   _filter_complex=(
     "${_filter_complex_cmds_string}"
     "[s0]palettegen=max_colors=${_palettegen_max_colors}[p]"
@@ -85,25 +106,170 @@ _mkgif_ffmpeg() {
     -filter_complex
       "${_filter_complex_string}"
   )
-  echo "${_ffmpeg_opts[*]}"
+  _msg=(
+    "Running ffmpeg with options"
+    "'${_ffmpeg_opts[*]}'."
+  )
+  _msg_info \
+    "${_msg[*]}"
   ffmpeg \
     "${_ffmpeg_opts[@]}" \
     "${_output_gif}"
 }
 
 # Merges together pictures to make a gif
-_mkgif() {
+_mkgif_imagemagick() {
   local \
     _out="${1}" \
     _len="${2}" \
-    _pics=()
-  shift 2
-  _pics=("${@}")
+    _pics=() \
+    _convert_opts=()
+  shift \
+    2
+  _pics+=(
+    "$@"
+  )
+  _convert_opts+=(
+    -delay
+      "${_len}"
+    -loop
+      0
+  )
   convert \
-    -delay "${_len}" \
-    -loop 0 \
+    "${_convert_opts[@]}" \
     "${_pics[@]}" \
     "${_out}"
+}
+
+_mkgif() {
+  local \
+    _out_gif="${1}" \
+    _target_length="${2}" \
+    _target_program="${3}" \
+    _in_media=() \
+    _cmd \
+    _args=()
+  shift \
+    3
+  _in_media+=(
+    "$@"
+  )
+  if [[ "${_target_program}" == "imagemagick" ]]; then
+    _args+=(
+      "${_out_gif}"
+      "${_target_length}"
+      "${_in_media[@]}"
+    )
+  elif [[ "${_target_program}" == "ffmpeg" ]]; then
+    _args+=(
+      "${_out_gif}"
+      # "${_target_length}"
+      "${_in_media[@]}"
+    )
+  fi
+  _cmd="_mkgif_${_target_program}"
+  "${_cmd}" \
+    "${_args[@]}"
+}
+
+_in_media_check() {
+  local \
+    _file
+  for _file in "${in_media[@]}"; do
+    if [[ ! -e "${_file}" ]]; then
+      _msg=(
+        "File '${_file}'"
+	"does not exist."
+      )
+      _msg_error \
+        "${_msg[*]}" \
+	1
+    fi
+  done
+}
+
+_out_gif_auto_detect() {
+  local \
+    _in_media_files_amount \
+    _in_file_name \
+    _out_gif
+  _in_media_files_amount="${#in_media[@]}"
+  if (( "${_in_media_files_amount}" < 1 )); then
+    _out_gif="<input-file-name>.gif"
+  else
+    _in_file_name="$(
+      basename \
+        "${in_media[0]}")"
+    _out_gif="${_in_file_name%.*}"
+  fi
+  _set_override \
+    "out" \
+    "gif" \
+    "${_out_gif}"
+}
+
+_target_program_auto_detect() {
+  local \
+    _in_media_files_amount \
+    _input_file \
+    _target_program
+  _target_program="ffmpeg"
+  _in_media_files_amount="${#in_media[@]}"
+  if (( 0 < "${_in_media_files_amount}" )); then
+    _input_file="${in_media[0]}"
+    if [[ "${_input_file}" == *".jpg" || \
+          "${_input}" ]]; then
+      _target_program="imagemagick"
+    elif [[ "${_input_file}" == *".mp4" ]]; then
+      _target_program="ffmpeg"
+    else
+      _ext="${_input_file##*.}"
+      _msg=(
+        "I'm not in the mood to"
+        "go to pick the mime/type"
+        "parser right now to get if"
+        "an '${_ext}' is a picture"
+        "or a video, you tell me."
+      )
+      _msg_info \
+        "${_msg[*]}"
+    fi
+  fi
+  _set_override \
+    "target" \
+    "program" \
+    "${_target_program}"
+}
+
+_set_overrides() {
+  if [[ -v override_color ]]; then
+    color="${override_color}"
+  elif [[ -z "${color}" ]]; then
+    color="n"
+  fi
+  if [[ -v override_quiet ]]; then
+    quiet="${override_quiet}"
+  elif [[ -z "${quiet}" ]]; then
+    quiet="y"
+  fi
+  _set_override \
+    "make" \
+    "date" \
+    "$(_get_date_human)"
+  _in_media_check
+  _out_gif_auto_detect
+  _set_override \
+    "out" \
+    "gif" \
+    "${in_media[@]}.gif"
+  _set_override \
+    "in" \
+    "duration" \
+    "3"
+  _set_override \
+    "out" \
+    "duration" \
+    "${in_duration}"
 }
 
 # Shows configuration options.
@@ -238,18 +404,10 @@ _config_user_init \
 _ffmpeg_options_load
 _show_config
 app_opts=(
-  "${out_video}"
-  "${in_video}"
-  "${in_duration}"
-  "${out_duration}"
+  "${out_gif}"
+  "${target_length}"
+  "${target_program}"
+  "${in_media[@]}"
 )
-
-_out="${1}"
-_len="${2}"
-shift 2
-_pics="${@}"
-
 _mkgif \
-  "${_out}" \
-  "${_len}" \
-  "${_pics[@]}"
+  "${app_opts[@]}"
