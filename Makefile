@@ -1,85 +1,114 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: AGPL-3.0
 
+#    -----------------------------------------------------
+#    Copyright © 2023, 2024, 2025, 2026
+#                Pellegrino Prevete
+#
+#    All rights reserved
+#    -----------------------------------------------------
+#
+#    This program is free software: you can redistribute
+#    it and/or modify it under the terms of the
+#    GNU Affero General Public License as published by
+#    the Free Software Foundation, either version 3 of
+#    the License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it
+#    will be useful, but WITHOUT ANY WARRANTY;
+#    without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#    See the GNU Affero General Public License for
+#    more details.
+#
+#    You should have received a copy of the
+#    GNU Affero General Public License
+#    along with this program.
+#    If not, see <https://www.gnu.org/licenses/>.
+
+SHELL = bash
 _PROJECT=media-tools
 PREFIX ?= /usr/local
 DOC_DIR=$(DESTDIR)$(PREFIX)/share/doc/$(_PROJECT)
 BIN_DIR=$(DESTDIR)$(PREFIX)/bin
 DATA_DIR=$(DESTDIR)$(PREFIX)/share/$(_PROJECT)
 
-DOC_FILES=$(wildcard *.rst)
-SCRIPT_FILES=$(wildcard $(_PROJECT)/*)
+_INSTALL_FILE=\
+  install \
+    -vDm644
+_INSTALL_DIR=\
+  install \
+    -vdm755
+_INSTALL_EXE=\
+  install \
+    -vDm755
+_MAKE_EXE=\
+  chmod \
+    755
+_MAKE_LINK=\
+  ln \
+    -sv
+
+DOC_FILES=\
+  $(wildcard \
+      *.rst)
+SCRIPT_FILES=\
+  $(wildcard \
+      $(_PROJECT)/*)
 
 all:
 
 check: shellcheck
 
 shellcheck:
-	shellcheck -s bash $(SCRIPT_FILES)
+
+	shellcheck \
+	  -s \
+	    "bash" \
+	  $(SCRIPT_FILES)
 
 install: install-media install-configs install-doc
 
 install-doc:
 
-	install -vDm 644 $(DOC_FILES) -t $(DOC_DIR)
+	$(_INSTALL_FILE) \
+	  $(DOC_FILES) \
+	  -t \
+	  $(DOC_DIR)
 
 install-media:
 
-	install -vdm 755 "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/addfade "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/addsilence "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/audiocat "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/audiopic2vid "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/audioscale "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/audioverlap "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/blackintro "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/blackoutro "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/blackvid "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/clip-random "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/crop "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/fluidreverseloop "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/gridcrop "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/hflip "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/hflipvid "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/ispic "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mediaclip "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/medialength "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mediasplit "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mediareverse "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mediasize "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mediasize-dir-split "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mix "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mkmedia "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mkaudioloop "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mkgif "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mkpad "$(BIN_DIR)"
-	ln -s "$(PREFIX)/bin/audiopic2vid" "$(BIN_DIR)/mkslideshow" || true
-	install -vDm 755 $(_PROJECT)/mktimepad "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/mkvs2webm "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/opus2ogg "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/pic2pdf "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/pic2ascii "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/pic2txt "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/picscale "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/picstitch "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/pixelize "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/reverse_logarithmic_presser "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/stretchpic "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/txt2pic "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/vidcat "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/vidcolors "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/vidmute "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/vidrotate "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/vidscale "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/vidstack "$(BIN_DIR)"
-	ln -s "$(PREFIX)/bin/mediasize" "$(BIN_DIR)/vidsize" || true
-	install -vDm 755 $(_PROJECT)/volumechange "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/ytxclip "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/ytencode "$(BIN_DIR)"
-	install -vDm 755 $(_PROJECT)/zoompan "$(BIN_DIR)"
+	$(_INSTALL_DIR) \
+	  "$(BIN_DIR)"
+	for _file \
+	  in $(SCRIPT_FILES); do \
+	  $(_INSTALL_EXE) \
+	    "$(_PROJECT)/$${_file}" \
+	    "$(BIN_DIR)/$${_file}"; \
+	done
+	$(_MAKE_LINK) \
+	  "$(PREFIX)/bin/audiopic2vid" \
+	  "$(BIN_DIR)/mkslideshow" || \
+	true
+	$(_MAKE_LINK) \
+	  "$(PREFIX)/bin/mediasize" \
+	  "$(BIN_DIR)/vidsize" || \
+	true
 
 install-configs:
 
-	install -vdm 755 "$(DATA_DIR)/configs"
-	install -vDm 755 configs/ffmpeg_options "$(DATA_DIR)/configs"
+	$(_INSTALL_DIR) \
+	  "$(DATA_DIR)/configs"
+	$(_INSTALL_FILE) \
+	  "configs/ffmpeg_options" \
+	  "$(DATA_DIR)/configs"
 
-.PHONY: check install install-configs install-doc install-media shellcheck
+uninstall-media:
+
+	for _file \
+	  in $(SCRIPT_FILES); do \
+	  rm \
+	    -vrf \
+	    "$(BIN_DIR)/$${_file}"; \
+	done
+
+.PHONY: check install install-configs install-doc install-media shellcheck uninstall-media
