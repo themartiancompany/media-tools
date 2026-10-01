@@ -105,7 +105,7 @@ _usage() {
       _usage_text << \
         ENDUSAGETEXT || true
 
-Merges pictures into a GIF or convert a video into a GIF.
+Merges pictures or convert videos into animated GIFs.
 
 Usage:
   ${app_name}
@@ -119,9 +119,14 @@ Usage:
                           for conversion.
                           It can be 'picture' or
                           'video'.
-                          Default: ${in_duration}
+                          Default: ${input_type}
 
-     -p                   Explicitly set program
+     -l <length>          Output GIF target length
+                          (when creating animated GIFs
+                          from pictures.)
+                          Default: ${_target_length}
+
+     -p <program>         Explicitly set program
                           to use. It can be
                           'ffmpeg' or 'imagemagick'.
                           Default: ${target_program}
@@ -137,17 +142,84 @@ ENDUSAGETEXT
     "${_exit_code}"
 }
 
-if (( "$#" < 1 )); then
+_globals
+_global_variables
+_requirements
+# shellcheck disable=SC2004
+# shellcheck disable=SC2034
+while \
+  getopts \
+    'i:p:l:cvh?' \
+    arg; do
+  case \
+    "${arg}" in
+    i)
+      override_input_type="${OPTARG}" ;;
+    p)
+      override_target_program="${OPTARG}" ;;
+    l)
+      override_target_length="${OPTARG}" ;;
+    c)
+      override_color="y" ;;
+    v)
+      override_quiet="n" ;;
+    h|?)
+      _set_overrides
+      _usage \
+        0 ;;
+    *)
+      _msg=(
+        "Invalid argument '${arg}'."
+      )
+      _msg_error \
+        "${_msg[*]}" \
+        0
+      _set_overrides
+      _usage \
+        1 ;;
+  esac
+done
+shift \
+  $((
+    OPTIND - 1 \
+  ))
+if (( $# < 1 )); then
+  _set_overrides
   _msg=(
     "Output gif argument"
     "is required."
   )
   _msg_error \
     "${_msg[*]}" \
-    1
+    0
   _usage \
     1
 fi
+out_gif="${1}"
+if (( "$#" < 2 )); then
+  _msg=(
+    "Input file argument"
+    "is required."
+  )
+  _msg_error \
+    "${_msg[*]}" \
+    0
+  _usage \
+    1
+fi
+in_video="${2}"
+_set_overrides
+_config_user_init \
+  "media-tools"
+_ffmpeg_options_load
+_show_config
+app_opts=(
+  "${out_video}"
+  "${in_video}"
+  "${in_duration}"
+  "${out_duration}"
+)
+
 _out="${1}"
 _len="${2}"
 shift 2
