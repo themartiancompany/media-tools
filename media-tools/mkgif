@@ -36,6 +36,18 @@ _sourced \
 source \
   "${_crash_bash}"
 
+_global_variables() {
+  make_date=""
+  out_gif=""
+  in_media=()
+  target_length=""
+  target_program=""
+  color=""
+  quiet=""
+}
+
+
+
 _mkgif_ffmpeg() {
   _input_mp4="alt-tab.mp4"; \
   _output_gif="alt-tab.gif"; \
@@ -92,6 +104,16 @@ _mkgif() {
     -loop 0 \
     "${_pics[@]}" \
     "${_out}"
+}
+
+# Shows configuration options.
+_show_config() {
+  _msg_info "${app_name} configuration"
+  _msg_info "                Make date:   ${make_date}"
+  _msg_info "              Input media:   ${in_media[*]}"
+  _msg_info "               Output GIF:   ${out_gif}"
+  _msg_info "            Target length:   ${target_length}"
+  _msg_info "           Output program:   ${target_program}"
 }
 
 _usage() {
@@ -198,8 +220,8 @@ fi
 out_gif="${1}"
 if (( "$#" < 2 )); then
   _msg=(
-    "Input file argument"
-    "is required."
+    "Input file(s) argument(s)"
+    "is (are) required."
   )
   _msg_error \
     "${_msg[*]}" \
@@ -207,7 +229,9 @@ if (( "$#" < 2 )); then
   _usage \
     1
 fi
-in_video="${2}"
+in_media=(
+  "$@"
+)
 _set_overrides
 _config_user_init \
   "media-tools"
