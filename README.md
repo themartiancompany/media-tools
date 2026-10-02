@@ -30,11 +30,17 @@ written using
 [ImageMagick](
   https://imagemagick.org),
 [Python Pillow](
-  https://pillow.readthedocs.io)
+  https://pillow.readthedocs.io),
+the
+[`ascii-utils`](
+  https://github.com/themartiancompany/ascii-utils),
+the 
+[`caca-utils`](
+  https://github.com/themartiancompany/ascii-utils),
 and the
 [Crash Bash](
   https://github.com/themartiancompany/crash-bash)
-library.
+libraries.
 
 All tools are cross-platform and work
 on GNU/Linux, Android, Mac OS and Windows.
