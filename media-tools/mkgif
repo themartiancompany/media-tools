@@ -354,7 +354,7 @@ Usage:
 
   options:
 
-     -i                   Explicitly set input type
+     -i <input-type>      Explicitly set input type
                           for conversion.
                           It can be 'picture' or
                           'video'.
